@@ -1,9 +1,11 @@
 pragma solidity ^0.4.14;
 
 contract KetherHomepage {
+    // TODO: Do we care about timestamps?
+
     /// Buy is emitted when an ad unit is reserved.
     event Buy(
-        uint idx,
+        uint indexed idx,
         address owner,
         uint x,
         uint y,
@@ -13,7 +15,7 @@ contract KetherHomepage {
 
     /// Publish is emitted whenever the contents of an ad is changed.
     event Publish(
-        uint idx,
+        uint indexed idx,
         string link,
         string image,
         bool NSFW
@@ -82,8 +84,10 @@ contract KetherHomepage {
     /// Publish allows for setting the link, image, and NSFW status for the ad
     /// unit that is identified by the idx which was returned during the buy step.
     /// The link and image must be full web3-recognizeable URLs, such as:
+    ///  - bzz://a5c10851ef054c268a2438f10a21f6efe3dc3dcdcc2ea0e6a1a7a38bf8c91e23
     ///  - bzz://mydomain.eth/ad.png
     ///  - https://cdn.mydomain.com/ad.png
+    /// Images should be valid PNG.
     function publish(uint _idx, string _link, string _image, bool _NSFW) {
         Ad storage ad = ads[_idx];
         require(ad.owner == msg.sender);
