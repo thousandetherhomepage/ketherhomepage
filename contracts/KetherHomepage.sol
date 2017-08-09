@@ -1,4 +1,4 @@
-pragma solidity ^0.4.14;
+pragma solidity ^0.4.4;
 
 contract KetherHomepage {
     // TODO: Do we care about timestamps?
@@ -30,7 +30,7 @@ contract KetherHomepage {
     bool[100][100] grid;
 
     /// owner can withdraw the funds and override NSFW status of ad units.
-    address owner;
+    address public owner;
 
     struct Ad {
         address owner;
@@ -62,6 +62,7 @@ contract KetherHomepage {
     function buy(uint _x, uint _y, uint _width, uint _height) payable returns (uint idx) {
         uint cost = _width * _height * pixelsPerCell * weiPixelPrice;
         require(msg.value >= cost);
+        // TODO: require that the width and height are non-zero;
 
         // Loop over relevant grid entries
         for(uint i=0; i<_width; i++) {
