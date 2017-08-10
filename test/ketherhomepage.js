@@ -1,19 +1,14 @@
-var KetherHomepage = artifacts.require("./KetherHomepage.sol");
+const KetherHomepage = artifacts.require("./KetherHomepage.sol");
 // TODO should I query the contract to make sure the above values are right?
-let weiPixelPrice = 1000000000000000;
-let pixelsPerCell = 10;
+const weiPixelPrice = 1000000000000000;
+const pixelsPerCell = 10;
 
-let oneHundredCellPrice = 10 * 10 * pixelsPerCell * weiPixelPrice
-
-function deployContract(owner) {
-
-  return contract;
-}
+const oneHundredCellPrice = 10 * 10 * pixelsPerCell * weiPixelPrice
 
 contract('KetherHomepage', function(accounts) {
-  let owner = accounts[0]; // this is the account we deploy as owner, see 2_deploy_contracts.js
-  let account1 = accounts[1];
-  let account2 = accounts[2];
+  const owner = accounts[0]; // this is the account we deploy as owner, see 2_deploy_contracts.js
+  const account1 = accounts[1];
+  const account2 = accounts[2];
   it("should have an owner", function() {
     let KH;
     return KetherHomepage.new(owner)
@@ -230,7 +225,7 @@ contract('KetherHomepage', function(accounts) {
       .then(function() {
         return KH.withdraw({ from: account1 })
       })
-      .then(function(returnValue) {
+      .then(function() {
         assert.fail();
       })
       .catch(function(error) {
