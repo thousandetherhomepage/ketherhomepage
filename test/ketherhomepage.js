@@ -4,39 +4,38 @@ let weiPixelPrice = 1000000000000000;
 let pixelsPerCell = 10;
 
 let oneHundredCellPrice = 10 * 10 * pixelsPerCell * weiPixelPrice
-contract('KetherHomepage initialization', function(accounts) {
-	let owner = accounts[0]; // this is the account we deploy as owner, see 2_deploy_contracts.js
 
-	let KH;
-	before(function() {
-		KetherHomepage.deployed()
+function deployContract(owner) {
+
+	return contract;
+}
+
+contract('KetherHomepage', function(accounts) {
+	let owner = accounts[0]; // this is the account we deploy as owner, see 2_deploy_contracts.js
+	let account1 = accounts[1];
+	let account2 = accounts[2];
+	it("should have an owner", function() {
+		let KH;
+		return KetherHomepage.new(owner)
 			.then(function(instance) {
 				KH = instance;
-			});
-	})
 
-	it("should have an owner", function() {
-		return KH.owner.call()
+				return KH.owner.call();
+			})
 			.then(function(result) {
 				assert.equal(result, owner);
 			});
 	});
-});
-
-contract('KetherHomepage buying', function(accounts) {
-	let account1 = accounts[1];
-	let account2 = accounts[2];
-
-	let KH;
-	before(function() {
-		KetherHomepage.deployed()
-			.then(function(instance) {
-				KH = instance;
-			});
-	});
 
 	it("shouldn't let users buy if they don't send enough eth", function() {
-		return KH.buy(0, 0, 10, 10, { value: 1, from: account1 })
+
+		let KH;
+		return KetherHomepage.new(owner)
+			.then(function(instance) {
+				KH = instance;
+
+				return KH.buy(0, 0, 10, 10, { value: 1, from: account1 })
+			})
 			.then(function(returnValue) {
 				// This should not be hit since we threw an error
 				assert.fail();
@@ -48,9 +47,16 @@ contract('KetherHomepage buying', function(accounts) {
 	});
 
 	it("should let users buy if they send enough eth", function() {
-		let watcher = KH.Buy();
+		let KH;
+		let watcher;
 		let idx;
-		return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
+		return KetherHomepage.new(owner)
+			.then(function(instance) {
+				KH = instance;
+				watcher = KH.Buy();
+
+				return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
+			})
 			.then(function() {
 				return watcher.get()
 			})
@@ -88,32 +94,34 @@ contract('KetherHomepage buying', function(accounts) {
 	});
 
 	it("shouldn't let users buy overlapping adspace", function() {
-		// account1 bought 0,0,10,10 in a previous test
-		KH.buy(5, 5, 10, 10, { value: oneHundredCellPrice, from: account2 })
-			.then(function(returnValue) {
+		let KH;
+		return KetherHomepage.new(owner)
+			.then(function(instance) {
+				KH = instance;
+
+				return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
+			})
+			.then(function() {
+				return KH.buy(5, 5, 10, 10, { value: oneHundredCellPrice, from: account2 })
+			})
+			.then(function() {
 				assert.fail();
 			})
 			.catch(function(error) {
 				assert(error.message.indexOf("invalid opcode") >= 0);
 			})
 	});
-});
-*/
-/* contract('KetherHomepage publish', function(accounts) {
-	let account1 = accounts[1];
-	let account2 = accounts[2];
 
-	let KH;
-	before(function() {
-		KetherHomepage.deployed()
+	it("should let a user publish an ad", function() {
+		let KH;
+		return KetherHomepage.new(owner)
 			.then(function(instance) {
 				KH = instance;
 				return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
-			});
-	});
-
-	it("should let a user publish an ad", function() {
-		return KH.publish(0, "link", "image", false, { from: account1 })
+			})
+			.then(function() {
+				return KH.publish(0, "link", "image", false, { from: account1 })
+			})
 			.then(function() {
 				return KH.getAd.call(0);
 			})
@@ -126,82 +134,102 @@ contract('KetherHomepage buying', function(accounts) {
 				assert.equal("link", ad[4]);
 				assert.equal("image", ad[5]);
 				assert.equal(false, ad[6]);
-			})
+			});
 	});
 
 	it("shouldn't let a user publish another user's ad", function() {
-		KH.publish(0, "link", "image", false, { from: account2 })
-			.then(function(returnValue) {
+		let KH;
+		return KetherHomepage.new(owner)
+			.then(function(instance) {
+				KH = instance;
+
+				return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
+			})
+			.then(function() {
+				return KH.publish(0, "link", "image", false, { from: account2 })
+			})
+			.then(function() {
 				assert.fail();
 			})
 			.catch(function(error) {
 				assert(error.message.indexOf("invalid opcode") >= 0);
 			})
 	});
-}); 
 
-contract('KetherHomepage forceNSFW', function(accounts) {
-	let owner = accounts[0];
-	let account1 = accounts[1];
-
-	let KH;
-	before(function() {
-		KetherHomepage.deployed()
+	it("should let the owner forceNSFW", function() {
+		let KH;
+		return KetherHomepage.new(owner)
 			.then(function(instance) {
 				KH = instance;
 
 				return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
 			})
-	});
-
-	it("should let the owner forceNSFW", function() {
-		return KH.forceNSFW(0, true, { from: owner })
-			.then(function(a) {
-
+			.then(function() {
+				return KH.forceNSFW(0, true, { from: owner })
+			})
+			.then(function() {
 				return KH.getAd.call(0);
 			})
 			.then(function(ad) {
-				// Make sure we added the ad
+				// Make sure we set the nsfw on the ad
 				assert.equal(true, ad[6]);
 			})
 	});
 
 	it("shouldn't let non-owners forceNSFW", function() {
-		KH.forceNSFW(0, true, { from: account1 })
-			.then(function(returnValue) {
+		let KH;
+		return KetherHomepage.new(owner)
+			.then(function(instance) {
+				KH = instance;
+
+				return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
+			})
+			.then(function() {
+				return KH.forceNSFW(0, true, { from: account1 })
+			})
+			.then(function() {
 				assert.fail();
 			})
 			.catch(function(error) {
 				assert(error.message.indexOf("invalid opcode") >= 0);
 			})
 	});
-});
-
-contract('KetherHomepage withdraw', function(accounts) {
-	let owner = accounts[0];
-	let account1 = accounts[1];
-
-	let KH;
-	before(function() {
-		KetherHomepage.deployed()
-			.then(function(instance) {
-				KH = instance;
-				return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
-			})
-	});
 
 	it("should let the owner withdraw", function() {
-		let initialBalance = web3.eth.getBalance(owner)
+		let initialBalance;
+		let KH;
+		let gas;
+		return KetherHomepage.new(owner)
+			.then(function(instance) {
+				KH = instance;
 
-		return KH.withdraw({ from: owner })
+				return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
+			})
+			.then(function(tx) {
+				gas = tx.receipt.gasUsed;
+				initialBalance = web3.eth.getBalance(owner);
+				return KH.withdraw({ from: owner })
+			})
 			.then(function() {
 				let newBalance = web3.eth.getBalance(owner)
-				assert(newBalance.toNumber() > initialBalance.toNumber())
+				// TOOD: I would expect that assert.equal(newBalance.toNumber(), initialBalance.toNumber() + oneHundredCellPrice + gas);
+				//	would work. Instead it's off by 2857000000000000 wei...
+				// What happened?
+				assert(newBalance.toNumber() > initialBalance.toNumber());
 			})
 	});
 
 	it("shouldn't let non-owners withdraw", function() {
-		KH.withdraw({ from: account1 })
+		let KH;
+		return KetherHomepage.new(owner)
+			.then(function(instance) {
+				KH = instance;
+
+				return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
+			})
+			.then(function() {
+				return KH.withdraw({ from: account1 })
+			})
 			.then(function(returnValue) {
 				assert.fail();
 			})
