@@ -22,12 +22,12 @@ contract KetherHomepage {
     );
 
     /// Price is 1 kether divided by 1,000,000 pixels
-    uint constant weiPixelPrice = 1000000000000000;
+    uint public constant weiPixelPrice = 1000000000000000;
 
     /// Each grid cell represents 10 pixels.
-    uint constant pixelsPerCell = 10;
+    uint public constant pixelsPerCell = 10;
 
-    bool[100][100] grid;
+    bool[100][100] public grid;
 
     /// owner can withdraw the funds and override NSFW status of ad units.
     address public owner;
@@ -54,7 +54,25 @@ contract KetherHomepage {
     function KetherHomepage(address _owner) {
         owner = _owner;
     }
+ 
 
+    /// getAdsLength tells you how many ads there are
+    function getAdsLength() returns (uint) {
+        return ads.length;
+    }
+
+    /// getAd gives you the Ad at a specific id
+    function getAd(uint idx) returns (uint x, uint y, uint width, uint height, string link, string image, bool nsfw) {
+        Ad storage ad = ads[idx];
+        x = ad.x;
+        y = ad.y;
+        width = ad.width;
+        height = ad.height;
+        link = ad.link;
+        image = ad.image;
+        nsfw = ad.NSFW|| ad.forceNSFW;
+    }
+ 
     /// Ads must be purchased in 10x10 pixel blocks.
     /// Each coordinate represents 10 pixels. That is,
     ///   _x=5, _y=10, _width=3, _height=3
@@ -76,8 +94,8 @@ contract KetherHomepage {
         }
 
         // We reserved space in the grid, now make a placeholder entry.
-        idx = ads.push(Ad(msg.sender, _x, _y, _width, _height, "", "", false, false)) - 1;
-
+        Ad memory ad = Ad(msg.sender, _x, _y, _width, _height, "", "", false, false);
+        idx = ads.push(ad) - 1;
         Buy(idx, msg.sender, _x, _y, _width, _height);
         return idx;
     }
