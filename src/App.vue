@@ -1,18 +1,16 @@
 <template>
   <div id="app">
     <h1>Kether Homepage</h1>
-    <p>{{ msg }}</p>
+
+    <router-view :web3="web3" class="view"></router-view>
   </div>
 </template>
 
 <script>
+
 export default {
+  props: ['web3'],
   name: 'app',
-  data () {
-    return {
-      msg: 'Welcome to Your Vue.js App'
-    }
-  }
 }
 </script>
 
@@ -21,9 +19,8 @@ export default {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin: 1em;
 }
 
 h1, h2 {
