@@ -2,7 +2,7 @@
   <div>
     <h2>Million dollar homepage here.</h2>
 
-    <p>Ready: {{accounts}}</p>
+    <p>Ready: {{status}}</p>
   </div>
 </template>
 
@@ -11,8 +11,7 @@ export default {
   props: ['web3'],
   data() {
     return {
-      accounts: 'foo',
-      //accounts: this.web3.eth.accounts,
+      status: web3.eth.accounts[0],
     }
   },
 }

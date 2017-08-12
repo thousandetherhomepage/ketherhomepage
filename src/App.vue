@@ -7,10 +7,47 @@
 </template>
 
 <script>
+import Web3 from 'web3'
+function waitForWeb3(cb) {
+  function getWeb3() {
+    let web3 = window.web3;
+    if (typeof web3 !== 'undefined') {
+      web3 = new Web3(web3.currentProvider);
+    } else {
+      web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+    }
+    try {
+      if (web3.currentProvider.isConnected()) return web3;
+    } catch (_) {
+      return null;
+    }
+  }
+  window.addEventListener('load', function() {
+    const interval = setInterval(function() {
+      let r = getWeb3()
+      if (r) {
+        console.log("ready", r.currentProvider.isConnected());
+        clearInterval(interval)
+        cb(r);
+      }
+    }, 500);
+  });
+}
 
 export default {
-  props: ['web3'],
   name: 'app',
+  data() {
+    return {
+      'web3': null,
+    }
+  },
+  created() {
+    this.$router.push({ name: 'connecting' })
+    waitForWeb3(function(web3) {
+      this.web3 = web3;
+      this.$router.push({ name: 'home', props: true})
+    }.bind(this));
+  },
 }
 </script>
 
