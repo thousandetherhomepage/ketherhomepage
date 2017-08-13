@@ -35,6 +35,11 @@ module.exports = {
         options: {
           name: '[name].[ext]?[hash]'
         }
+      },
+      {
+        // Disable the hot-reloader
+        test: path.resolve(__dirname, 'node_modules/webpack-dev-server/client'),
+        loader: "null-loader"
       }
     ]
   },

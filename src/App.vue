@@ -26,7 +26,6 @@ function waitForWeb3(cb) {
     const interval = setInterval(function() {
       let r = getWeb3()
       if (r) {
-        console.log("ready", r.currentProvider.isConnected());
         clearInterval(interval)
         cb(r);
       }
