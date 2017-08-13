@@ -22,6 +22,15 @@ export default {
       const contract = web3.eth.contract(contractJSON.abi);
       return contract.at(contractAddr);
     },
+    getTiles(contract, cb) {
+      // TODO: ...
+      // contract.getAdsLength.call(function(err, res) {
+      //   // loop and aggregate...
+      //   contract.getAd.call(0, funcion(err, res) {
+      //     ...
+      //   }
+      // }
+    },
   }
 }
 </script>

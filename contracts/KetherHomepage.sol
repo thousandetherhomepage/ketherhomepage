@@ -63,7 +63,7 @@ contract KetherHomepage {
 
     /// getAd gives you the Ad at a specific id
     function getAd(uint idx) returns (uint x, uint y, uint width, uint height, string link, string image, bool nsfw) {
-        Ad storage ad = ads[idx];
+        Ad memory ad = ads[idx];
         x = ad.x;
         y = ad.y;
         width = ad.width;
