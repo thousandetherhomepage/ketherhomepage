@@ -232,4 +232,19 @@ contract('KetherHomepage', function(accounts) {
         assert(error.message.indexOf("invalid opcode") >= 0);
       })
   });
+
+  it("shouldn't let users buy 0-width space", function() {
+    return KetherHomepage.new(owner)
+      .then(function(instance) {
+        return instance.buy(0, 0, 10, 0, { value: oneHundredCellPrice, from: account1 })
+      })
+      .then(function(returnValue) {
+        // This should not be hit since we threw an error
+        assert.fail();
+      })
+      .catch(function(error) {
+        // catch revert / require
+        assert(error.message.indexOf("invalid opcode") >= 0);
+      });
+  });
 });

@@ -79,6 +79,7 @@ contract KetherHomepage {
     /// Represents a 30x30 pixel ad at coordinates (50, 100)
     function buy(uint _x, uint _y, uint _width, uint _height) payable returns (uint idx) {
         uint cost = _width * _height * pixelsPerCell * weiPixelPrice;
+        require(cost > 0);
         require(msg.value >= cost);
         // TODO: require that the width and height are non-zero;
 
