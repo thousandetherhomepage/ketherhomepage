@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --open",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
-    "truffle": "truffle serve"
+    "truffle-compile": "truffle compile",
+    "truffle-serve": "truffle serve",
+    "truffle-test": "truffle test --network test"
   },
   "dependencies": {
     "vue": "^2.3.3",
