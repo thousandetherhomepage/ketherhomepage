@@ -1,6 +1,6 @@
 const KetherHomepage = artifacts.require("./KetherHomepage.sol");
 // TODO should I query the contract to make sure the above values are right?
-const weiPixelPrice = 1000000000000000;
+const weiPixelPrice = 10000000000000000;
 const pixelsPerCell = 10;
 
 const oneHundredCellPrice = 10 * 10 * pixelsPerCell * weiPixelPrice
@@ -9,6 +9,27 @@ contract('KetherHomepage', function(accounts) {
   const owner = accounts[0]; // this is the account we deploy as owner, see 2_deploy_contracts.js
   const account1 = accounts[1];
   const account2 = accounts[2];
+  it("should have correct constants by default", function() {
+    let KH;
+    return KetherHomepage.new(owner)
+      .then(function(instance) {
+        KH = instance;
+
+        return KH.weiPixelPrice.call();
+      })
+      .then(function(wpp) {
+        assert.equal(weiPixelPrice, wpp.toNumber());
+        return KH.pixelsPerCell.call();
+      })
+      .then(function(ppc) {
+        assert.equal(pixelsPerCell, ppc.toNumber());
+      });
+  });
+
+  it("should be a kether", function() {
+    assert.equal(1, web3.fromWei(weiPixelPrice * pixelsPerCell * 100 * 100, 'kether'));
+  });
+
   it("should have an owner", function() {
     let KH;
     return KetherHomepage.new(owner)

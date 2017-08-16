@@ -22,7 +22,7 @@ contract KetherHomepage {
     );
 
     /// Price is 1 kether divided by 1,000,000 pixels
-    uint public constant weiPixelPrice = 1000000000000000;
+    uint public constant weiPixelPrice = 10000000000000000;
 
     /// Each grid cell represents 10 pixels.
     uint public constant pixelsPerCell = 10;
