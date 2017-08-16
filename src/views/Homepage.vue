@@ -9,12 +9,13 @@
 <script>
 import contractJSON from 'json-loader!../../build/contracts/KetherHomepage.json'
 
-const contractAddr = '0x2b97c190581935243698bfe1064fa2f3cef7af1b'
+const contractAddr = '0x47b20b71d0e4039a85e1d67e48af138cf4b05fea'
 
 export default {
+  props: ["web3"],
   data() {
     return {
-      status: web3.eth.accounts[0],
+      status: "connecting..."
     }
   },
   methods: {
@@ -31,6 +32,11 @@ export default {
       //   }
       // }
     },
+  },
+  created() {
+    this.web3.eth.getAccounts(function(err, res) {
+      this.status = res;
+    }.bind(this));
   }
 }
 </script>

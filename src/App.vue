@@ -8,6 +8,7 @@
 
 <script>
 import Web3 from 'web3'
+
 function waitForWeb3(cb) {
   function getWeb3() {
     let web3 = window.web3;
