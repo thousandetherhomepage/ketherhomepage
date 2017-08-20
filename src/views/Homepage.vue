@@ -5,7 +5,7 @@
   height: 1000px;
   background: #eee;
 
-  li {
+  img {
     position: absolute;
     display: block;
     overflow: hidden;
@@ -16,70 +16,103 @@
 <template>
   <div>
     <p>Accounts: {{accounts}}</p>
-    <p>Num Ads: {{numAds}}</p>
-    <component :is="action" :web3="web3" :contract="contract" :account="accounts[0]"></component>
-    <ul id="adGrid">
-      <li v-for="tile in tiles">
-        <a :href="tile.link"><img :src="tile.image" :style="adStyle(tile)" /></a>
-      </li>
-    </ul>
+    <p>{{ads.length}} Ads Purchased, {{numOwned}} by you.</p>
+
+    <div id="adGrid">
+      <template v-for="ad in ads" v-if="ad">
+        <a :href="ad.link"><img :src="ad.image" :style="adStyle(ad)" /></a>
+      </template>
+    </div>
   </div>
 </template>
 
 <script>
 
-import Buy from './Buy.vue'
-
-function toAd(r) {
+function toAd(i, r) {
   return {
+    // TODO: Add owner
+    idx: i,
     x: r[0].toNumber(),
     y: r[1].toNumber(),
     width: r[2].toNumber(),
     height: r[3].toNumber(),
     link: r[4],
-    image: r[5],
+    image: r[5] || "",
     nsfw: r[6],
   }
 }
 
 export default {
-  props: ["web3", "contract"],
+  props: ["web3", "contract", "ownedAds"],
   data() {
     return {
-      accounts: "connecting...",
-      numAds: 0,
-      tiles: [],
-      action: Buy,
+      accounts: {},
+      ads: [],
+      numOwned: 0,
     }
   },
   methods: {
-    loadTiles() {
+    isOwner(account) {
+      return true; // XXX
+      return this.accounts[account] || false;
+    },
+    loadAd(ad) {
+      if (ad.idx > this.ads.length) {
+        this.ads.length = ad.idx;
+      }
+      // Need to use splice rather than this.ads[i] to make it reactive
+      this.ads.splice(ad.idx, 1, ad);
+      if (this.isOwner(ad.owner)) {
+        if (this.ownedAds[ad.idx] === undefined) {
+          this.numOwned++;
+        }
+        this.ownedAds[ad.idx] = ad;
+        this.$emit('update:ownedAds', this.ownedAds);
+        // FIXME: This doesn't actually propagate to the Publish component unless refreshed
+      }
+    },
+    loadAds() {
       this.contract.getAdsLength.call(function(err, res) {
-        this.numAds = res.toNumber();
+        const num = res.toNumber();
+        this.ads.length = num;
 
-        for (let i=0; i<this.numAds; i++) {
+        for (let i=0; i<num; i++) {
           this.contract.getAd.call(i, function(err, res) {
-            this.tiles.push(toAd(res));
+            this.loadAd(toAd(i, res));
           }.bind(this));
         }
+
+        // TODO: Watch events for new Buys and Publish's here?
+        // contract.Buy().watch(function() { console.log("event", arguments); })
 
       }.bind(this));
     },
     adStyle(ad) {
-      return {
+      const s = {
         "margin-left": ad.x * 10 + "px",
         "margin-top": ad.y * 10 + "px",
         "width": ad.width * 10 + "px",
         "height": ad.height * 10 + "px",
       }
+      if (!ad.image) {
+        s["background"] = "#000";
+      }
+      return s;
+    }
+  },
+  events: {
+    purchased: function(account) {
+      console.log("Purchase detected");
     }
   },
   created() {
     this.web3.eth.getAccounts(function(err, res) {
-      this.accounts = res;
+      for (const acct of res) {
+        this.accounts[acct] = true;
+      }
     }.bind(this));
 
-    this.loadTiles();
+    this.loadAds();
   }
 }
 </script>

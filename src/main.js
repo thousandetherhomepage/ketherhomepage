@@ -4,10 +4,14 @@ import VueRouter from 'vue-router'
 Vue.use(VueRouter)
 
 import App from './App.vue'
-import Home from './views/Homepage.vue'
 
-const Connecting = {
-  template: '<div>Connecting...</div>',
+import Buy from './views/Buy.vue'
+import Publish from './views/Publish.vue'
+
+const Index = {
+  template: `
+    <p>A million pixels for a thousand ether.</p>
+  `,
 }
 
 const vm = new Vue({
@@ -15,8 +19,9 @@ const vm = new Vue({
   render: h => h(App),
   router: new VueRouter({
     routes: [
-      { path: '/connecting', name: 'connecting', component: Connecting },
-      { path: '/home', name: 'home', component: Home },
+      { path: '/', name: 'index', component: Index },
+      { path: '/buy', name: 'buy', component: Buy },
+      { path: '/publish', name: 'publish', component: Publish },
     ],
   }),
 })

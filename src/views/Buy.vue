@@ -32,11 +32,6 @@
     <p v-if="error" class="error">{{error}}</p>
 
     <button v-on:click="buy">Buy Slot</button>
-
-    <h2>Publish to slot</h2>
-
-    TODO: ...
-
   </div>
 </template>
 
@@ -83,16 +78,16 @@ export default {
     buy() {
       const x = Math.floor(this.x/10), y = Math.floor(this.y/10), width = Math.floor(this.width/10), height = Math.floor(this.height/10);
       const weiPrice = this.web3.toWei(this.price, "ether");
+      const account = this.account;
       if (!this.isAvailable(x, y, width, height)) {
         this.error = `Slot is not available: ${width*10}x${height*10} at position (${x*10}, ${y*10})`
         return;
       }
-      this.contract.buy.sendTransaction(x, y, width, height, { value: weiPrice, from: this.account }, function(err, res) {
+      this.contract.buy.sendTransaction(x, y, width, height, { value: weiPrice, from: account }, function(err, res) {
         if (err) {
           this.error = err;
         }
-        // TODO: Transition to publish? Or show some success message
-        console.log("purchased", res);
+        this.$dispatch('purchased', account)
       }.bind(this));
     }
   },

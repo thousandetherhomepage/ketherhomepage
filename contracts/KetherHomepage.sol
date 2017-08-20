@@ -18,6 +18,7 @@ contract KetherHomepage {
         uint indexed idx,
         string link,
         string image,
+        string title,
         bool NSFW
     );
 
@@ -40,7 +41,7 @@ contract KetherHomepage {
         uint height;
         string link;
         string image;
-        // TODO: Add string title
+        string title;
 
         /// NSFW is whether the ad is suitable for people of all
         /// ages and workplaces.
@@ -55,7 +56,6 @@ contract KetherHomepage {
     function KetherHomepage(address _owner) {
         owner = _owner;
     }
- 
 
     /// getAdsLength tells you how many ads there are
     function getAdsLength() returns (uint) {
@@ -63,15 +63,17 @@ contract KetherHomepage {
     }
 
     /// getAd gives you the Ad at a specific id
-    function getAd(uint idx) returns (uint x, uint y, uint width, uint height, string link, string image, bool nsfw) {
+    function getAd(uint idx) returns (address owner, uint x, uint y, uint width, uint height, string link, string image, string title, bool nsfw) {
         Ad memory ad = ads[idx];
+        owner = ad.owner;
         x = ad.x;
         y = ad.y;
         width = ad.width;
         height = ad.height;
         link = ad.link;
         image = ad.image;
-        nsfw = ad.NSFW|| ad.forceNSFW;
+        title = ad.title;
+        nsfw = ad.NSFW || ad.forceNSFW;
     }
  
     /// Ads must be purchased in 10x10 pixel blocks.
@@ -109,14 +111,15 @@ contract KetherHomepage {
     ///  - bzz://mydomain.eth/ad.png
     ///  - https://cdn.mydomain.com/ad.png
     /// Images should be valid PNG.
-    function publish(uint _idx, string _link, string _image, bool _NSFW) {
+    function publish(uint _idx, string _link, string _image, string _title, bool _NSFW) {
         Ad storage ad = ads[_idx];
         require(ad.owner == msg.sender);
         ad.link = _link;
         ad.image = _image;
+        ad.title = _title;
         ad.NSFW = _NSFW;
 
-        Publish(_idx, ad.link, ad.image, ad.NSFW || ad.forceNSFW);
+        Publish(_idx, ad.link, ad.image, ad.title, ad.NSFW || ad.forceNSFW);
     }
 
     /// forceNSFW allows the owner to override the NSFW status for a specific ad unit.
@@ -125,7 +128,7 @@ contract KetherHomepage {
         Ad storage ad = ads[_idx];
         ad.forceNSFW = _NSFW;
 
-        Publish(_idx, ad.link, ad.image, ad.NSFW || ad.forceNSFW);
+        Publish(_idx, ad.link, ad.image, ad.title, ad.NSFW || ad.forceNSFW);
     }
 
     /// withdraw allows the owner to transfer out the balance of the contract.
