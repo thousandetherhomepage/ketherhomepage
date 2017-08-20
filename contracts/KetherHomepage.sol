@@ -40,6 +40,7 @@ contract KetherHomepage {
         uint height;
         string link;
         string image;
+        // TODO: Add string title
 
         /// NSFW is whether the ad is suitable for people of all
         /// ages and workplaces.

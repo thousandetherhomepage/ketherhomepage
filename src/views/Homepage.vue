@@ -15,11 +15,9 @@
 
 <template>
   <div>
-    <h2>Million dollar homepage here.</h2>
-
-    <p>Ready: {{accounts}}</p>
-
+    <p>Accounts: {{accounts}}</p>
     <p>Num Ads: {{numAds}}</p>
+    <component :is="action" :web3="web3" :contract="contract" :account="accounts[0]"></component>
     <ul id="adGrid">
       <li v-for="tile in tiles">
         <a :href="tile.link"><img :src="tile.image" :style="adStyle(tile)" /></a>
@@ -29,6 +27,8 @@
 </template>
 
 <script>
+
+import Buy from './Buy.vue'
 
 function toAd(r) {
   return {
@@ -49,6 +49,7 @@ export default {
       accounts: "connecting...",
       numAds: 0,
       tiles: [],
+      action: Buy,
     }
   },
   methods: {
