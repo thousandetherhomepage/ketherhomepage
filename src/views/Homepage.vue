@@ -4,6 +4,12 @@
   width: 1000px;
   height: 1000px;
   background: #eee;
+
+  li {
+    position: absolute;
+    display: block;
+    overflow: hidden;
+  }
 }
 </style>
 
@@ -15,8 +21,8 @@
 
     <p>Num Ads: {{numAds}}</p>
     <ul id="adGrid">
-      <li v-for="tile in tiles" :style="tile.style">
-        <a :href="tile.link"><img :src="tile.image" /></a>
+      <li v-for="tile in tiles">
+        <a :href="tile.link"><img :src="tile.image" :style="adStyle(tile)" /></a>
       </li>
     </ul>
   </div>
@@ -25,7 +31,7 @@
 <script>
 
 function toAd(r) {
-  const ad = {
+  return {
     x: r[0].toNumber(),
     y: r[1].toNumber(),
     width: r[2].toNumber(),
@@ -34,14 +40,6 @@ function toAd(r) {
     image: r[5],
     nsfw: r[6],
   }
-  ad.style = {
-    "position": "absolute",
-    "margin-left": ad.x * 10,
-    "margin-top": ad.y * 10,
-    "width": ad.width,
-    "height": ad.height,
-  }
-  return ad;
 }
 
 export default {
@@ -66,6 +64,14 @@ export default {
 
       }.bind(this));
     },
+    adStyle(ad) {
+      return {
+        "margin-left": ad.x * 10 + "px",
+        "margin-top": ad.y * 10 + "px",
+        "width": ad.width * 10 + "px",
+        "height": ad.height * 10 + "px",
+      }
+    }
   },
   created() {
     this.web3.eth.getAccounts(function(err, res) {
