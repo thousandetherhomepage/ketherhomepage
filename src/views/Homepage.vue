@@ -15,7 +15,6 @@
 
 <template>
   <div>
-    <p>Accounts: {{accounts}}</p>
     <p>{{ads.length}} Ads Purchased, {{numOwned}} by you.</p>
 
     <div id="adGrid">
@@ -67,8 +66,9 @@ export default {
           this.numOwned++;
         }
         this.ownedAds[ad.idx] = ad;
-        this.$emit('update:ownedAds', this.ownedAds);
-        // FIXME: This doesn't actually propagate to the Publish component unless refreshed
+
+        // FIXME: This is a dirty hack to pass data up and down again -_-, remove after switching to VueX or similar
+        this.$emit('update:ownedAds', JSON.parse(JSON.stringify(this.ownedAds)));
       }
     },
     loadAds() {

@@ -7,9 +7,12 @@
       <router-link to="/buy">Buy</router-link>
       <router-link to="/publish">Publish</router-link>
     </div>
-    <router-view :web3="web3" :contract="contract" :ownedAds.sync="ownedAds" class="view"></router-view>
+    <router-view :web3="web3" :contract="contract" :ownedAds="ownedAds" class="view"></router-view>
 
-    <component :is="homepage" :web3="web3" :contract="contract" :ownedAds.sync="ownedAds"></component>
+    <Homepage v-if="ready" :web3="web3" :contract="contract" :ownedAds.sync="ownedAds"></Homepage>
+    <p v-else>
+      Connecting to Web3...
+    </p>
   </div>
 </template>
 
@@ -18,7 +21,6 @@ import Web3 from 'web3'
 import contractJSON from 'json-loader!../build/contracts/KetherHomepage.json'
 
 const contractAddr = '0x47b20b71d0e4039a85e1d67e48af138cf4b05fea'
-
 
 import Homepage from './views/Homepage.vue'
 
@@ -53,10 +55,8 @@ export default {
     return {
       'web3': null,
       'contract': null,
-      'homepage': {
-        template: "<p>Connecting...</p>",
-      },
       'ownedAds': {},
+      'ready': false,
     }
   },
   created() {
@@ -67,9 +67,12 @@ export default {
       // Load contract data
       const contract = this.web3.eth.contract(contractJSON.abi);
       this.contract = Object.freeze(contract.at(contractAddr));
-      this.homepage = Homepage;
+      this.ready = true;
     }.bind(this));
   },
+  components: {
+    'Homepage': Homepage,
+  }
 }
 </script>
 
