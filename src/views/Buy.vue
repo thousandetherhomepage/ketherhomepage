@@ -31,7 +31,14 @@
 
     <p v-if="error" class="error">{{error}}</p>
 
-    <button v-on:click="buy">Buy Slot</button>
+    <p v-if="isAvailable(x, y, width, height)">
+      <strong>Slot is available.</strong>
+      <button v-on:click="buy">Buy Slot</button>
+    </p>
+    <p v-else>
+      Slot is not available.
+    </p>
+
   </div>
 </template>
 
@@ -72,8 +79,7 @@ export default {
   },
   methods: {
     isAvailable(x, y, width, height) {
-      // TODO: Implement this
-      return true;
+      return this.$store.getters.isCollidingAd({x, y, width, height});
     },
     buy() {
       const x = Math.floor(this.x/10), y = Math.floor(this.y/10), width = Math.floor(this.width/10), height = Math.floor(this.height/10);

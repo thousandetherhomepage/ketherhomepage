@@ -3,6 +3,52 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
+function grid_array2d(w, h) {
+  const grid = [];
+  grid.length = h;
+
+  for (let x=0; x<w; x++) {
+    const row = [];
+    row.length = w;
+    for(let y=0; y<h; y++) row[y] = 0;
+    grid[x] = row;
+  }
+
+  return {
+    set: function(x, y, value) {
+      grid[x][y] = value;
+    },
+    get: function(x, y) {
+      return grid[x][y];
+    },
+    checkBox: function(x1, y1, x2, y2) {
+      // Returns true if has collision, inclusive.
+      if (x1 < 0 || y1 < 0 || x2 >= w || y2 >= h) return true;
+
+      for (let x=x1; x<=x2; x++) {
+        for (let y=y1; y<=y2; y++) {
+          if(grid[x][y]) return true;
+        }
+      }
+      return false;
+    },
+    setBox: function(x1, y1, x2, y2) {
+      for (let x=x1; x<=x2; x++) {
+        for(let y=y1; y<=y2; y++) {
+          grid[x][y] = true;
+        }
+      }
+    },
+  }
+}
+
+function filledGrid(grid, ads) {
+  for(let ad in ads) {
+    grid.setBox(ad.x, ad.y, ad.x+ad.width, ad.y+ad.height);
+  }
+  return grid;
+}
+
 export default new Vuex.Store({
   state: {
     accounts: {},
@@ -10,6 +56,7 @@ export default new Vuex.Store({
     ads: [],
     ownedAds: {},
     numOwned: 0,
+    grid: null, // lazy load
   },
   mutations: {
     setAccount(state, account) {
@@ -35,6 +82,20 @@ export default new Vuex.Store({
         if (state.ownedAds[ad.idx] === undefined) state.numOwned += 1
         state.ownedAds[ad.idx] = ad
       }
+
+      if (state.grid !== null) {
+        // Fill grid cache if it's already loaded
+        state.grid.setBox(ad.x, ad.y, ad.x+ad.width, ad.y+ad.height);
+      }
     },
+  },
+  getters: {
+    isCollidingAd: (state, getters) => (ad) => {
+      if (state.grid === null) {
+        // Compute grid and cache it
+        state.grid = filledGrid(grid_array2d(100, 100), state.ads);
+      }
+      return state.grid.checkBox(ad.x, ad.y, ad.x+ad.width, ad.y+ad.height);
+    }
   },
 })
