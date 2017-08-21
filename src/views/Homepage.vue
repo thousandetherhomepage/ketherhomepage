@@ -9,6 +9,14 @@
     position: absolute;
     display: block;
     overflow: hidden;
+    background: #000;
+  }
+
+  img.previewAd {
+    background: #fff;
+    opacity: 0.5;
+    border: 1px solid red;
+    z-index: 3;
   }
 }
 </style>
@@ -20,6 +28,9 @@
     <div id="adGrid">
       <template v-for="ad in $store.state.ads" v-if="ad">
         <a :href="ad.link"><img :src="ad.image" :style="adStyle(ad)" /></a>
+      </template>
+      <template v-if="previewAd">
+        <a :href="previewAd.link"><img :src="previewAd.image" :style="adStyle(previewAd)" class="previewAd" /></a>
       </template>
     </div>
   </div>
@@ -43,9 +54,10 @@ function toAd(i, r) {
 
 export default {
   props: ["web3", "contract"],
-  data() {
-    return {
-    }
+  computed: {
+    previewAd() {
+      return this.$store.state.previewAd;
+    },
   },
   methods: {
     isOwner(account) {
@@ -73,9 +85,6 @@ export default {
         "margin-top": ad.y * 10 + "px",
         "width": ad.width * 10 + "px",
         "height": ad.height * 10 + "px",
-      }
-      if (!ad.image) {
-        s["background"] = "#000";
       }
       return s;
     }

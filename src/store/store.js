@@ -53,12 +53,16 @@ export default new Vuex.Store({
   state: {
     accounts: {},
     activeAccount: '',
+    previewAd: null,
     ads: [],
     ownedAds: {},
     numOwned: 0,
     grid: null, // lazy load
   },
   mutations: {
+    setPreviewAd(state, ad) {
+      state.previewAd = ad;
+    },
     setAccount(state, account) {
       state.activeAccount = account
     },

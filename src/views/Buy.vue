@@ -19,17 +19,13 @@
       width: <vue-slider v-bind="sliderWidth" v-model="width"></vue-slider>
       height: <vue-slider v-bind="sliderHeight" v-model="height"></vue-slider>
     </p>
-    <p>
-      Position:
-      (<input v-model="x" placeholder="X" maxlen="4">,
-      <input v-model="y" placeholder="Y" maxlen="4">)
-
-      x: <vue-slider v-bind="sliderWidth" v-model="x"></vue-slider>
-      y: <vue-slider v-bind="sliderHeight" v-model="y"></vue-slider>
+    <p style="margin-top: 3em;">
+      x: <input type="text" v-model="x" maxlen="$" />
+      y: <input type="text" v-model="y" maxlen="4" />
     </p>
 
     <p>
-      Price: {{price}} ETH + gas fees.
+      Price: {{price(width, height)}} ETH + gas fees.
     </p>
 
     <p v-if="error" class="error">{{error}}</p>
@@ -74,30 +70,30 @@ export default {
       error: null,
     }
   },
-  computed: {
-    price: function () {
+  methods: {
+    price(height, width) {
       // Round up to the nearest 0.01
       return Math.ceil(this.height * this.width * ethPerPixel * 100) / 100;
-    }
-  },
-  methods: {
+    },
     isAvailable(x, y, width, height) {
       const x1 = Math.floor(x/10);
       const y1 = Math.floor(y/10);
       const x2 = x1 + Math.floor(width/10) - 1;
       const y2 = y1 + Math.floor(height/10) - 1;
 
+      this.$store.commit('setPreviewAd', {x: x1, y: y1, width: x2-x1+1, height: y2-y1+1});
+
       return !this.$store.getters.isColliding(x1, y1, x2, y2);
     },
     buy() {
       const ad = {x: this.x, y: this.y, width: this.width, height: this.height}
-      const weiPrice = this.web3.toWei(this.price, "ether");
-      const account = this.$store.state.activeAccount;
       if (!this.isAvailable(ad.x, ad.y, ad.width, ad.height)) {
         this.error = `Slot is not available: ${ad}`
         return;
       }
       const x = Math.floor(this.x/10), y = Math.floor(this.y/10), width = Math.floor(this.width/10), height = Math.floor(this.height/10);
+      const weiPrice = this.web3.toWei(this.price(width, height), "ether");
+      const account = this.$store.state.activeAccount;
       this.contract.buy.sendTransaction(x, y, width, height, { value: weiPrice, from: account }, function(err, res) {
         if (err) {
           this.error = err;
