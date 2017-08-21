@@ -84,7 +84,6 @@ contract KetherHomepage {
         uint cost = _width * _height * pixelsPerCell * weiPixelPrice;
         require(cost > 0);
         require(msg.value >= cost);
-        // TODO: require that the width and height are non-zero;
 
         // Loop over relevant grid entries
         for(uint i=0; i<_width; i++) {
