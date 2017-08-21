@@ -85,17 +85,17 @@ export default new Vuex.Store({
 
       if (state.grid !== null) {
         // Fill grid cache if it's already loaded
-        state.grid.setBox(ad.x, ad.y, ad.x+ad.width, ad.y+ad.height);
+        state.grid.setBox(ad.x, ad.y, ad.x+ad.width-1, ad.y+ad.height-1);
       }
     },
   },
   getters: {
-    isCollidingAd: (state, getters) => (ad) => {
+    isColliding: (state, getters) => (x1, y1, x2, y2) => {
       if (state.grid === null) {
         // Compute grid and cache it
         state.grid = filledGrid(grid_array2d(100, 100), state.ads);
       }
-      return state.grid.checkBox(ad.x, ad.y, ad.x+ad.width, ad.y+ad.height);
+      return state.grid.checkBox(x1, y1, x2, y2);
     }
   },
 })

@@ -23,6 +23,9 @@
       Position:
       (<input v-model="x" placeholder="X" maxlen="4">,
       <input v-model="y" placeholder="Y" maxlen="4">)
+
+      x: <vue-slider v-bind="sliderWidth" v-model="x"></vue-slider>
+      y: <vue-slider v-bind="sliderHeight" v-model="y"></vue-slider>
     </p>
 
     <p>
@@ -31,7 +34,7 @@
 
     <p v-if="error" class="error">{{error}}</p>
 
-    <p v-if="isAvailable(x, y, width, height)">
+    <p v-if="isAvailable(x, y, width, height, $store.state.ads)">
       <strong>Slot is available.</strong>
       <button v-on:click="buy">Buy Slot</button>
     </p>
@@ -79,16 +82,22 @@ export default {
   },
   methods: {
     isAvailable(x, y, width, height) {
-      return this.$store.getters.isCollidingAd({x, y, width, height});
+      const x1 = Math.floor(x/10);
+      const y1 = Math.floor(y/10);
+      const x2 = x1 + Math.floor(width/10) - 1;
+      const y2 = y1 + Math.floor(height/10) - 1;
+
+      return !this.$store.getters.isColliding(x1, y1, x2, y2);
     },
     buy() {
-      const x = Math.floor(this.x/10), y = Math.floor(this.y/10), width = Math.floor(this.width/10), height = Math.floor(this.height/10);
+      const ad = {x: this.x, y: this.y, width: this.width, height: this.height}
       const weiPrice = this.web3.toWei(this.price, "ether");
       const account = this.$store.state.activeAccount;
-      if (!this.isAvailable(x, y, width, height)) {
-        this.error = `Slot is not available: ${width*10}x${height*10} at position (${x*10}, ${y*10})`
+      if (!this.isAvailable(ad.x, ad.y, ad.width, ad.height)) {
+        this.error = `Slot is not available: ${ad}`
         return;
       }
+      const x = Math.floor(this.x/10), y = Math.floor(this.y/10), width = Math.floor(this.width/10), height = Math.floor(this.height/10);
       this.contract.buy.sendTransaction(x, y, width, height, { value: weiPrice, from: account }, function(err, res) {
         if (err) {
           this.error = err;
