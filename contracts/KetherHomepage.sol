@@ -63,9 +63,9 @@ contract KetherHomepage {
     }
 
     /// getAd gives you the Ad at a specific id
-    function getAd(uint idx) returns (address owner, uint x, uint y, uint width, uint height, string link, string image, string title, bool nsfw) {
+    function getAd(uint idx) returns (address adOwner, uint x, uint y, uint width, uint height, string link, string image, string title, bool nsfw) {
         Ad memory ad = ads[idx];
-        owner = ad.owner;
+        adOwner = ad.owner;
         x = ad.x;
         y = ad.y;
         width = ad.width;
@@ -97,7 +97,7 @@ contract KetherHomepage {
         }
 
         // We reserved space in the grid, now make a placeholder entry.
-        Ad memory ad = Ad(msg.sender, _x, _y, _width, _height, "", "", false, false);
+        Ad memory ad = Ad(msg.sender, _x, _y, _width, _height, "", "", "", false, false);
         idx = ads.push(ad) - 1;
         Buy(idx, msg.sender, _x, _y, _width, _height);
         return idx;
