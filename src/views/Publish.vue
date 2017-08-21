@@ -5,13 +5,13 @@
   <div id="adPublish">
     <h2>Publish to slot</h2>
 
-    <select v-model="selected" v-if="Object.keys(ownedAds).length > 0">
+    <select v-model="selected">
       <option disabled value="">Select ad slot</option>
-      <option v-for="ad of ownedAds" :value="ad.idx">
+      <option v-for="ad of $store.state.ownedAds" :value="ad.idx">
         {{ad.width}}x{{ad.height}} at ({{ad.x}}, {{ad.y}}): {{ ad.link || "(no link)" }}
       </option>
     </select>
-    <p v-else>
+    <p v-if="$store.state.numOwned == 0">
       No purchased ads detected for active accounts. Listening to Purchase events on the blockchain...
     </p>
 
@@ -21,7 +21,7 @@
 
 <script>
 export default {
-  props: ["web3", "contract", "account", "ownedAds"],
+  props: ["web3", "contract"],
   data() {
     return {
       selected: '',

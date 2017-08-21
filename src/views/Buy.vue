@@ -43,7 +43,7 @@ const sliderLength = 300;
 const ethPerPixel = 1000 / 1000000;
 
 export default {
-  props: ["web3", "contract", "account"],
+  props: ["web3", "contract"],
   data() {
     return {
       width: 10,
@@ -78,7 +78,7 @@ export default {
     buy() {
       const x = Math.floor(this.x/10), y = Math.floor(this.y/10), width = Math.floor(this.width/10), height = Math.floor(this.height/10);
       const weiPrice = this.web3.toWei(this.price, "ether");
-      const account = this.account;
+      const account = this.$store.state.activeAccount;
       if (!this.isAvailable(x, y, width, height)) {
         this.error = `Slot is not available: ${width*10}x${height*10} at position (${x*10}, ${y*10})`
         return;
@@ -87,7 +87,7 @@ export default {
         if (err) {
           this.error = err;
         }
-        this.$dispatch('purchased', account)
+        // TODO: Transition to Publish route?
       }.bind(this));
     }
   },
