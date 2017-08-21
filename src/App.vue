@@ -7,9 +7,9 @@
       <router-link to="/buy">Buy</router-link>
       <router-link to="/publish">Publish</router-link>
     </div>
-    <router-view :web3="web3" :contract="contract" :ownedAds="ownedAds" class="view"></router-view>
+    <router-view :web3="web3" :contract="contract" class="view"></router-view>
 
-    <Homepage v-if="ready" :web3="web3" :contract="contract" :ownedAds.sync="ownedAds"></Homepage>
+    <Homepage v-if="ready" :web3="web3" :contract="contract"></Homepage>
     <p v-else>
       Connecting to Web3...
     </p>
@@ -55,7 +55,6 @@ export default {
     return {
       'web3': null,
       'contract': null,
-      'ownedAds': {},
       'ready': false,
     }
   },
