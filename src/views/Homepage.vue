@@ -46,15 +46,16 @@ import VueDraggableResizable from 'vue-draggable-resizable'
 
 function toAd(i, r) {
   return {
-    owner: "0x961aa96febee5465149a0787b03bfa14d8e9033f", // XXX: r[0] will be owner
     idx: i,
-    x: r[0].toNumber(),
-    y: r[1].toNumber(),
-    width: r[2].toNumber(),
-    height: r[3].toNumber(),
-    link: r[4],
-    image: r[5] || "",
-    nsfw: r[6],
+    owner: r[0],
+    x: r[1].toNumber(),
+    y: r[2].toNumber(),
+    width: r[3].toNumber(),
+    height: r[4].toNumber(),
+    link: r[5],
+    image: r[6] || "",
+    title: r[7],
+    nsfw: r[8],
   }
 }
 

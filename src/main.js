@@ -16,15 +16,6 @@ const vm = new Vue({
   el: '#app',
   store,
   render: h => h(App),
-  /*
-  router: new VueRouter({
-    routes: [
-      { path: '/', name: 'index', component: Index },
-      { path: '/buy', name: 'buy', component: Buy },
-      { path: '/publish', name: 'publish', component: Publish },
-    ],
-  }),
-  */
 })
 
 export { vm }

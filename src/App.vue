@@ -13,7 +13,7 @@
 import Web3 from 'web3'
 import contractJSON from 'json-loader!../build/contracts/KetherHomepage.json'
 
-const contractAddr = '0x47b20b71d0e4039a85e1d67e48af138cf4b05fea'
+const contractAddr = '0xffb81a3a20e7fc1d44c3222a2b7a6d5705a7064b'
 
 import Homepage from './views/Homepage.vue'
 
