@@ -25,7 +25,7 @@
     <p>{{$store.state.adsPixels}} pixels sold. <button v-on:click="updatePreview()" v-if="!previewAd">Buy Pixels</button></p>
     <p v-if="$store.state.numOwned > 0">{{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button></p>
 
-    <Publish v-if="showPublish"></Publish>
+    <Publish v-if="showPublish" :web3="web3" :contract="contract"></Publish>
 
     <div id="adGrid">
       <template v-for="ad in $store.state.ads" v-if="ad">
@@ -46,7 +46,7 @@ import VueDraggableResizable from 'vue-draggable-resizable'
 
 function toAd(i, r) {
   return {
-    // TODO: Add owner
+    owner: "0x961aa96febee5465149a0787b03bfa14d8e9033f", // XXX: r[0] will be owner
     idx: i,
     x: r[0].toNumber(),
     y: r[1].toNumber(),

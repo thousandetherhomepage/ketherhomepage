@@ -49,6 +49,14 @@ function filledGrid(grid, ads) {
   return grid;
 }
 
+function addAdOwned(state, ad) {
+  if (state.ownedAds[ad.idx] === undefined) {
+    state.numOwned += 1
+    state.pixelsOwned += ad.width * ad.height * 100;
+  }
+  state.ownedAds[ad.idx] = ad
+}
+
 export default new Vuex.Store({
   state: {
     accounts: {},
@@ -66,7 +74,12 @@ export default new Vuex.Store({
     },
     addAccount(state, account) {
       if (state.activeAccount === '') state.activeAccount = account
+      if (state.accounts[account]) return;
       state.accounts[account] = true
+
+      for (let ad of state.ads) {
+        if (ad.owner === account) addAdOwned(state, ad);
+      }
     },
     setAdsLength(state, len) {
       state.ads.length = len;
@@ -80,16 +93,7 @@ export default new Vuex.Store({
       }
       // Need to use splice rather than this.ads[i] to make it reactive
       state.ads.splice(ad.idx, 1, ad)
-      let isOwned = state.accounts[ad.account]
-      isOwned = true // XXX
-      if (isOwned) {
-        // Keep track of owned ads
-        if (state.ownedAds[ad.idx] === undefined) {
-          state.numOwned += 1
-          state.pixelsOwned += ad.width * ad.height * 100;
-        }
-        state.ownedAds[ad.idx] = ad
-      }
+      if (state.accounts[ad.owner]) addAdOwned(state, ad);
 
       if (state.grid !== null) {
         // Fill grid cache if it's already loaded
