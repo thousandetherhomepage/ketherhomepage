@@ -4,7 +4,6 @@ Vue.use(VueRouter)
 
 import store from './store/store'
 import App from './App.vue'
-import Buy from './views/Buy.vue'
 import Publish from './views/Publish.vue'
 
 const Index = {
@@ -17,6 +16,7 @@ const vm = new Vue({
   el: '#app',
   store,
   render: h => h(App),
+  /*
   router: new VueRouter({
     routes: [
       { path: '/', name: 'index', component: Index },
@@ -24,6 +24,7 @@ const vm = new Vue({
       { path: '/publish', name: 'publish', component: Publish },
     ],
   }),
+  */
 })
 
 export { vm }

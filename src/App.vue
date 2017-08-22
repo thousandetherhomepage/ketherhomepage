@@ -2,13 +2,6 @@
   <div id="app">
     <h1>Kether Homepage</h1>
 
-    <div id="nav">
-      <router-link to="/">Home</router-link>
-      <router-link to="/buy">Buy</router-link>
-      <router-link to="/publish">Publish</router-link>
-    </div>
-    <router-view :web3="web3" :contract="contract" class="view"></router-view>
-
     <Homepage v-if="ready" :web3="web3" :contract="contract"></Homepage>
     <p v-else>
       Connecting to Web3...

@@ -3,7 +3,7 @@
   position: relative;
   width: 1000px;
   height: 1000px;
-  background: #eee;
+  background: #ddd;
 
   img {
     position: absolute;
@@ -12,10 +12,9 @@
     background: #000;
   }
 
-  img.previewAd {
-    background: #fff;
-    opacity: 0.5;
-    border: 1px solid red;
+  .previewAd {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.9);
     z-index: 3;
   }
 }
@@ -23,20 +22,23 @@
 
 <template>
   <div>
-    <p>{{$store.state.ads.length}} Ads Purchased, {{$store.state.numOwned}} by you.</p>
+    <p>{{$store.state.ads.length}} Ads Purchased, {{$store.state.numOwned}} by you. <button v-on:click="updatePreview()" v-if="!previewAd">Purchase Ad Slot</button></p>
 
     <div id="adGrid">
       <template v-for="ad in $store.state.ads" v-if="ad">
         <a :href="ad.link"><img :src="ad.image" :style="adStyle(ad)" /></a>
       </template>
-      <template v-if="previewAd">
-        <a :href="previewAd.link"><img :src="previewAd.image" :style="adStyle(previewAd)" class="previewAd" /></a>
-      </template>
+      <vue-draggable-resizable :minw="10" :minh="10" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" v-if="previewAd" class="previewAd">
+        <Buy :web3="web3" :contract="contract"></Buy>
+      </vue-draggable-resizable>
     </div>
   </div>
 </template>
 
 <script>
+
+import Buy from './Buy.vue'
+import VueDraggableResizable from 'vue-draggable-resizable'
 
 function toAd(i, r) {
   return {
@@ -54,12 +56,16 @@ function toAd(i, r) {
 
 export default {
   props: ["web3", "contract"],
-  computed: {
-    previewAd() {
-      return this.$store.state.previewAd;
-    },
+  data() {
+    return {
+      previewAd: null,
+      isBuyEnabled: false,
+    }
   },
   methods: {
+    updatePreview(x, y, width, height) {
+      this.previewAd = {x, y, width, height}
+    },
     isOwner(account) {
       this.$store.state.accounts[account] || false;
     },
@@ -102,6 +108,10 @@ export default {
     }.bind(this));
 
     this.loadAds();
+  },
+  components: {
+    'vue-draggable-resizable': VueDraggableResizable,
+    Buy,
   }
 }
 </script>

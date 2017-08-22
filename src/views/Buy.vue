@@ -1,93 +1,76 @@
 <style lang="scss">
-#adBuy input {
-  width: 3em;
+#adBuy {
+  position: absolute;
+  background: white;
+  border: 2px solid #d90006;
+  display: block;
+  width: 400px;
+  height: 100px;
+  margin-top: -130px;
+  padding: 5px;
   text-align: center;
 }
+#adBuy.available {
+  border-color: #97d900;
+}
+
 .error {
   color: red;
 }
 </style>
 
 <template>
-  <div id="adBuy">
-    <h2>Buy ad slot</h2>
-    <p>
-      Ad slots are sold in 10-pixel increments.
-    </p>
-
-    <p>
-      width: <vue-slider v-bind="sliderWidth" v-model="width"></vue-slider>
-      height: <vue-slider v-bind="sliderHeight" v-model="height"></vue-slider>
-    </p>
-    <p style="margin-top: 3em;">
-      x: <input type="text" v-model="x" maxlen="$" />
-      y: <input type="text" v-model="y" maxlen="4" />
-    </p>
-
-    <p>
-      Price: {{price(width, height)}} ETH + gas fees.
-    </p>
+  <div id="adBuy" v-show="$parent.active" v-bind:class="{ available: isAvailable }">
+    <div>
+      {{$parent.width}}x{{$parent.height}} = {{ $parent.width * $parent.height }} pixels at position ({{$parent.left}}, {{$parent.top}}).
+    </div>
+    <div>
+      Price: {{price($parent.width, $parent.height)}} ETH + gas fees.
+    </div>
 
     <p v-if="error" class="error">{{error}}</p>
 
-    <p v-if="isAvailable(x, y, width, height, $store.state.ads)">
+    <p v-if="isAvailable">
       <strong>Slot is available.</strong>
       <button v-on:click="buy">Buy Slot</button>
     </p>
     <p v-else>
       Slot is not available.
     </p>
-
   </div>
 </template>
 
 <script>
-import vueSlider from 'vue-slider-component';
-
-const sliderThickness = 6;
-const sliderLength = 300;
 const ethPerPixel = 1000 / 1000000;
 
 export default {
   props: ["web3", "contract"],
   data() {
     return {
-      width: 10,
-      height: 10,
-      x: 0,
-      y: 0,
-      sliderWidth: {
-        interval: 10,
-        min: 10,
-        max: 1000,
-      },
-      sliderHeight: {
-        interval: 10,
-        min: 10,
-        max: 1000,
-        "tooltip-dir": "bottom",
-      },
       error: null,
+      available: false,
+    }
+  },
+  computed: {
+    isAvailable: function() {
+      return this.checkAvailable(this.$parent.left, this.$parent.top, this.$parent.width, this.$parent.height, this.$store.state.ads);
     }
   },
   methods: {
     price(height, width) {
       // Round up to the nearest 0.01
-      return Math.ceil(this.height * this.width * ethPerPixel * 100) / 100;
+      return Math.ceil(height * width * ethPerPixel * 100) / 100;
     },
-    isAvailable(x, y, width, height) {
+    checkAvailable(x, y, width, height) {
       const x1 = Math.floor(x/10);
       const y1 = Math.floor(y/10);
       const x2 = x1 + Math.floor(width/10) - 1;
       const y2 = y1 + Math.floor(height/10) - 1;
-
-      this.$store.commit('setPreviewAd', {x: x1, y: y1, width: x2-x1+1, height: y2-y1+1});
-
       return !this.$store.getters.isColliding(x1, y1, x2, y2);
     },
     buy() {
-      const ad = {x: this.x, y: this.y, width: this.width, height: this.height}
-      if (!this.isAvailable(ad.x, ad.y, ad.width, ad.height)) {
+      const ad = {x: this.$parent.left, y: this.$parent.top, width: this.$parent.width, height: this.$parent.height}
+      if (!this.checkAvailable(ad.x, ad.y, ad.width, ad.height)) {
         this.error = `Slot is not available: ${ad}`
         return;
       }
@@ -101,9 +84,6 @@ export default {
         // TODO: Transition to Publish route?
       }.bind(this));
     }
-  },
-  components: {
-    vueSlider
   },
 }
 </script>

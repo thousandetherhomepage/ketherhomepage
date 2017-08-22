@@ -43,7 +43,7 @@ function grid_array2d(w, h) {
 }
 
 function filledGrid(grid, ads) {
-  for(let ad in ads) {
+  for(let ad of ads) {
     grid.setBox(ad.x, ad.y, ad.x+ad.width, ad.y+ad.height);
   }
   return grid;
@@ -53,16 +53,12 @@ export default new Vuex.Store({
   state: {
     accounts: {},
     activeAccount: '',
-    previewAd: null,
     ads: [],
     ownedAds: {},
     numOwned: 0,
     grid: null, // lazy load
   },
   mutations: {
-    setPreviewAd(state, ad) {
-      state.previewAd = ad;
-    },
     setAccount(state, account) {
       state.activeAccount = account
     },
