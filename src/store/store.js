@@ -44,7 +44,7 @@ function grid_array2d(w, h) {
 
 function filledGrid(grid, ads) {
   for(let ad of ads) {
-    grid.setBox(ad.x, ad.y, ad.x+ad.width, ad.y+ad.height);
+    grid.setBox(ad.x, ad.y, ad.x+ad.width-1, ad.y+ad.height-1);
   }
   return grid;
 }
@@ -54,8 +54,10 @@ export default new Vuex.Store({
     accounts: {},
     activeAccount: '',
     ads: [],
+    adsPixels: 0,
     ownedAds: {},
     numOwned: 0,
+    pixelsOwned: 0,
     grid: null, // lazy load
   },
   mutations: {
@@ -73,13 +75,19 @@ export default new Vuex.Store({
       if (ad.idx > state.ads.length) {
         state.ads.length = ad.idx;
       }
+      if (state.ads[ad.idx] === undefined) {
+          state.adsPixels += ad.width * ad.height * 100;
+      }
       // Need to use splice rather than this.ads[i] to make it reactive
       state.ads.splice(ad.idx, 1, ad)
       let isOwned = state.accounts[ad.account]
       isOwned = true // XXX
       if (isOwned) {
         // Keep track of owned ads
-        if (state.ownedAds[ad.idx] === undefined) state.numOwned += 1
+        if (state.ownedAds[ad.idx] === undefined) {
+          state.numOwned += 1
+          state.pixelsOwned += ad.width * ad.height * 100;
+        }
         state.ownedAds[ad.idx] = ad
       }
 

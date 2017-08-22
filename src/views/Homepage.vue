@@ -22,7 +22,10 @@
 
 <template>
   <div>
-    <p>{{$store.state.ads.length}} Ads Purchased, {{$store.state.numOwned}} by you. <button v-on:click="updatePreview()" v-if="!previewAd">Purchase Ad Slot</button></p>
+    <p>{{$store.state.adsPixels}} pixels sold. <button v-on:click="updatePreview()" v-if="!previewAd">Buy Pixels</button></p>
+    <p v-if="$store.state.numOwned > 0">{{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button></p>
+
+    <Publish v-if="showPublish"></Publish>
 
     <div id="adGrid">
       <template v-for="ad in $store.state.ads" v-if="ad">
@@ -38,6 +41,7 @@
 <script>
 
 import Buy from './Buy.vue'
+import Publish from './Publish.vue'
 import VueDraggableResizable from 'vue-draggable-resizable'
 
 function toAd(i, r) {
@@ -59,7 +63,7 @@ export default {
   data() {
     return {
       previewAd: null,
-      isBuyEnabled: false,
+      showPublish: false,
     }
   },
   methods: {
@@ -112,6 +116,7 @@ export default {
   components: {
     'vue-draggable-resizable': VueDraggableResizable,
     Buy,
+    Publish,
   }
 }
 </script>
