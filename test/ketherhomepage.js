@@ -78,14 +78,14 @@ contract('KetherHomepage', function(accounts) {
       })
       .then(function(events) {
         // Make sure we issued the right Buy() event
-        event = events[0].args;
-        idx = event.idx;
+        const buyEvent = events[0].args;
+        idx = buyEvent.idx;
 
-        assert.equal(account1, event.owner)
-        assert.equal(0, event.x.toNumber());
-        assert.equal(0, event.y.toNumber());
-        assert.equal(10, event.width.toNumber());
-        assert.equal(10, event.height.toNumber());
+        assert.equal(account1, buyEvent.owner)
+        assert.equal(0, buyEvent.x.toNumber());
+        assert.equal(0, buyEvent.y.toNumber());
+        assert.equal(10, buyEvent.width.toNumber());
+        assert.equal(10, buyEvent.height.toNumber());
 
         // make sure the grid is filled
         return KH.grid.call(0, 0);
@@ -102,10 +102,11 @@ contract('KetherHomepage', function(accounts) {
       })
       .then(function(ad) {
         // Make sure we added the ad
-        assert.equal(0, ad[0].toNumber());
+        assert.equal(account1, ad[0]);
         assert.equal(0, ad[1].toNumber());
-        assert.equal(10, ad[2].toNumber());
+        assert.equal(0, ad[2].toNumber());
         assert.equal(10, ad[3].toNumber());
+        assert.equal(10, ad[4].toNumber());
       })
   });
 
@@ -136,20 +137,22 @@ contract('KetherHomepage', function(accounts) {
         return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
       })
       .then(function() {
-        return KH.publish(0, "link", "image", false, { from: account1 })
+        return KH.publish(0, "link", "image", "title", false, { from: account1 })
       })
       .then(function() {
         return KH.getAd.call(0);
       })
       .then(function(ad) {
         // Make sure we added the ad
-        assert.equal(0, ad[0].toNumber());
+        assert.equal(account1, ad[0]);
         assert.equal(0, ad[1].toNumber());
-        assert.equal(10, ad[2].toNumber());
+        assert.equal(0, ad[2].toNumber());
         assert.equal(10, ad[3].toNumber());
-        assert.equal("link", ad[4]);
-        assert.equal("image", ad[5]);
-        assert.equal(false, ad[6]);
+        assert.equal(10, ad[4].toNumber());
+        assert.equal("link", ad[5]);
+        assert.equal("image", ad[6]);
+        assert.equal("title", ad[7]);
+        assert.equal(false, ad[8]);
       });
   });
 
@@ -162,7 +165,7 @@ contract('KetherHomepage', function(accounts) {
         return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
       })
       .then(function() {
-        return KH.publish(0, "link", "image", false, { from: account2 })
+        return KH.publish(0, "link", "image", "title", false, { from: account2 })
       })
       .then(function() {
         assert.fail();
@@ -188,7 +191,7 @@ contract('KetherHomepage', function(accounts) {
       })
       .then(function(ad) {
         // Make sure we set the nsfw on the ad
-        assert.equal(true, ad[6]);
+        assert.equal(true, ad[8]);
       })
   });
 
