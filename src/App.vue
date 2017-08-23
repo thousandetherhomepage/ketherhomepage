@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <h1>Kether Homepage</h1>
+    <h2>1,000,000 pixels &middot; 0.001 ETH per pixel &middot; Own a piece of blockchain history!</h2>
 
     <Homepage v-if="ready" :web3="web3" :contract="contract"></Homepage>
     <p v-else>
@@ -77,8 +78,17 @@ export default {
   margin: 1em;
 }
 
-h1, h2 {
+h1 {
+  font-size: 1.6rem;
   font-weight: normal;
+  margin: 0.1em 0 0.5em 0;
+}
+
+h2 {
+  color: #556;
+  font-size: 1.1rem;
+  font-weight: normal;
+  margin: 0.1em 0 0.5em 0;
 }
 
 ul {
