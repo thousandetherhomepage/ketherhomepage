@@ -29,8 +29,8 @@
     </div>
 
     <p v-if="error" class="error">{{error}}</p>
-
-    <p v-if="isAvailable">
+    <p v-else-if="success" class="success">{{success}}</p>
+    <p v-else-if="isAvailable">
       <strong>Slot is available.</strong>
       <button v-on:click="buy">Buy Slot</button>
     </p>
@@ -48,6 +48,7 @@ export default {
   data() {
     return {
       error: null,
+      success: null,
       available: false,
     }
   },
@@ -77,10 +78,19 @@ export default {
       const weiPrice = this.web3.toWei(this.price(ad.width, ad.height), "ether");
       const x = Math.floor(this.x/10), y = Math.floor(this.y/10), width = Math.floor(this.width/10), height = Math.floor(this.height/10);
       const account = this.$store.state.activeAccount;
+
       this.contract.buy.sendTransaction(x, y, width, height, { value: weiPrice, from: account }, function(err, res) {
         if (err) {
-          this.error = err;
+          if (err.message && err.message.indexOf('User denied transaction signature.') !== -1)  {
+            // Aborted, revert to original state.
+            return;
+          }
+          this.error = err.toString();
+          return;
         }
+
+        this.success = 'Transaction sent successfully.'
+        this.$emit("buy", {x, y, width, height})
         // TODO: Transition to Publish route?
       }.bind(this));
     }

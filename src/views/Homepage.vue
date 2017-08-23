@@ -17,6 +17,9 @@
     border: 1px solid rgba(255, 255, 255, 0.9);
     z-index: 3;
   }
+  .previewAd.locked {
+    background: #ffcc47;
+  }
 }
 </style>
 
@@ -31,8 +34,8 @@
       <template v-for="ad in $store.state.ads" v-if="ad">
         <a :href="ad.link"><img :src="ad.image" :style="adStyle(ad)" /></a>
       </template>
-      <vue-draggable-resizable :minw="10" :minh="10" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" v-if="previewAd" class="previewAd">
-        <Buy :web3="web3" :contract="contract"></Buy>
+      <vue-draggable-resizable :minw="10" :minh="10" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
+        <Buy :web3="web3" :contract="contract" @buy="onBuy"></Buy>
       </vue-draggable-resizable>
     </div>
   </div>
@@ -64,10 +67,14 @@ export default {
   data() {
     return {
       previewAd: null,
+      previewLocked: false,
       showPublish: false,
     }
   },
   methods: {
+    onBuy: function (ad) {
+      this.previewLocked = true;
+    },
     updatePreview(x, y, width, height) {
       this.previewAd = {x, y, width, height}
     },
@@ -118,6 +125,6 @@ export default {
     'vue-draggable-resizable': VueDraggableResizable,
     Buy,
     Publish,
-  }
+  },
 }
 </script>
