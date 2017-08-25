@@ -15,8 +15,9 @@ import Web3 from 'web3'
 import contractJSON from 'json-loader!../build/contracts/KetherHomepage.json'
 
 const contractAddr = '0xffb81a3a20e7fc1d44c3222a2b7a6d5705a7064b'
+const web3Fallback = 'https://rinkeby.infura.io/VZCd1IVOZ1gcPsrc9gd7'
 
-import Homepage from './views/Homepage.vue'
+import Homepage from './Homepage.vue'
 
 function waitForWeb3(cb) {
   function getWeb3() {
@@ -24,7 +25,7 @@ function waitForWeb3(cb) {
     if (typeof web3 !== 'undefined') {
       web3 = new Web3(web3.currentProvider);
     } else {
-      web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+      web3 = new Web3(new Web3.providers.HttpProvider(web3Fallback));
     }
     try {
       if (web3.currentProvider.isConnected()) return web3;

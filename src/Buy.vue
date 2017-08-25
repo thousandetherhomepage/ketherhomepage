@@ -32,7 +32,7 @@
     <p v-else-if="success" class="success">{{success}}</p>
     <p v-else-if="isAvailable">
       <strong>Slot is available.</strong>
-      <button v-on:click="buy">Buy Slot</button>
+      <button v-on:click="buy" v-bind:disabled="isReadOnly">Buy Pixels</button>
     </p>
     <p v-else>
       Slot is not available.
@@ -44,7 +44,7 @@
 const ethPerPixel = 1000 / 1000000;
 
 export default {
-  props: ["web3", "contract"],
+  props: ["web3", "contract", "isReadOnly"],
   data() {
     return {
       error: null,

@@ -4,7 +4,6 @@ Vue.use(VueRouter)
 
 import store from './store/store'
 import App from './App.vue'
-import Publish from './views/Publish.vue'
 
 const Index = {
   template: `

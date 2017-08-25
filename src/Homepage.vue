@@ -25,9 +25,10 @@
 
 <template>
   <div>
+    <Offline v-if="isReadOnly"></Offline>
+
     <p>{{$store.state.adsPixels}} pixels sold. <button v-on:click="updatePreview()" v-if="!previewAd">Buy Pixels</button></p>
     <p v-if="$store.state.numOwned > 0">{{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button></p>
-
     <Publish v-if="showPublish" :web3="web3" :contract="contract"></Publish>
 
     <div id="adGrid">
@@ -35,7 +36,7 @@
         <a :href="ad.link"><img :src="ad.image" :style="adStyle(ad)" /></a>
       </template>
       <vue-draggable-resizable :minw="10" :minh="10" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
-        <Buy :web3="web3" :contract="contract" @buy="onBuy"></Buy>
+        <Buy :web3="web3" :contract="contract" :isReadOnly="isReadOnly" @buy="onBuy"></Buy>
       </vue-draggable-resizable>
     </div>
   </div>
@@ -45,6 +46,7 @@
 
 import Buy from './Buy.vue'
 import Publish from './Publish.vue'
+import Offline from './Offline.vue'
 import VueDraggableResizable from 'vue-draggable-resizable'
 
 function toAd(i, r) {
@@ -55,7 +57,7 @@ function toAd(i, r) {
     y: r[2].toNumber(),
     width: r[3].toNumber(),
     height: r[4].toNumber(),
-    link: r[5],
+    link: r[5] || "#",
     image: r[6] || "",
     title: r[7],
     nsfw: r[8],
@@ -65,10 +67,12 @@ function toAd(i, r) {
 export default {
   props: ["web3", "contract"],
   data() {
+    const providerHost = this.web3.currentProvider.host
     return {
       previewAd: null,
       previewLocked: false,
       showPublish: false,
+      isReadOnly: providerHost && providerHost.indexOf('infura.io') !== -1,
     }
   },
   methods: {
@@ -125,6 +129,7 @@ export default {
     'vue-draggable-resizable': VueDraggableResizable,
     Buy,
     Publish,
+    Offline,
   },
 }
 </script>
