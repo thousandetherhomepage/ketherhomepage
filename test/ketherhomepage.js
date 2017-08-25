@@ -39,7 +39,7 @@ contract('KetherHomepage', function(accounts) {
       .then(function(instance) {
         KH = instance;
 
-        return KH.owner.call();
+        return KH.contractOwner.call();
       })
       .then(function(result) {
         assert.equal(result, owner);
@@ -131,7 +131,7 @@ contract('KetherHomepage', function(accounts) {
       })
   });
 
-  it("should let a user publish an ad", function() {
+  it("should let a user publish their own ad", function() {
     let KH;
     return KetherHomepage.new(owner)
       .then(function(instance) {
@@ -177,7 +177,7 @@ contract('KetherHomepage', function(accounts) {
       })
   });
 
-  it("should let the owner forceNSFW", function() {
+  it("should let the contract owner forceNSFW", function() {
     let KH;
     return KetherHomepage.new(owner)
       .then(function(instance) {
@@ -197,7 +197,7 @@ contract('KetherHomepage', function(accounts) {
       })
   });
 
-  it("shouldn't let non-owners forceNSFW", function() {
+  it("shouldn't let non contract owners forceNSFW", function() {
     let KH;
     return KetherHomepage.new(owner)
       .then(function(instance) {
@@ -276,7 +276,7 @@ contract('KetherHomepage', function(accounts) {
       });
   });
 
-  it("should let owners setAdOwner", function() {
+  it("should let a user setAdOwner on their own ad", function() {
     let KH;
     return KetherHomepage.new(owner)
       .then(function(instance) {
@@ -308,7 +308,7 @@ contract('KetherHomepage', function(accounts) {
       });
   });
 
-  it("shouldn't let non-owners setAdOwner", function() {
+  it("shouldn't let a user setAdOwner on another user's ad", function() {
     let KH;
     return KetherHomepage.new(owner)
       .then(function(instance) {

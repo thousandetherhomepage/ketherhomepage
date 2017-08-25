@@ -38,7 +38,7 @@ contract KetherHomepage {
     bool[100][100] public grid;
 
     /// owner can withdraw the funds and override NSFW status of ad units.
-    address public owner;
+    address public contractOwner;
 
     struct Ad {
         address owner;
@@ -60,8 +60,8 @@ contract KetherHomepage {
     /// ads are stored in an array, the id of an ad is its index in this array.
     Ad[] public ads;
 
-    function KetherHomepage(address _owner) {
-        owner = _owner;
+    function KetherHomepage(address _contractOwner) {
+        contractOwner = _contractOwner;
     }
 
     /// getAdsLength tells you how many ads there are
@@ -139,7 +139,7 @@ contract KetherHomepage {
 
     /// forceNSFW allows the owner to override the NSFW status for a specific ad unit.
     function forceNSFW(uint _idx, bool _NSFW) {
-        require(msg.sender == owner);
+        require(msg.sender == contractOwner);
         Ad storage ad = ads[_idx];
         ad.forceNSFW = _NSFW;
 
@@ -148,7 +148,7 @@ contract KetherHomepage {
 
     /// withdraw allows the owner to transfer out the balance of the contract.
     function withdraw() {
-        require(msg.sender == owner);
-        owner.transfer(this.balance);
+        require(msg.sender == contractOwner);
+        contractOwner.transfer(this.balance);
     }
 }
