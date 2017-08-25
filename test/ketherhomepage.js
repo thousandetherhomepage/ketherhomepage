@@ -9,6 +9,9 @@ contract('KetherHomepage', function(accounts) {
   const owner = accounts[0]; // this is the account we deploy as owner, see 2_deploy_contracts.js
   const account1 = accounts[1];
   const account2 = accounts[2];
+
+  web3.eth.sendTransaction({from:owner, to:account1, value: 10000000000000000000 }, function(err, r) { /* NOP */ });
+
   it("should have correct constants by default", function() {
     let KH;
     return KetherHomepage.new(owner)
@@ -36,7 +39,7 @@ contract('KetherHomepage', function(accounts) {
       .then(function(instance) {
         KH = instance;
 
-        return KH.owner.call();
+        return KH.contractOwner.call();
       })
       .then(function(result) {
         assert.equal(result, owner);
@@ -73,12 +76,11 @@ contract('KetherHomepage', function(accounts) {
 
         return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
       })
-      .then(function() {
-        return watcher.get()
-      })
-      .then(function(events) {
+      .then(function(result) {
         // Make sure we issued the right Buy() event
-        const buyEvent = events[0].args;
+        assert.equal("Buy", result.logs[0].event);
+        const buyEvent = result.logs[0].args;
+
         idx = buyEvent.idx;
 
         assert.equal(account1, buyEvent.owner)
@@ -98,7 +100,7 @@ contract('KetherHomepage', function(accounts) {
       .then(function(res) {
         assert.equal(false, res);
 
-        return KH.getAd.call(idx);
+        return KH.ads.call(idx);
       })
       .then(function(ad) {
         // Make sure we added the ad
@@ -129,7 +131,7 @@ contract('KetherHomepage', function(accounts) {
       })
   });
 
-  it("should let a user publish an ad", function() {
+  it("should let a user publish their own ad", function() {
     let KH;
     return KetherHomepage.new(owner)
       .then(function(instance) {
@@ -140,7 +142,7 @@ contract('KetherHomepage', function(accounts) {
         return KH.publish(0, "link", "image", "title", false, { from: account1 })
       })
       .then(function() {
-        return KH.getAd.call(0);
+        return KH.ads.call(0);
       })
       .then(function(ad) {
         // Make sure we added the ad
@@ -175,7 +177,7 @@ contract('KetherHomepage', function(accounts) {
       })
   });
 
-  it("should let the owner forceNSFW", function() {
+  it("should let the contract owner forceNSFW", function() {
     let KH;
     return KetherHomepage.new(owner)
       .then(function(instance) {
@@ -187,15 +189,15 @@ contract('KetherHomepage', function(accounts) {
         return KH.forceNSFW(0, true, { from: owner })
       })
       .then(function() {
-        return KH.getAd.call(0);
+        return KH.ads.call(0);
       })
       .then(function(ad) {
         // Make sure we set the nsfw on the ad
-        assert.equal(true, ad[8]);
+        assert.equal(true, ad[9]);
       })
   });
 
-  it("shouldn't let non-owners forceNSFW", function() {
+  it("shouldn't let non contract owners forceNSFW", function() {
     let KH;
     return KetherHomepage.new(owner)
       .then(function(instance) {
@@ -216,6 +218,7 @@ contract('KetherHomepage', function(accounts) {
 
   it("should let the owner withdraw", function() {
     let initialBalance;
+    let newBalance;
     let KH;
     let gas;
     return KetherHomepage.new(owner)
@@ -226,15 +229,16 @@ contract('KetherHomepage', function(accounts) {
       })
       .then(function(tx) {
         gas = tx.receipt.gasUsed;
-        initialBalance = web3.eth.getBalance(owner);
+        web3.eth.getBalance(owner, function(error, balance) { initialBalance = balance; });
         return KH.withdraw({ from: owner })
       })
       .then(function() {
-        let newBalance = web3.eth.getBalance(owner)
         // TOOD: I would expect that assert.equal(newBalance.toNumber(), initialBalance.toNumber() + oneHundredCellPrice + gas);
         //	would work. Instead it's off by 2857000000000000 wei...
         // What happened?
-        assert(newBalance.toNumber() > initialBalance.toNumber());
+        web3.eth.getBalance(owner, function(error, balance) {
+          assert(balance.toNumber() > initialBalance.toNumber());
+        });
       })
   });
 
@@ -261,6 +265,63 @@ contract('KetherHomepage', function(accounts) {
     return KetherHomepage.new(owner)
       .then(function(instance) {
         return instance.buy(0, 0, 10, 0, { value: oneHundredCellPrice, from: account1 })
+      })
+      .then(function(returnValue) {
+        // This should not be hit since we threw an error
+        assert.fail();
+      })
+      .catch(function(error) {
+        // catch revert / require
+        assert(error.message.indexOf("invalid opcode") >= 0);
+      });
+  });
+
+  it("should let a user setAdOwner on their own ad", function() {
+    let KH;
+    return KetherHomepage.new(owner)
+      .then(function(instance) {
+        KH = instance;
+        return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
+      })
+      .then(function() {
+        return KH.ads.call(0);
+      })
+      .then(function(ad) {
+        assert.equal(account1, ad[0]);
+
+        return KH.setAdOwner(0, account2, { from: account1 });
+      })
+      .then(function(result) {
+        // Make sure we issued the right SetAdOwner() event
+        assert.equal("SetAdOwner", result.logs[0].event);
+        const event = result.logs[0].args;
+
+        assert.equal(0, event.idx);
+
+        assert.equal(account1, event.from);
+        assert.equal(account2, event.to);
+
+        return KH.ads.call(0)
+      })
+      .then(function(ad) {
+        assert.equal(account2, ad[0]);
+      });
+  });
+
+  it("shouldn't let a user setAdOwner on another user's ad", function() {
+    let KH;
+    return KetherHomepage.new(owner)
+      .then(function(instance) {
+        KH = instance;
+        return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
+      })
+      .then(function() {
+        return KH.ads.call(0);
+      })
+      .then(function(ad) {
+        assert.equal(account1, ad[0]);
+
+        return KH.setAdOwner(0, account2, { from: account2 });
       })
       .then(function(returnValue) {
         // This should not be hit since we threw an error

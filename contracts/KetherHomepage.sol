@@ -22,6 +22,13 @@ contract KetherHomepage {
         bool NSFW
     );
 
+    /// SetAdOwner is emitted whenever the ownership of an ad is transfered
+    event SetAdOwner(
+        uint indexed idx,
+        address from,
+        address to
+    );
+
     /// Price is 1 kether divided by 1,000,000 pixels
     uint public constant weiPixelPrice = 10000000000000000;
 
@@ -31,7 +38,7 @@ contract KetherHomepage {
     bool[100][100] public grid;
 
     /// owner can withdraw the funds and override NSFW status of ad units.
-    address public owner;
+    address public contractOwner;
 
     struct Ad {
         address owner;
@@ -53,29 +60,15 @@ contract KetherHomepage {
     /// ads are stored in an array, the id of an ad is its index in this array.
     Ad[] public ads;
 
-    function KetherHomepage(address _owner) {
-        owner = _owner;
+    function KetherHomepage(address _contractOwner) {
+        contractOwner = _contractOwner;
     }
 
     /// getAdsLength tells you how many ads there are
     function getAdsLength() returns (uint) {
         return ads.length;
     }
-
-    /// getAd gives you the Ad at a specific id
-    function getAd(uint idx) returns (address adOwner, uint x, uint y, uint width, uint height, string link, string image, string title, bool nsfw) {
-        Ad memory ad = ads[idx];
-        adOwner = ad.owner;
-        x = ad.x;
-        y = ad.y;
-        width = ad.width;
-        height = ad.height;
-        link = ad.link;
-        image = ad.image;
-        title = ad.title;
-        nsfw = ad.NSFW || ad.forceNSFW;
-    }
- 
+    
     /// Ads must be purchased in 10x10 pixel blocks.
     /// Each coordinate represents 10 pixels. That is,
     ///   _x=5, _y=10, _width=3, _height=3
@@ -112,7 +105,7 @@ contract KetherHomepage {
     /// Images should be valid PNG.
     function publish(uint _idx, string _link, string _image, string _title, bool _NSFW) {
         Ad storage ad = ads[_idx];
-        require(ad.owner == msg.sender);
+        require(msg.sender == ad.owner);
         ad.link = _link;
         ad.image = _image;
         ad.title = _title;
@@ -121,9 +114,18 @@ contract KetherHomepage {
         Publish(_idx, ad.link, ad.image, ad.title, ad.NSFW || ad.forceNSFW);
     }
 
+    /// setAdOwner allows the owner of an ad unit to transfer the rigths to publish to another address
+    function setAdOwner(uint _idx, address _newOwner) {
+        Ad storage ad = ads[_idx];
+        require(msg.sender == ad.owner);
+        ad.owner = _newOwner;
+
+        SetAdOwner(_idx, msg.sender, _newOwner);
+    }
+
     /// forceNSFW allows the owner to override the NSFW status for a specific ad unit.
     function forceNSFW(uint _idx, bool _NSFW) {
-        require(msg.sender == owner);
+        require(msg.sender == contractOwner);
         Ad storage ad = ads[_idx];
         ad.forceNSFW = _NSFW;
 
@@ -132,7 +134,7 @@ contract KetherHomepage {
 
     /// withdraw allows the owner to transfer out the balance of the contract.
     function withdraw() {
-        require(msg.sender == owner);
-        owner.transfer(this.balance);
+        require(msg.sender == contractOwner);
+        contractOwner.transfer(this.balance);
     }
 }
