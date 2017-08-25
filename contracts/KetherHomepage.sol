@@ -119,7 +119,7 @@ contract KetherHomepage {
     /// Images should be valid PNG.
     function publish(uint _idx, string _link, string _image, string _title, bool _NSFW) {
         Ad storage ad = ads[_idx];
-        require(ad.owner == msg.sender);
+        require(msg.sender == ad.owner);
         ad.link = _link;
         ad.image = _image;
         ad.title = _title;
@@ -131,7 +131,7 @@ contract KetherHomepage {
     /// setAdOwner allows the owner of an ad unit to transfer the rigths to publish to another address
     function setAdOwner(uint _idx, address _newOwner) {
         Ad storage ad = ads[_idx];
-        require(ad.owner == msg.sender);
+        require(msg.sender == ad.owner);
         ad.owner = _newOwner;
 
         SetAdOwner(_idx, msg.sender, _newOwner);
