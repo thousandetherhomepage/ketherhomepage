@@ -22,6 +22,13 @@ contract KetherHomepage {
         bool NSFW
     );
 
+    /// Transfer is emitted whenever the ownership of an ad is transfered
+    event Transfer(
+        uint indexed idx,
+        address from,
+        address to
+    );
+
     /// Price is 1 kether divided by 1,000,000 pixels
     uint public constant weiPixelPrice = 10000000000000000;
 
@@ -119,6 +126,15 @@ contract KetherHomepage {
         ad.NSFW = _NSFW;
 
         Publish(_idx, ad.link, ad.image, ad.title, ad.NSFW || ad.forceNSFW);
+    }
+
+    /// Transfer allows the owner of an ad unit to transfer the rigths to publish to another address
+    function transfer(uint _idx, address _newOwner) {
+        Ad storage ad = ads[_idx];
+        require(ad.owner == msg.sender);
+        ad.owner = _newOwner;
+
+        Transfer(_idx, msg.sender, _newOwner);
     }
 
     /// forceNSFW allows the owner to override the NSFW status for a specific ad unit.
