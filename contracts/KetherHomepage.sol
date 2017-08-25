@@ -68,21 +68,7 @@ contract KetherHomepage {
     function getAdsLength() returns (uint) {
         return ads.length;
     }
-
-    /// getAd gives you the Ad at a specific id
-    function getAd(uint idx) returns (address adOwner, uint x, uint y, uint width, uint height, string link, string image, string title, bool nsfw) {
-        Ad memory ad = ads[idx];
-        adOwner = ad.owner;
-        x = ad.x;
-        y = ad.y;
-        width = ad.width;
-        height = ad.height;
-        link = ad.link;
-        image = ad.image;
-        title = ad.title;
-        nsfw = ad.NSFW || ad.forceNSFW;
-    }
- 
+    
     /// Ads must be purchased in 10x10 pixel blocks.
     /// Each coordinate represents 10 pixels. That is,
     ///   _x=5, _y=10, _width=3, _height=3

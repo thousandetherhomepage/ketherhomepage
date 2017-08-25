@@ -58,7 +58,8 @@ function toAd(i, r) {
     link: r[5],
     image: r[6] || "",
     title: r[7],
-    nsfw: r[8],
+    userNSFW: r[8],
+    forceNSFW: r[9],
   }
 }
 
@@ -87,7 +88,7 @@ export default {
         this.$store.commit('setAdsLength', num);
 
         for (let i=0; i<num; i++) {
-          this.contract.getAd.call(i, function(err, res) {
+          this.contract.ads.call(i, function(err, res) {
             this.$store.commit('addAd', toAd(i, res));
           }.bind(this));
         }

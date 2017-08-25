@@ -100,7 +100,7 @@ contract('KetherHomepage', function(accounts) {
       .then(function(res) {
         assert.equal(false, res);
 
-        return KH.getAd.call(idx);
+        return KH.ads.call(idx);
       })
       .then(function(ad) {
         // Make sure we added the ad
@@ -142,7 +142,7 @@ contract('KetherHomepage', function(accounts) {
         return KH.publish(0, "link", "image", "title", false, { from: account1 })
       })
       .then(function() {
-        return KH.getAd.call(0);
+        return KH.ads.call(0);
       })
       .then(function(ad) {
         // Make sure we added the ad
@@ -189,11 +189,11 @@ contract('KetherHomepage', function(accounts) {
         return KH.forceNSFW(0, true, { from: owner })
       })
       .then(function() {
-        return KH.getAd.call(0);
+        return KH.ads.call(0);
       })
       .then(function(ad) {
         // Make sure we set the nsfw on the ad
-        assert.equal(true, ad[8]);
+        assert.equal(true, ad[9]);
       })
   });
 
@@ -284,7 +284,7 @@ contract('KetherHomepage', function(accounts) {
         return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
       })
       .then(function() {
-        return KH.getAd.call(0);
+        return KH.ads.call(0);
       })
       .then(function(ad) {
         assert.equal(account1, ad[0]);
@@ -301,7 +301,7 @@ contract('KetherHomepage', function(accounts) {
         assert.equal(account1, event.from);
         assert.equal(account2, event.to);
 
-        return KH.getAd.call(0)
+        return KH.ads.call(0)
       })
       .then(function(ad) {
         assert.equal(account2, ad[0]);
@@ -316,7 +316,7 @@ contract('KetherHomepage', function(accounts) {
         return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
       })
       .then(function() {
-        return KH.getAd.call(0);
+        return KH.ads.call(0);
       })
       .then(function(ad) {
         assert.equal(account1, ad[0]);
