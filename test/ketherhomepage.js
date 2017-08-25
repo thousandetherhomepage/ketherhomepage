@@ -276,7 +276,7 @@ contract('KetherHomepage', function(accounts) {
       });
   });
 
-  it("should let owners transfer ownership", function() {
+  it("should let owners setAdOwner", function() {
     let KH;
     return KetherHomepage.new(owner)
       .then(function(instance) {
@@ -289,17 +289,17 @@ contract('KetherHomepage', function(accounts) {
       .then(function(ad) {
         assert.equal(account1, ad[0]);
 
-        return KH.transfer(0, account2, { from: account1 });
+        return KH.setAdOwner(0, account2, { from: account1 });
       })
       .then(function(result) {
-        // Make sure we issued the right Transfer() event
-        assert.equal("Transfer", result.logs[0].event);
-        const transferEvent = result.logs[0].args;
+        // Make sure we issued the right SetAdOwner() event
+        assert.equal("SetAdOwner", result.logs[0].event);
+        const event = result.logs[0].args;
 
-        assert.equal(0, transferEvent.idx);
+        assert.equal(0, event.idx);
 
-        assert.equal(account1, transferEvent.from);
-        assert.equal(account2, transferEvent.to);
+        assert.equal(account1, event.from);
+        assert.equal(account2, event.to);
 
         return KH.getAd.call(0)
       })
@@ -308,7 +308,7 @@ contract('KetherHomepage', function(accounts) {
       });
   });
 
-  it("shouldn't let non-owners transfer ownership", function() {
+  it("shouldn't let non-owners setAdOwner", function() {
     let KH;
     return KetherHomepage.new(owner)
       .then(function(instance) {
@@ -321,7 +321,7 @@ contract('KetherHomepage', function(accounts) {
       .then(function(ad) {
         assert.equal(account1, ad[0]);
 
-        return KH.transfer(0, account2, { from: account2 });
+        return KH.setAdOwner(0, account2, { from: account2 });
       })
       .then(function(returnValue) {
         // This should not be hit since we threw an error
