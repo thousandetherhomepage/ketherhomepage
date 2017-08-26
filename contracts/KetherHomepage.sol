@@ -1,8 +1,6 @@
 pragma solidity ^0.4.4;
 
 contract KetherHomepage {
-    // TODO: Do we care about timestamps?
-
     /// Buy is emitted when an ad unit is reserved.
     event Buy(
         uint indexed idx,
@@ -30,15 +28,19 @@ contract KetherHomepage {
     );
 
     /// Price is 1 kether divided by 1,000,000 pixels
-    uint public constant weiPixelPrice = 10000000000000000;
+    uint public constant weiPixelPrice = 1000000000000000;
 
-    /// Each grid cell represents 10 pixels.
-    uint public constant pixelsPerCell = 10;
+    /// Each grid cell represents 100 pixels (10x10).
+    uint public constant pixelsPerCell = 100;
 
     bool[100][100] public grid;
 
-    /// owner can withdraw the funds and override NSFW status of ad units.
+    /// contractOwner can withdraw the funds and override NSFW status of ad units.
     address public contractOwner;
+
+    /// withdrawWallet is the fixed destination of funds to withdraw. It is
+    /// separate from contractOwner to allow for a cold storage destination.
+    address public withdrawWallet;
 
     struct Ad {
         address owner;
@@ -60,15 +62,19 @@ contract KetherHomepage {
     /// ads are stored in an array, the id of an ad is its index in this array.
     Ad[] public ads;
 
-    function KetherHomepage(address _contractOwner) {
+    function KetherHomepage(address _contractOwner, address _withdrawWallet) {
+        require(_contractOwner != address(0));
+        require(_withdrawWallet != address(0));
+
         contractOwner = _contractOwner;
+        withdrawWallet = _withdrawWallet;
     }
 
     /// getAdsLength tells you how many ads there are
     function getAdsLength() returns (uint) {
         return ads.length;
     }
-    
+
     /// Ads must be purchased in 10x10 pixel blocks.
     /// Each coordinate represents 10 pixels. That is,
     ///   _x=5, _y=10, _width=3, _height=3
@@ -114,7 +120,7 @@ contract KetherHomepage {
         Publish(_idx, ad.link, ad.image, ad.title, ad.NSFW || ad.forceNSFW);
     }
 
-    /// setAdOwner allows the owner of an ad unit to transfer the rigths to publish to another address
+    /// setAdOwner changes the owner of an ad unit
     function setAdOwner(uint _idx, address _newOwner) {
         Ad storage ad = ads[_idx];
         require(msg.sender == ad.owner);
@@ -135,6 +141,6 @@ contract KetherHomepage {
     /// withdraw allows the owner to transfer out the balance of the contract.
     function withdraw() {
         require(msg.sender == contractOwner);
-        contractOwner.transfer(this.balance);
+        withdrawWallet.transfer(this.balance);
     }
 }

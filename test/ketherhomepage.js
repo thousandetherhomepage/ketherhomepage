@@ -1,20 +1,21 @@
 const KetherHomepage = artifacts.require("./KetherHomepage.sol");
 // TODO should I query the contract to make sure the above values are right?
-const weiPixelPrice = 10000000000000000;
-const pixelsPerCell = 10;
+const weiPixelPrice = web3.toWei(1000/1000000, "ether");
+const pixelsPerCell = 100;
 
-const oneHundredCellPrice = 10 * 10 * pixelsPerCell * weiPixelPrice
+const oneHundredCellPrice = 10 * 10 * pixelsPerCell * weiPixelPrice;
 
 contract('KetherHomepage', function(accounts) {
   const owner = accounts[0]; // this is the account we deploy as owner, see 2_deploy_contracts.js
-  const account1 = accounts[1];
-  const account2 = accounts[2];
+  const withdrawWallet = accounts[1];
+  const account1 = accounts[2];
+  const account2 = accounts[3];
 
   web3.eth.sendTransaction({from:owner, to:account1, value: 10000000000000000000 }, function(err, r) { /* NOP */ });
 
   it("should have correct constants by default", function() {
     let KH;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
 
@@ -35,7 +36,7 @@ contract('KetherHomepage', function(accounts) {
 
   it("should have an owner", function() {
     let KH;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
 
@@ -49,7 +50,7 @@ contract('KetherHomepage', function(accounts) {
   it("shouldn't let users buy if they don't send enough eth", function() {
 
     let KH;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
 
@@ -69,7 +70,7 @@ contract('KetherHomepage', function(accounts) {
     let KH;
     let watcher;
     let idx;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
         watcher = KH.Buy();
@@ -114,7 +115,7 @@ contract('KetherHomepage', function(accounts) {
 
   it("shouldn't let users buy overlapping adspace", function() {
     let KH;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
 
@@ -133,7 +134,7 @@ contract('KetherHomepage', function(accounts) {
 
   it("should let a user publish their own ad", function() {
     let KH;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
         return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
@@ -160,7 +161,7 @@ contract('KetherHomepage', function(accounts) {
 
   it("shouldn't let a user publish another user's ad", function() {
     let KH;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
 
@@ -179,7 +180,7 @@ contract('KetherHomepage', function(accounts) {
 
   it("should let the contract owner forceNSFW", function() {
     let KH;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
 
@@ -199,7 +200,7 @@ contract('KetherHomepage', function(accounts) {
 
   it("shouldn't let non contract owners forceNSFW", function() {
     let KH;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
 
@@ -221,7 +222,7 @@ contract('KetherHomepage', function(accounts) {
     let newBalance;
     let KH;
     let gas;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
 
@@ -236,7 +237,7 @@ contract('KetherHomepage', function(accounts) {
         // TOOD: I would expect that assert.equal(newBalance.toNumber(), initialBalance.toNumber() + oneHundredCellPrice + gas);
         //	would work. Instead it's off by 2857000000000000 wei...
         // What happened?
-        web3.eth.getBalance(owner, function(error, balance) {
+        web3.eth.getBalance(withdrawWallet, function(error, balance) {
           assert(balance.toNumber() > initialBalance.toNumber());
         });
       })
@@ -244,7 +245,7 @@ contract('KetherHomepage', function(accounts) {
 
   it("shouldn't let non-owners withdraw", function() {
     let KH;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
 
@@ -262,7 +263,7 @@ contract('KetherHomepage', function(accounts) {
   });
 
   it("shouldn't let users buy 0-width space", function() {
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         return instance.buy(0, 0, 10, 0, { value: oneHundredCellPrice, from: account1 })
       })
@@ -278,7 +279,7 @@ contract('KetherHomepage', function(accounts) {
 
   it("should let a user setAdOwner on their own ad", function() {
     let KH;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
         return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
@@ -310,7 +311,7 @@ contract('KetherHomepage', function(accounts) {
 
   it("shouldn't let a user setAdOwner on another user's ad", function() {
     let KH;
-    return KetherHomepage.new(owner)
+    return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
         KH = instance;
         return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
