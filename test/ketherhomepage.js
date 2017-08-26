@@ -277,6 +277,36 @@ contract('KetherHomepage', function(accounts) {
       });
   });
 
+  it("shouldn't let users buy negative space", function() {
+    return KetherHomepage.new(owner, withdrawWallet)
+      .then(function(instance) {
+        return instance.buy(30, 30, -10, -10, { value: oneHundredCellPrice, from: account1 })
+      })
+      .then(function(returnValue) {
+        // This should not be hit since we threw an error
+        assert.fail();
+      })
+      .catch(function(error) {
+        // catch revert / require
+        assert(error.message.indexOf("invalid opcode") >= 0);
+      });
+  });
+
+  it("shouldn't let users buy out of bounds space", function() {
+    return KetherHomepage.new(owner, withdrawWallet)
+      .then(function(instance) {
+        return instance.buy(99, 99, 10, 10, { value: oneHundredCellPrice, from: account1 })
+      })
+      .then(function(returnValue) {
+        // This should not be hit since we threw an error
+        assert.fail();
+      })
+      .catch(function(error) {
+        // catch revert / require
+        assert(error.message.indexOf("invalid opcode") >= 0);
+      });
+  });
+
   it("should let a user setAdOwner on their own ad", function() {
     let KH;
     return KetherHomepage.new(owner, withdrawWallet)
