@@ -36,11 +36,11 @@ contract KetherHomepage {
     bool[100][100] public grid;
 
     /// contractOwner can withdraw the funds and override NSFW status of ad units.
-    address public contractOwner;
+    address contractOwner;
 
     /// withdrawWallet is the fixed destination of funds to withdraw. It is
     /// separate from contractOwner to allow for a cold storage destination.
-    address public withdrawWallet;
+    address withdrawWallet;
 
     struct Ad {
         address owner;

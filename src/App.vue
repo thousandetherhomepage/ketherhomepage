@@ -14,7 +14,7 @@
 import Web3 from 'web3'
 import contractJSON from 'json-loader!../build/contracts/KetherHomepage.json'
 
-const contractAddr = '0xdcae1069048e59be72e15683131eef67edbc465b'
+const contractAddr = '0xB33831E22216200D57EC62e2F9E601daA50ce425'
 const web3Fallback = 'https://rinkeby.infura.io/VZCd1IVOZ1gcPsrc9gd7'
 
 import Homepage from './Homepage.vue'

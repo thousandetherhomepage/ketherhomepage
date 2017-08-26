@@ -7,6 +7,9 @@ test: deps contracts
 run: deps contracts
 	npm run dev
 
+deploy:
+	./node_modules/.bin/truffle migrate -f 2 --network rinkeby --reset
+
 deps: node_modules/
 
 contracts: build/contracts/*
