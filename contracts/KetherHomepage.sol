@@ -71,7 +71,7 @@ contract KetherHomepage {
     }
 
     /// getAdsLength tells you how many ads there are
-    function getAdsLength() returns (uint) {
+    function getAdsLength() constant returns (uint) {
         return ads.length;
     }
 
