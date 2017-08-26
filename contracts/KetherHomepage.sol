@@ -1,4 +1,4 @@
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.15;
 
 contract KetherHomepage {
     /// Buy is emitted when an ad unit is reserved.
