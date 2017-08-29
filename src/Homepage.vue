@@ -66,14 +66,12 @@ function toAd(i, r) {
 }
 
 export default {
-  props: ["web3", "contract"],
+  props: ["web3", "contract", "isReadOnly"],
   data() {
-    const providerHost = this.web3.currentProvider.host
     return {
       previewAd: null,
       previewLocked: false,
       showPublish: false,
-      isReadOnly: providerHost && providerHost.indexOf('infura.io') !== -1,
     }
   },
   methods: {
@@ -87,6 +85,7 @@ export default {
       this.$store.state.accounts[account] || false;
     },
     loadAds() {
+      this.$store.commit('clearAds');
       this.contract.getAdsLength.call(function(err, res) {
         const num = res.toNumber();
         this.$store.commit('setAdsLength', num);

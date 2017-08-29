@@ -81,6 +81,13 @@ export default new Vuex.Store({
         if (ad.owner === account) addAdOwned(state, ad);
       }
     },
+    clearAds(state) {
+      state.ads = [];
+      state.adsPixels = 0;
+      state.ownedAds = {};
+      state.numOwned = 0;
+      state.pixelsOwned = 0;
+    },
     setAdsLength(state, len) {
       state.ads.length = len;
     },
