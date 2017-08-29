@@ -61,11 +61,11 @@ export default {
   },
   methods: {
     publish() {
-      this.contract.publish.sendTransaction(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, this.ad.nsfw, { from: this.ad.owner }, function(err, res) {
+      this.contract.publish.sendTransaction(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.nsfw), { from: this.ad.owner }, function(err, res) {
         if (err) {
           this.error = err;
         }
-        console.log("success");
+        // TODO: Flash message?
         this.ad = false;
       }.bind(this));
       return false;
