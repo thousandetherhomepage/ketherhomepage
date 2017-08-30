@@ -16,8 +16,8 @@ module.exports = function(callback) {
   KetherHomepage
     .at(cfg.contractAddress)
     .then(function(contract) {
-      return contract.withdraw.sendTransaction({from: cfg.ownerAddress, gas: 30000 })
+      return contract.withdraw({from: cfg.ownerAddress, gas: 48241 })
     })
-    .then(callback)
-    .catch(callback);
+    .then((err, res) => { console.log("success: ", err, res) })
+    .catch(callback)
 };
