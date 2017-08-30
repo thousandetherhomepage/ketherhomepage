@@ -6,6 +6,12 @@
     <p>
       Ethereum Blockchain:
       <Dropdown :options="availableNetworks" :default="activeNetwork" @selected="setNetwork" :disabled="!isReadOnly" invalidName="Unsupported Network"></Dropdown>
+      <a v-if="networkConfig.etherscanLink" :href="networkConfig.etherscanLink" target="_blank">
+        View Contract
+      </a>
+      <span v-else>
+        Contract is only deployed on MainNet and Rinkeby TestNet.
+      </span>
     </p>
 
     <template v-if="ready">
@@ -84,6 +90,7 @@ export default {
     return {
       'availableNetworks': deployConfig,
       'activeNetwork': null,
+      'networkConfig': {},
       'selecting': false,
       'web3': null,
       'contract': null,
@@ -112,6 +119,7 @@ export default {
 
         // Load contract data
         const options = deployConfig[this.activeNetwork];
+        this.networkConfig = options;
         const contract = this.web3.eth.contract(contractJSON.abi);
         this.contract = Object.freeze(contract.at(options.contractAddr));
         this.ready = true;
