@@ -15,6 +15,7 @@ module.exports = {
       host: '127.0.0.1',
       port: 8545,
       network_id: 4,
+      gasPrice: "20000000000", // 20 gwei
     },
     live: {
       host: "127.0.0.1",
