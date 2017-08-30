@@ -65,6 +65,7 @@ export default new Vuex.Store({
     adsPixels: 0,
     ownedAds: {},
     numOwned: 0,
+    numNSFW: 0,
     pixelsOwned: 0,
     grid: null, // lazy load
   },
@@ -84,6 +85,7 @@ export default new Vuex.Store({
     clearAds(state) {
       state.ads = [];
       state.adsPixels = 0;
+      state.numNSFW = 0;
       state.ownedAds = {};
       state.numOwned = 0;
       state.pixelsOwned = 0;
@@ -96,8 +98,19 @@ export default new Vuex.Store({
         state.ads.length = ad.idx;
       }
       if (state.ads[ad.idx] === undefined) {
-          state.adsPixels += ad.width * ad.height * 100;
+        // Not counted yet
+        state.adsPixels += ad.width * ad.height * 100;
+        if (ad.nsfw) {
+          state.numNSFW += 1
+        }
+      } else {
+        // Already counted
+        if (state.ads[ad.idx].nsfw && !ad.nsfw) {
+          // Toggled from nsfw to not-nsfw
+          state.numNSFW -= 1;
+        }
       }
+
       // Need to use splice rather than this.ads[i] to make it reactive
       state.ads.splice(ad.idx, 1, ad)
       if (state.accounts[ad.owner]) addAdOwned(state, ad);

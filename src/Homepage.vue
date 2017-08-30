@@ -1,5 +1,6 @@
 <style lang="scss">
 #adGrid {
+  margin: 0 auto;
   position: relative;
   width: 1000px;
   height: 1000px;
@@ -31,9 +32,14 @@
     <p v-if="$store.state.numOwned > 0">{{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button></p>
     <Publish v-if="showPublish" :web3="web3" :contract="contract"></Publish>
 
+    <p v-if="$store.state.numNSFW > 0">
+      <button v-if="!showNSFW" v-on:click="showNSFW = true">Show {{$store.state.numNSFW}} NSFW ads</button>
+      <button v-else v-on:click="showNSFW = false">Hide {{$store.state.numNSFW}} NSFW ads</button>
+    </p>
+
     <div id="adGrid">
-      <template v-for="ad in $store.state.ads" v-if="ad">
-        <a :href="ad.link"><img :src="ad.image" :style="adStyle(ad)" /></a>
+      <template v-for="ad in $store.state.ads" v-if="ad && (!ad.nsfw || showNSFW)">
+        <a :href="ad.link" target="_blank"><img :src="ad.image" :style="adStyle(ad)" :title="ad.title" /></a>
       </template>
       <vue-draggable-resizable :minw="10" :minh="10" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
         <Buy :web3="web3" :contract="contract" :isReadOnly="isReadOnly" @buy="onBuy"></Buy>
@@ -57,11 +63,10 @@ function toAd(i, r) {
     y: r[2].toNumber(),
     width: r[3].toNumber(),
     height: r[4].toNumber(),
-    link: r[5] || "#",
+    link: r[5] || "",
     image: r[6] || "",
     title: r[7],
-    userNSFW: r[8],
-    forceNSFW: r[9],
+    nsfw: r[8] || r[9],
   }
 }
 
@@ -69,6 +74,7 @@ export default {
   props: ["web3", "contract", "isReadOnly"],
   data() {
     return {
+      showNSFW: false,
       previewAd: null,
       previewLocked: false,
       showPublish: false,
