@@ -23,12 +23,14 @@ import contractJSON from 'json-loader!../build/contracts/KetherHomepage.json'
 
 const deployConfig = {
   "TestNet (Rinkeby)": {
-    contractAddr: '0xB33831E22216200D57EC62e2F9E601daA50ce425',
-    web3Fallback: 'https://rinkeby.infura.io/VZCd1IVOZ1gcPsrc9gd7'
+    contractAddr: '0xb88404dd8fe4969ef67841250baef7f04f6b1a5e',
+    web3Fallback: 'https://rinkeby.infura.io/VZCd1IVOZ1gcPsrc9gd7',
+    etherscanLink: 'https://rinkeby.etherscan.io/address/0xb88404dd8fe4969ef67841250baef7f04f6b1a5e',
   },
   "MainNet": {
     contractAddr: '0xb5fe93ccfec708145d6278b0c71ce60aa75ef925',
-    web3Fallback: 'https://mainnet.infura.io/VZCd1IVOZ1gcPsrc9gd7'
+    web3Fallback: 'https://mainnet.infura.io/VZCd1IVOZ1gcPsrc9gd7',
+    etherscanLink: 'https://etherscan.io/address/0xb5fe93ccfec708145d6278b0c71ce60aa75ef925',
   }
 }
 const web3Networks = [
