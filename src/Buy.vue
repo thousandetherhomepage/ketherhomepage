@@ -32,7 +32,8 @@
     <p v-else-if="success" class="success">{{success}}</p>
     <p v-else-if="isAvailable">
       <strong>Slot is available.</strong>
-      <button v-on:click="buy" v-bind:disabled="isReadOnly">Buy Pixels</button>
+      <button v-on:click="buy" v-bind:disabled="isReadOnly" v-if="this.$store.state.activeAccount">Buy Pixels</button>
+      <button v-on:click="checkAccounts" v-else>Unlock Account to Buy</button>
     </p>
     <p v-else>
       Slot is not available.
@@ -61,6 +62,13 @@ export default {
     price(height, width) {
       // Round up to the nearest 0.01
       return Math.ceil(height * width * ethPerPixel * 100) / 100;
+    },
+    checkAccounts() {
+      this.web3.eth.getAccounts(function(err, res) {
+        for (const acct of res) {
+          this.$store.commit('addAccount', acct)
+        }
+      }.bind(this));
     },
     checkAvailable(x, y, width, height) {
       const x1 = Math.floor(x/10);
