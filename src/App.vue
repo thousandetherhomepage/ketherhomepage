@@ -19,7 +19,7 @@
       </ul>
       <ul>
         <li><h3>Project</h3></li>
-        <li><a href="https://github/thousandetherhomepage">Source code</a></li>
+        <li><a href="https://github.com/thousandetherhomepage">Source code</a></li>
       </ul>
       <ul>
         <li><h3>Blockchain</h3></li>
