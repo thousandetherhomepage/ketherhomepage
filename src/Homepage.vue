@@ -1,11 +1,5 @@
 <style lang="scss">
-#adGrid {
-  margin: 0 auto;
-  position: relative;
-  width: 1000px;
-  height: 1000px;
-  background: #ddd;
-
+.adGrid {
   img {
     position: absolute;
     display: block;
@@ -26,25 +20,21 @@
 
 <template>
   <div>
-    <Offline v-if="isReadOnly"></Offline>
-
-    <p>{{$store.state.adsPixels}} pixels sold. <button v-on:click="updatePreview()" v-if="!previewAd">Buy Pixels</button></p>
     <p v-if="$store.state.numOwned > 0">{{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button></p>
     <Publish v-if="showPublish" :web3="web3" :contract="contract"></Publish>
 
-    <p v-if="$store.state.numNSFW > 0">
-      <button v-if="!showNSFW" v-on:click="showNSFW = true">Show {{$store.state.numNSFW}} NSFW ads</button>
-      <button v-else v-on:click="showNSFW = false">Hide {{$store.state.numNSFW}} NSFW ads</button>
-    </p>
-
-    <div id="adGrid">
+    <div class="adGrid">
       <template v-for="ad in $store.state.ads" v-if="ad && (!ad.nsfw || showNSFW)">
         <a :href="ad.link" target="_blank"><img :src="ad.image" :style="adStyle(ad)" :title="ad.title" /></a>
       </template>
-      <vue-draggable-resizable :minw="10" :minh="10" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
+      <vue-draggable-resizable :minw="10" :minh="10" :x="20" :y="940" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
         <Buy :web3="web3" :contract="contract" :isReadOnly="isReadOnly" @buy="onBuy"></Buy>
       </vue-draggable-resizable>
     </div>
+
+    <p>{{$store.state.adsPixels}} pixels sold. <button v-on:click="updatePreview()" v-if="!previewAd">Buy Pixels</button></p>
+
+    <Offline v-if="isReadOnly"></Offline>
   </div>
 </template>
 
@@ -71,10 +61,9 @@ function toAd(i, r) {
 }
 
 export default {
-  props: ["web3", "contract", "isReadOnly"],
+  props: ["web3", "contract", "isReadOnly", "showNSFW"],
   data() {
     return {
-      showNSFW: false,
       previewAd: null,
       previewLocked: false,
       showPublish: false,

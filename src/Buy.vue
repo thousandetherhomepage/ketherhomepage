@@ -5,8 +5,8 @@
   border: 2px solid #d90006;
   display: block;
   width: 400px;
-  height: 100px;
-  margin-top: -130px;
+  height: 80px;
+  margin-top: -110px;
   padding: 5px;
   text-align: center;
 }

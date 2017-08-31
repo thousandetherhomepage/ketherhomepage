@@ -3,9 +3,93 @@
   <head>
     <meta charset="utf-8">
     <title>The Thousand Ether Homepage &middot; Own a piece of blockchain history!</title>
+    <style>
+      body {
+        font-family: Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        color: #2c3e50;
+      }
+      a {
+        color: #42b983;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      a:hover {
+        color: #70caa2;
+      }
+      h1 {
+        font-size: 1.6rem;
+        font-weight: normal;
+        margin: 0.1em 0 0.5em 0;
+      }
+
+      h2 {
+        color: #556;
+        font-size: 1.1rem;
+        font-weight: normal;
+        margin: 1.5em 0;
+      }
+
+      h3 {
+        color: #246648;
+        font-size: 1rem;
+        margin: 0.5em 0;
+      }
+
+      header, .container {
+        width: 1000px;
+        margin: 1em auto;
+      }
+
+      footer {
+        margin: 2em auto;
+        display: table;
+        table-layout: fixed;
+        width: 100%;
+      }
+      footer ul {
+        display: table-cell;
+        width: 100%;
+        list-style: none;
+        padding: 0 1em;
+        vertical-align: top;
+      }
+      footer li {
+        margin-bottom: 0.5em;
+      }
+
+      .adGrid {
+        margin: 0 auto;
+        position: relative;
+        width: 1000px;
+        height: 1000px;
+        background: #ddd;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <header>
+      <h1>The Thousand Ether Homepage</h1>
+      <h2>1,000,000 pixels &middot; 0.001 ETH per pixel &middot; Own a piece of blockchain history!</h2>
+    <header>
+
+    <div id="app" class="container">
+      <div class="adGrid"></div>
+
+      <footer>
+        <ul>
+          <li><h3>Authors</h3></li>
+          <li><a href="https://keybase.io/shazow">shazow</a></li>
+          <li><a href="https://keybase.io/mveytsman">mveytsman</a></li>
+        </ul>
+        <ul>
+          <li><h3>Project</h3></li>
+          <li><a href="https://github/thousandetherhomepage">Source code</a></li>
+        </ul>
+      </footer>
+    </div>
+
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

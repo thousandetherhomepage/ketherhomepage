@@ -1,25 +1,47 @@
 <template>
   <div id="app">
-    <h1>The Thousand Ether Homepage</h1>
-    <h2>1,000,000 pixels &middot; 0.001 ETH per pixel &middot; Own a piece of blockchain history!</h2>
-
-    <p>
-      Ethereum Blockchain:
-      <Dropdown :options="availableNetworks" :default="activeNetwork" @selected="setNetwork" :disabled="!isReadOnly" invalidName="Unsupported Network"></Dropdown>
-      <a v-if="networkConfig.etherscanLink" :href="networkConfig.etherscanLink" target="_blank">
-        View Contract
-      </a>
-      <span v-else>
-        Contract is only deployed on MainNet and Rinkeby TestNet.
-      </span>
-    </p>
-
     <template v-if="ready">
-      <Homepage v-if="ready" :web3="web3" :contract="contract" :isReadOnly="isReadOnly"></Homepage>
+      <Homepage v-if="ready" :web3="web3" :contract="contract" :isReadOnly="isReadOnly" :showNSFW="showNSFW"></Homepage>
     </template>
-    <p v-else>
-      Waiting for Web3...
-    </p>
+    <template v-else>
+      <div class="adGrid">
+        <p style="text-align: center; padding: 2em; color: #666;">
+          Waiting for Web3...
+        </p>
+      </div>
+    </template>
+
+    <footer>
+      <ul>
+        <li><h3>Authors</h3></li>
+        <li><a href="https://keybase.io/shazow">shazow</a></li>
+        <li><a href="https://keybase.io/mveytsman">mveytsman</a></li>
+      </ul>
+      <ul>
+        <li><h3>Project</h3></li>
+        <li><a href="https://github/thousandetherhomepage">Source code</a></li>
+      </ul>
+      <ul>
+        <li><h3>Blockchain</h3></li>
+        <li>
+          <Dropdown :options="availableNetworks" :default="activeNetwork" @selected="setNetwork" :disabled="!isReadOnly" invalidName="Unsupported Network"></Dropdown>
+          <span v-if="!networkConfig.etherscanLink">
+            Contract is only on MainNet and Rinkeby.
+          </span>
+        </li>
+        <li v-if="networkConfig.etherscanLink">
+          <a :href="networkConfig.etherscanLink" target="_blank">
+            Contract on Etherscan
+          </a>
+        </li>
+        <li v-if="$store.state.numNSFW > 0">
+          <a v-if="!showNSFW" v-on:click="showNSFW = true">Show NSFW ({{$store.state.numNSFW}})</a>
+          <a v-else v-on:click="showNSFW = false">Hide NSFW</a>
+        </li>
+
+      </ul>
+    </footer>
+
   </div>
 </template>
 
@@ -96,6 +118,7 @@ export default {
       'contract': null,
       'ready': false,
       'isReadOnly': false,
+      'showNSFW': false,
     }
   },
   methods: {
@@ -137,43 +160,4 @@ export default {
 </script>
 
 <style lang="scss">
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-  margin: 1em;
-}
-
-h1 {
-  font-size: 1.6rem;
-  font-weight: normal;
-  margin: 0.1em 0 0.5em 0;
-}
-
-h2 {
-  color: #556;
-  font-size: 1.1rem;
-  font-weight: normal;
-  margin: 0.1em 0 0.5em 0;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
-}
-
-a.router-link-exact-active {
-  color: #aaa;
-  text-decoration: none;
-}
 </style>
