@@ -20,9 +20,6 @@
 
 <template>
   <div>
-    <p v-if="$store.state.numOwned > 0">{{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button></p>
-    <Publish v-if="showPublish" :web3="web3" :contract="contract"></Publish>
-
     <div class="adGrid">
       <template v-for="ad in $store.state.ads" v-if="ad && (!ad.nsfw || showNSFW)">
         <a :href="ad.link" target="_blank"><img :src="ad.image" :style="adStyle(ad)" :title="ad.title" /></a>
@@ -33,6 +30,9 @@
     </div>
 
     <p>{{$store.state.adsPixels}} pixels sold. <button v-on:click="updatePreview()" v-if="!previewAd">Buy Pixels</button></p>
+
+    <p v-if="$store.state.numOwned > 0">{{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button></p>
+    <Publish v-if="showPublish" :web3="web3" :contract="contract"></Publish>
 
     <Offline v-if="isReadOnly"></Offline>
   </div>
