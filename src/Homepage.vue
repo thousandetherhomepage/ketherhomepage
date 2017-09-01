@@ -58,6 +58,7 @@ function toAd(i, r) {
     image: r[6] || "",
     title: r[7],
     nsfw: r[8] || r[9],
+    forcedNSFW: r[9],
   }
 }
 

@@ -1,13 +1,23 @@
 <style lang="scss">
 form {
   margin-bottom: 2em;
+  width: 600px;
 }
 label {
   display: block;
+  margin-bottom: 0.5em;
   span {
     display: inline-block;
     min-width: 6em;
   }
+}
+input {
+  width: 200px;
+}
+
+.editAd {
+  border-left: 10px solid #eee;
+  padding-left: 10px;
 }
 </style>
 
@@ -17,26 +27,43 @@ label {
       <select v-model="ad">
         <option disabled value="">Select ad to edit</option>
         <option v-for="ad of $store.state.ownedAds" v-bind:value="ad">
-          {{ad.width}}x{{ad.height}} at ({{ad.x}}, {{ad.y}}): {{ ad.link || "(no link)" }}
+          {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ ad.link || "(no link)" }}
         </option>
       </select>
-      <div v-if="ad">
+      <div v-if="ad" class="editAd">
+        <p>
+          What do you want your ad to look like? Some rules:
+        </p>
+        <ul>
+          <li>If your ad contains adult content, please self-mark it as NSFW. NSFW ads are opt-in by viewers. You can change it later if you self-mark as NSFW.</li>
+          <li>Don't put inappropriate or illegal content in the ad.</li>
+          <li>Keep your image size small, under 100KB. PNG is preferred, but JPG or non-animated GIF is acceptable.</li>
+          <li>If your ad breaks any rules, it can be forced to NSFW by the moderators of this contract and then only a moderator can change it back to non-NSFW.</li>
+        </ul>
+        <label>
+          <span>Title</span>
+          <input type="text" v-model="ad.title" placeholder="Come visit MyCorp" />
+        </label>
         <label>
           <span>Link</span>
-          <input type="text" v-model="ad.link" />
+          <input type="text" v-model="ad.link" placeholder="https://..." />
         </label>
         <label>
           <span>Image</span>
-          <input type="text" v-model="ad.image" />
-        </label>
-        <label>
-          <span>Title</span>
-          <input type="text" v-model="ad.title" />
+          <input type="text" v-model="ad.image" placeholder="https://...." />
+          <small>URL to PNG image. Can be <code>https://</code>, <code>bzz://</code>, or <code>data:image/png,base64,...</code> encoded</small>
         </label>
         <label>
           <span>NSFW</span>
           <input type="checkbox" v-model="ad.nsfw" />
+          <strong v-if="ad.forcedNSFW">Forced NSFW by moderator</strong>
         </label>
+        <div>
+          <h3>Live preview</h3>
+          <p>
+            <a :href="ad.link" target="_blank"><img :src="ad.image" :style="{ width: (ad.width*10) + 'px', height: (ad.height*10) + 'px'}" :title="ad.title" /></a>
+          </p>
+        </div>
         <input type="submit" value="Publish Changes" />
       </div>
     </form>
