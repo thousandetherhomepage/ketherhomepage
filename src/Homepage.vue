@@ -1,6 +1,6 @@
 <style lang="scss">
 .adGrid {
-  img {
+  img, .nsfwAd {
     position: absolute;
     display: block;
     overflow: hidden;
@@ -21,8 +21,9 @@
 <template>
   <div>
     <div class="adGrid">
-      <template v-for="ad in $store.state.ads" v-if="ad && (!ad.nsfw || showNSFW)">
-        <a :href="ad.link" target="_blank"><img :src="ad.image" :style="adStyle(ad)" :title="ad.title" /></a>
+      <template v-for="ad in $store.state.ads" v-if="ad">
+        <a :href="ad.link" target="_blank" v-if="!ad.nsfw || showNSFW"><img :src="ad.image" :style="adStyle(ad)" :title="ad.title" /></a>
+        <div class="nsfwAd" :style="adStyle(ad)" v-else title="NSFW ad disabled"></div>
       </template>
       <vue-draggable-resizable :minw="10" :minh="10" :x="20" :y="940" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
         <Buy :web3="web3" :contract="contract" :isReadOnly="isReadOnly" @buy="onBuy"></Buy>
