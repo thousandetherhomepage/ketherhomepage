@@ -129,23 +129,28 @@ export default {
       waitForWeb3(deployConfig[network || defaultNetwork], function(web3) {
         // VueJS tries to inspect/walk/observe objects unless they're frozen. This breaks web3.
         this.web3 = Object.freeze(web3);
-        if (this.activeNetwork === undefined) {
-          this.activeNetwork = web3Networks[this.web3.version.network];
-        }
 
-        const providerHost = this.web3.currentProvider.host
-        this.isReadOnly = providerHost && providerHost.indexOf('infura.io') !== -1;
-        if (this.activeNetwork === undefined) {
-          this.isReadOnly = false;
-          return;
-        }
+        this.web3.version.getNetwork(function(error, networkVersion) {
+          if (error) throw error;
 
-        // Load contract data
-        const options = deployConfig[this.activeNetwork];
-        this.networkConfig = options;
-        const contract = this.web3.eth.contract(contractJSON.abi);
-        this.contract = Object.freeze(contract.at(options.contractAddr));
-        this.ready = true;
+          if (this.activeNetwork === undefined) {
+            this.activeNetwork = web3Networks[networkVersion];
+          }
+
+          const providerHost = this.web3.currentProvider.host
+          this.isReadOnly = providerHost && providerHost.indexOf('infura.io') !== -1;
+          if (this.activeNetwork === undefined) {
+            this.isReadOnly = false;
+            return;
+          }
+
+          // Load contract data
+          const options = deployConfig[this.activeNetwork];
+          this.networkConfig = options;
+          const contract = this.web3.eth.contract(contractJSON.abi);
+          this.contract = Object.freeze(contract.at(options.contractAddr));
+          this.ready = true;
+        }.bind(this))
       }.bind(this));
     },
   },
