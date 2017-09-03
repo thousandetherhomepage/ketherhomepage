@@ -62,6 +62,7 @@ export default {
   methods: {
     price(height, width) {
       // Round up to the nearest 0.01
+      // TODO: BigNumber?
       return Math.ceil(height * width * ethPerPixel * 100) / 100;
     },
     checkAccounts() {
