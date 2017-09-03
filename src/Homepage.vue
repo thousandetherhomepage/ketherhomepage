@@ -8,13 +8,12 @@
     font-size: 11px;
     color: #eee;
     white-space: nowrap;
-    z-index: 4;
   }
 
   .previewAd {
     background: rgba(255, 255, 255, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.9);
-    z-index: 3;
+    z-index: 5;
   }
   .previewAd.locked {
     background: #ffcc47;
@@ -119,6 +118,12 @@ export default {
     this.loadAds();
     this.contract.Buy().watch(function(err, res) {
       this.$store.commit('addAd', res.args);
+
+      if (this.previewLocked && Number(res.args.x*10) == this.previewAd.x && Number(res.args.y*10) == this.previewAd.y) {
+        // Colliding ad purchased
+        this.previewLocked = false;
+        this.previewAd = null;
+      }
     }.bind(this))
 
     this.contract.Publish().watch(function(err, res) {
