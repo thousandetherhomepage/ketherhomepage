@@ -5,6 +5,10 @@
     display: block;
     overflow: hidden;
     background: #000;
+    font-size: 11px;
+    color: #eee;
+    white-space: nowrap;
+    z-index: 4;
   }
 
   .previewAd {
@@ -22,7 +26,7 @@
   <div>
     <div class="adGrid">
       <template v-for="ad in $store.state.ads" v-if="ad">
-        <a :href="ad.link" target="_blank" v-if="!ad.nsfw || showNSFW"><img :src="ad.image" :style="adStyle(ad)" :title="ad.title" /></a>
+        <a :href="ad.link" target="_blank" v-if="!ad.NSFW || showNSFW"><img :src="ad.image" :style="adStyle(ad)" :title="ad.title" /></a>
         <div class="nsfwAd" :style="adStyle(ad)" v-else title="NSFW ad disabled"></div>
       </template>
       <vue-draggable-resizable :minw="10" :minh="10" :x="20" :y="940" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
@@ -50,14 +54,14 @@ function toAd(i, r) {
   return {
     idx: i,
     owner: r[0],
-    x: r[1].toNumber(),
-    y: r[2].toNumber(),
-    width: r[3].toNumber(),
-    height: r[4].toNumber(),
+    x: r[1],
+    y: r[2],
+    width: r[3],
+    height: r[4],
     link: r[5] || "",
     image: r[6] || "",
     title: r[7],
-    nsfw: r[8] || r[9],
+    NSFW: r[8] || r[9], // TODO: Rename to NSFW?
     forcedNSFW: r[9],
   }
 }
@@ -93,24 +97,16 @@ export default {
           }.bind(this));
         }
 
-        // TODO: Watch events for new Buys and Publish's here?
-        // contract.Buy().watch(function() { console.log("event", arguments); })
-
       }.bind(this));
     },
     adStyle(ad) {
       const s = {
-        "margin-left": ad.x * 10 + "px",
-        "margin-top": ad.y * 10 + "px",
+        "left": ad.x * 10 + "px",
+        "top": ad.y * 10 + "px",
         "width": ad.width * 10 + "px",
         "height": ad.height * 10 + "px",
       }
       return s;
-    }
-  },
-  events: {
-    purchased: function(account) {
-      console.log("Purchase detected");
     }
   },
   created() {
@@ -121,6 +117,13 @@ export default {
     }.bind(this));
 
     this.loadAds();
+    this.contract.Buy().watch(function(err, res) {
+      this.$store.commit('addAd', res.args);
+    }.bind(this))
+
+    this.contract.Publish().watch(function(err, res) {
+      this.$store.commit('addAd', res.args);
+    }.bind(this))
   },
   components: {
     'vue-draggable-resizable': VueDraggableResizable,

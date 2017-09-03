@@ -25,16 +25,16 @@ function grid_array2d(w, h) {
       // Returns true if has collision, inclusive.
       if (x1 < 0 || y1 < 0 || x2 >= w || y2 >= h) return true;
 
-      for (let x=x1; x<=x2; x++) {
-        for (let y=y1; y<=y2; y++) {
+      for (let x=Number(x1); x<=x2; x++) {
+        for (let y=Number(y1); y<=y2; y++) {
           if(grid[x][y]) return true;
         }
       }
       return false;
     },
     setBox: function(x1, y1, x2, y2) {
-      for (let x=x1; x<=x2; x++) {
-        for(let y=y1; y<=y2; y++) {
+      for (let x=Number(x1); x<=x2; x++) {
+        for(let y=Number(y1); y<=y2; y++) {
           grid[x][y] = true;
         }
       }
@@ -44,7 +44,11 @@ function grid_array2d(w, h) {
 
 function filledGrid(grid, ads) {
   for(let ad of ads) {
-    grid.setBox(ad.x, ad.y, ad.x+ad.width-1, ad.y+ad.height-1);
+    // Ad properties might be BigNumbers maybe which don't play well with +'s...
+    // TODO: Fix this in a more general way?
+    const x2 = Number(ad.x)+Number(ad.width)-1;
+    const y2 = Number(ad.y)+Number(ad.height)-1;
+    grid.setBox(ad.x, ad.y, x2, y2);
   }
   return grid;
 }
@@ -97,18 +101,30 @@ export default new Vuex.Store({
       if (ad.idx > state.ads.length) {
         state.ads.length = ad.idx;
       }
-      if (state.ads[ad.idx] === undefined) {
-        // Not counted yet
-        state.adsPixels += ad.width * ad.height * 100;
-        if (ad.nsfw) {
-          state.numNSFW += 1
-        }
-      } else {
-        // Already counted
-        if (state.ads[ad.idx].nsfw && !ad.nsfw) {
+      const existingAd = state.ads[ad.idx];
+      if (existingAd !== undefined) {
+        // Already counted, update values
+        if (existingAd.NSFW && !ad.NSFW) {
           // Toggled from nsfw to not-nsfw
           state.numNSFW -= 1;
         }
+        Object.assign(existingAd, ad);
+        return;
+      }
+
+      // Is it a buy-only ad? Prefill default values
+      if (ad.link === undefined) {
+        ad.link = "";
+        ad.image = "";
+        ad.title = ""
+        ad.NSFW = false;
+        ad.forcedNSFW = false;
+      }
+
+      // Not counted yet
+      state.adsPixels += ad.width * ad.height * 100;
+      if (ad.NSFW) {
+        state.numNSFW += 1;
       }
 
       // Need to use splice rather than this.ads[i] to make it reactive
@@ -117,7 +133,12 @@ export default new Vuex.Store({
 
       if (state.grid !== null) {
         // Fill grid cache if it's already loaded
-        state.grid.setBox(ad.x, ad.y, ad.x+ad.width-1, ad.y+ad.height-1);
+
+        // Ad properties might be BigNumbers maybe which don't play well with +'s...
+        // TODO: Fix this in a more general way?
+        const x2 = Number(ad.x)+Number(ad.width)-1;
+        const y2 = Number(ad.y)+Number(ad.height)-1;
+        state.grid.setBox(ad.x, ad.y, x2, y2);
       }
     },
   },

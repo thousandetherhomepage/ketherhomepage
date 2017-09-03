@@ -18,7 +18,18 @@ input {
 .editAd {
   border-left: 10px solid #eee;
   padding-left: 10px;
+
+  .previewAd {
+    display: block;
+    overflow: hidden;
+    background: #000;
+    font-size: 11px;
+    color: #eee;
+    white-space: nowrap;
+  }
 }
+
+
 </style>
 
 <template>
@@ -26,7 +37,7 @@ input {
     <form v-if="$store.state.numOwned > 0" v-on:submit='publish' v-on:submit.prevent>
       <select v-model="ad">
         <option disabled value="">Select ad to edit</option>
-        <option v-for="ad of $store.state.ownedAds" v-bind:value="ad">
+        <option v-for="ad of $store.state.ownedAds" :value="ad">
           {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ ad.link || "(no link)" }}
         </option>
       </select>
@@ -55,13 +66,13 @@ input {
         </label>
         <label>
           <span>NSFW</span>
-          <input type="checkbox" v-model="ad.nsfw" />
+          <input type="checkbox" v-model="ad.NSFW" />
           <strong v-if="ad.forcedNSFW">Forced NSFW by moderator</strong>
         </label>
         <div>
           <h3>Live preview</h3>
           <p>
-            <a :href="ad.link" target="_blank"><img :src="ad.image" :style="{ width: (ad.width*10) + 'px', height: (ad.height*10) + 'px'}" :title="ad.title" /></a>
+            <a :href="ad.link" target="_blank"><img class="previewAd" :src="ad.image" :style="{ width: (ad.width*10) + 'px', height: (ad.height*10) + 'px'}" :title="ad.title" /></a>
           </p>
         </div>
         <input type="submit" value="Publish Changes" />
@@ -88,11 +99,10 @@ export default {
   },
   methods: {
     publish() {
-      this.contract.publish.sendTransaction(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.nsfw), { from: this.ad.owner }, function(err, res) {
+      this.contract.publish.sendTransaction(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW), { from: this.ad.owner }, function(err, res) {
         if (err) {
           this.error = err;
         }
-        // TODO: Flash message?
         this.ad = false;
       }.bind(this));
       return false;

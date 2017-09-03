@@ -81,6 +81,7 @@ export default {
     buy() {
       const ad = {x: this.$parent.left, y: this.$parent.top, width: this.$parent.width, height: this.$parent.height}
       if (!this.checkAvailable(ad.x, ad.y, ad.width, ad.height)) {
+
         this.error = `Slot is not available: ${ad}`
         return;
       }
