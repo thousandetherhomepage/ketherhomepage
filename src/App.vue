@@ -1,15 +1,7 @@
 <template>
   <div id="app">
-    <template v-if="ready">
-      <Homepage v-if="ready" :web3="web3" :contract="contract" :isReadOnly="isReadOnly" :showNSFW="showNSFW"></Homepage>
-    </template>
-    <template v-else>
-      <div class="adGrid">
-        <p style="text-align: center; padding: 2em; color: #666;">
-          Waiting for Web3...
-        </p>
-      </div>
-    </template>
+    <router-view :web3="web3" :contract="contract" :isReadOnly="isReadOnly" :showNSFW="showNSFW">
+    </router-view>
 
     <footer>
       <ul>
@@ -24,7 +16,7 @@
       <ul>
         <li><h3>Blockchain</h3></li>
         <li>
-          <Dropdown :options="availableNetworks" :default="activeNetwork" @selected="setNetwork" :disabled="!isReadOnly" invalidName="Unsupported Network"></Dropdown>
+          <Dropdown :options="availableNetworks" :default="network" @selected="setNetwork" :disabled="!isReadOnly" invalidName="Unsupported Network"></Dropdown>
           <span v-if="!networkConfig.etherscanLink">
             Contract is only on MainNet and Rinkeby.
           </span>
@@ -50,25 +42,28 @@ import Web3 from 'web3'
 import contractJSON from 'json-loader!../build/contracts/KetherHomepage.json'
 
 const deployConfig = {
-  "TestNet (Rinkeby)": {
+  "rinkeby": {
+    id: 4,
+    label: 'TestNet (Rinkeby)',
     contractAddr: '0xb88404dd8fe4969ef67841250baef7f04f6b1a5e',
     web3Fallback: 'https://rinkeby.infura.io/VZCd1IVOZ1gcPsrc9gd7',
     etherscanLink: 'https://rinkeby.etherscan.io/address/0xb88404dd8fe4969ef67841250baef7f04f6b1a5e',
   },
-  "MainNet": {
+  "mainnet": {
+    id: 1,
+    label: 'MainNet',
     contractAddr: '0xb5fe93ccfec708145d6278b0c71ce60aa75ef925',
     web3Fallback: 'https://mainnet.infura.io/VZCd1IVOZ1gcPsrc9gd7',
     etherscanLink: 'https://etherscan.io/address/0xb5fe93ccfec708145d6278b0c71ce60aa75ef925',
   }
 }
 const web3Networks = [
-  undefined, 'MainNet', undefined, undefined, 'TestNet (Rinkeby)',
+  undefined, 'mainnet', undefined, undefined, 'rinkeby',
 ];
 
-const defaultNetwork = 'MainNet';
+const defaultNetwork = 'mainnet';
 
 import Dropdown from './Dropdown.vue'
-import Homepage from './Homepage.vue'
 
 function waitForWeb3(options, cb) {
   const web3Fallback = options.web3Fallback || "http://localhost:8545/";
@@ -111,45 +106,46 @@ export default {
   data() {
     return {
       'availableNetworks': deployConfig,
-      'activeNetwork': null,
+      'network': null,
       'networkConfig': {},
       'selecting': false,
       'web3': null,
       'contract': null,
-      'ready': false,
       'isReadOnly': false,
       'showNSFW': false,
     }
   },
   methods: {
     setNetwork(network) {
-      if (this.activeNetwork === network) return;
-      this.activeNetwork = network;
-      this.ready = false;
-      waitForWeb3(deployConfig[network || defaultNetwork], function(web3) {
+      if (this.network === network) return;
+
+      const cfg = deployConfig[network] || deployConfig[defaultNetwork];
+      waitForWeb3(cfg, function(web3) {
         // VueJS tries to inspect/walk/observe objects unless they're frozen. This breaks web3.
         this.web3 = Object.freeze(web3);
 
         this.web3.version.getNetwork(function(error, networkVersion) {
           if (error) throw error;
 
-          if (this.activeNetwork === undefined) {
-            this.activeNetwork = web3Networks[networkVersion];
+          if (network === undefined) {
+            network = web3Networks[networkVersion];
           }
 
           const providerHost = this.web3.currentProvider.host
           this.isReadOnly = providerHost && providerHost.indexOf('infura.io') !== -1;
-          if (this.activeNetwork === undefined) {
+          if (network === undefined) {
             this.isReadOnly = false;
             return;
           }
 
           // Load contract data
-          const options = deployConfig[this.activeNetwork];
+          const options = deployConfig[network];
           this.networkConfig = options;
           const contract = this.web3.eth.contract(contractJSON.abi);
           this.contract = Object.freeze(contract.at(options.contractAddr));
-          this.ready = true;
+
+          console.log("changing route", network)
+          this.$router.push({ name: 'homepage', query: { network }})
         }.bind(this))
       }.bind(this));
     },
@@ -158,9 +154,8 @@ export default {
     this.setNetwork();
   },
   components: {
-    'Homepage': Homepage,
     'Dropdown': Dropdown,
-  }
+  },
 }
 </script>
 

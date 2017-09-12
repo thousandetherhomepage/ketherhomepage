@@ -2,7 +2,7 @@
   <div class="dropdown">
     <ul :class="{selecting: isSelecting, disabled: disabled}">
       <li class="label" v-on:click="click(selected)">Select network</li>
-      <li v-for="(value, name) in options" v-on:click="click(name, value)" :class="{selected: selected == name, option: true}">{{name}}</li>
+      <li v-for="(value, name) in options" v-on:click="click(name, value)" :class="{selected: selected == value, option: true}">{{value.label || name}}</li>
       <li v-if="options[selected]===undefined" class="selected option">{{invalidName || "Invalid Option"}}</li>
     </ul>
   </div>
@@ -30,8 +30,8 @@ export default {
         return;
       }
       this.isSelecting = false;
-      if (this.isSelected === name) return;
-      this.isSelected = name;
+      if (this.isSelected === value) return;
+      this.isSelected = value;
       this.$emit('selected', name, value);
     },
   },
