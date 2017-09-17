@@ -4,10 +4,17 @@
     position: absolute;
     display: block;
     overflow: hidden;
-    background: #000;
     font-size: 11px;
-    color: #eee;
+    color: #888;
     white-space: nowrap;
+  }
+
+  .nsfwAd {
+    background: #000;
+  }
+
+  &.active img {
+    box-shadow: 0px 0px 0px 1px rgba(255, 255, 255, 0.4) inset;
   }
 
   .previewAd {
@@ -22,18 +29,18 @@
 </style>
 
 <template>
-  <div>
-    <div class="adGrid">
+  <div class="container">
+    <div :class="{ adGrid: true, active: !!$store.state.previewAd }">
       <template v-for="ad in $store.state.ads" v-if="ad">
         <a :href="ad.link" target="_blank" v-if="!ad.NSFW || showNSFW"><img :src="ad.image" :style="adStyle(ad)" :title="ad.title" /></a>
         <div class="nsfwAd" :style="adStyle(ad)" v-else title="NSFW ad disabled"></div>
       </template>
-      <vue-draggable-resizable :minw="10" :minh="10" :x="20" :y="940" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
+      <vue-draggable-resizable :active="true" :minw="10" :minh="10" :x="$store.state.previewAd.x" :y="$store.state.previewAd.y" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="$store.state.previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
         <Buy :web3="web3" :contract="contract" :isReadOnly="isReadOnly" @buy="onBuy"></Buy>
       </vue-draggable-resizable>
     </div>
 
-    <p>{{$store.state.adsPixels}} pixels sold. <button v-on:click="updatePreview()" v-if="!previewAd">Buy Pixels</button></p>
+    <p>{{$store.state.adsPixels}} pixels sold. <button v-on:click="updatePreview(20, 920)" v-if="!$store.state.previewAd">Buy Pixels</button></p>
 
     <p v-if="$store.state.numOwned > 0">{{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button></p>
     <Publish v-if="showPublish" :web3="web3" :contract="contract"></Publish>
@@ -69,7 +76,6 @@ export default {
   props: ["web3", "contract", "isReadOnly", "showNSFW"],
   data() {
     return {
-      previewAd: null,
       previewLocked: false,
       showPublish: false,
     }
@@ -79,7 +85,7 @@ export default {
       this.previewLocked = true;
     },
     updatePreview(x, y, width, height) {
-      this.previewAd = {x, y, width, height}
+      this.$store.commit('updatePreview', {x, y, width, height})
     },
     isOwner(account) {
       this.$store.state.accounts[account] || false;
@@ -119,10 +125,11 @@ export default {
     this.contract.Buy().watch(function(err, res) {
       this.$store.commit('addAd', res.args);
 
-      if (this.previewLocked && Number(res.args.x*10) == this.previewAd.x && Number(res.args.y*10) == this.previewAd.y) {
+      const previewAd = this.$store.state.previewAd;
+      if (this.previewLocked && Number(res.args.x*10) == previewAd.x && Number(res.args.y*10) == previewAd.y) {
         // Colliding ad purchased
         this.previewLocked = false;
-        this.previewAd = null;
+        this.$store.commit('clearPreview');
       }
     }.bind(this))
 

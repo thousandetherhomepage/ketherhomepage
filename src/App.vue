@@ -1,5 +1,13 @@
 <template>
   <div id="app">
+    <header>
+      <h1>The Thousand Ether Homepage</h1>
+      <h2>1,000,000 pixels &middot; 0.001 ETH per pixel &middot; Own a piece of blockchain history!</h2>
+      <div class="sold" v-if="ready">
+        {{$store.state.adsPixels}} pixels sold <button v-on:click="$store.commit('updatePreview', {y: 20, x: 20})" v-if="!$store.state.previewAd">Buy Pixels</button>
+      </div>
+    </header>
+
     <template v-if="ready">
       <Homepage v-if="ready" :web3="web3" :contract="contract" :isReadOnly="isReadOnly" :showNSFW="showNSFW"></Homepage>
     </template>
@@ -165,4 +173,22 @@ export default {
 </script>
 
 <style lang="scss">
+header {
+  h2 {
+    display: inline-block;
+  }
+  .sold {
+    display: inline-block;
+    margin-left: 5px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    background: #4A90E2;
+    color: white;
+    font-weight: bold;
+
+    button {
+      margin-left: 5px;
+    }
+  }
+}
 </style>

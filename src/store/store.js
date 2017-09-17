@@ -72,6 +72,7 @@ export default new Vuex.Store({
     numNSFW: 0,
     pixelsOwned: 0,
     grid: null, // lazy load
+    previewAd: null,
   },
   mutations: {
     setAccount(state, account) {
@@ -85,6 +86,12 @@ export default new Vuex.Store({
       for (let ad of state.ads) {
         if (ad.owner === account) addAdOwned(state, ad);
       }
+    },
+    updatePreview(state, ad) {
+      state.previewAd = ad;
+    },
+    clearPreview(state) {
+      state.previewAd = null;
     },
     clearAds(state) {
       state.ads = [];

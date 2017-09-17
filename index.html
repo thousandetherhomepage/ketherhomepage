@@ -37,16 +37,18 @@
         margin: 0.5em 0;
       }
 
-      header, .container {
+      header, footer, .container {
         width: 1000px;
         margin: 1em auto;
       }
+      header h2 {
+        margin-top: 0;
+      }
 
       footer {
-        margin: 2em auto;
+        margin-top: 2em;
         display: table;
         table-layout: fixed;
-        width: 100%;
       }
       footer ul {
         display: table-cell;
@@ -58,7 +60,6 @@
       footer li {
         margin-bottom: 0.5em;
       }
-
       .adGrid {
         margin: 0 auto;
         position: relative;
@@ -69,12 +70,12 @@
     </style>
   </head>
   <body>
-    <header>
-      <h1>The Thousand Ether Homepage</h1>
-      <h2>1,000,000 pixels &middot; 0.001 ETH per pixel &middot; Own a piece of blockchain history!</h2>
-    <header>
-
     <div id="app" class="container">
+      <header>
+        <h1>The Thousand Ether Homepage</h1>
+        <h2>1,000,000 pixels &middot; 0.001 ETH per pixel &middot; Own a piece of blockchain history!</h2>
+      </header>
+
       <div class="adGrid"></div>
 
       <footer>

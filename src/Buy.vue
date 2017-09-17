@@ -20,7 +20,7 @@
 </style>
 
 <template>
-  <div id="adBuy" v-show="$parent.active" v-bind:class="{ available: isAvailable }">
+  <div id="adBuy" v-show="$parent.enabled" v-bind:class="{ available: isAvailable }">
     <div>
       {{$parent.width}}x{{$parent.height}} = {{ $parent.width * $parent.height }} pixels at position ({{$parent.left}}, {{$parent.top}}).
     </div>
