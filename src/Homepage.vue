@@ -40,8 +40,6 @@
       </vue-draggable-resizable>
     </div>
 
-    <p>{{$store.state.adsPixels}} pixels sold. <button v-on:click="updatePreview(20, 920)" v-if="!$store.state.previewAd">Buy Pixels</button></p>
-
     <p v-if="$store.state.numOwned > 0">{{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button></p>
     <Publish v-if="showPublish" :web3="web3" :contract="contract"></Publish>
 

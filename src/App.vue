@@ -1,10 +1,10 @@
 <template>
-  <div id="app">
+  <div id="app" class="container">
     <header>
       <h1>The Thousand Ether Homepage</h1>
       <h2>1,000,000 pixels &middot; 0.001 ETH per pixel &middot; Own a piece of blockchain history!</h2>
       <div class="sold" v-if="ready">
-        {{$store.state.adsPixels}} pixels sold <button v-on:click="$store.commit('updatePreview', {y: 20, x: 20})" v-if="!$store.state.previewAd">Buy Pixels</button>
+        {{$store.state.adsPixels}} pixels sold <button v-on:click="$store.commit('updatePreview', {x: 20, y: 20})" v-if="!$store.state.previewAd">Buy Pixels</button>
       </div>
     </header>
 
@@ -18,6 +18,16 @@
         </p>
       </div>
     </template>
+
+    <div class="sold" v-if="ready">
+      {{$store.state.adsPixels}} pixels sold <button v-on:click="$store.commit('updatePreview', {x: 20, y: 920})" v-if="!$store.state.previewAd">Buy Pixels</button>
+    </div>
+
+    <div class="info">
+      <p>
+        Ads displayed above are loaded directly from the Ethereum Blockchain. This Decentralized Application (<a href="https://ethereum.stackexchange.com/questions/383/what-is-a-dapp">DApp</a>) does not have a traditional backend. No MVC framework, no SQL database. It's just a JavaScript application served statically from Github which speaks to the Ethereum blockchain using <a href="https://github.com/ethereum/web3.js/">Web3.js</a>. Pretty cool, right?
+      </p>
+    </div>
 
     <footer>
       <ul>
@@ -177,18 +187,18 @@ header {
   h2 {
     display: inline-block;
   }
-  .sold {
-    display: inline-block;
-    margin-left: 5px;
-    padding: 5px 10px;
-    border-radius: 3px;
-    background: #4A90E2;
-    color: white;
-    font-weight: bold;
+}
+.sold {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 5px 10px;
+  border-radius: 3px;
+  background: #4A90E2;
+  color: white;
+  font-weight: bold;
 
-    button {
-      margin-left: 5px;
-    }
+  button {
+    margin-left: 5px;
   }
 }
 </style>
