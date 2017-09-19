@@ -1,7 +1,4 @@
 import Vue from 'vue'
-import VueRouter from 'vue-router'
-Vue.use(VueRouter)
-
 import store from './store/store'
 import App from './App.vue'
 

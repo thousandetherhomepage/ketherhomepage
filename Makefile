@@ -10,7 +10,7 @@ run: deps contracts
 	npm run dev
 
 deploy-dapp: build ../thousandetherhomepage.github.io
-	tar c build/build.js index.html | tar -C ../thousandetherhomepage.github.io/ -xv
+	tar c build/build.js index.html faq | tar -C ../thousandetherhomepage.github.io/ -xv
 	cd ../thousandetherhomepage.github.io; git commit -v -a
 	echo "Push it."
 
