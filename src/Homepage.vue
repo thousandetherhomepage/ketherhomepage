@@ -32,8 +32,7 @@
   <div class="container">
     <div :class="{ adGrid: true, active: !!$store.state.previewAd }">
       <template v-for="ad in $store.state.ads" v-if="ad">
-        <a :href="ad.link" target="_blank" v-if="!ad.NSFW || showNSFW"><img :src="ad.image" :style="adStyle(ad)" :title="ad.title" /></a>
-        <div class="nsfwAd" :style="adStyle(ad)" v-else title="NSFW ad disabled"></div>
+        <Ad :showNSFW="showNSFW" :ad="ad"></Ad>
       </template>
       <vue-draggable-resizable :active="true" :minw="10" :minh="10" :x="$store.state.previewAd.x" :y="$store.state.previewAd.y" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="$store.state.previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
         <Buy :web3="web3" :contract="contract" :isReadOnly="isReadOnly" @buy="onBuy"></Buy>
@@ -41,14 +40,14 @@
     </div>
 
     <p v-if="$store.state.numOwned > 0">{{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button></p>
-    <Publish v-if="showPublish" :web3="web3" :contract="contract"></Publish>
+    <Publish v-if="showPublish" :web3="web3" :contract="contract" :showNSFW="showNSFW"></Publish>
 
     <Offline v-if="isReadOnly"></Offline>
   </div>
 </template>
 
 <script>
-
+import Ad from './Ad.vue'
 import Buy from './Buy.vue'
 import Publish from './Publish.vue'
 import Offline from './Offline.vue'
@@ -65,7 +64,7 @@ function toAd(i, r) {
     link: r[5] || "",
     image: r[6] || "",
     title: r[7],
-    NSFW: r[8] || r[9], // TODO: Rename to NSFW?
+    NSFW: r[8] || r[9],
     forcedNSFW: r[9],
   }
 }
@@ -102,15 +101,6 @@ export default {
 
       }.bind(this));
     },
-    adStyle(ad) {
-      const s = {
-        "left": ad.x * 10 + "px",
-        "top": ad.y * 10 + "px",
-        "width": ad.width * 10 + "px",
-        "height": ad.height * 10 + "px",
-      }
-      return s;
-    }
   },
   created() {
     this.web3.eth.getAccounts(function(err, res) {
@@ -137,6 +127,7 @@ export default {
   },
   components: {
     'vue-draggable-resizable': VueDraggableResizable,
+    Ad,
     Buy,
     Publish,
     Offline,

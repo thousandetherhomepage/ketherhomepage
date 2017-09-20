@@ -62,7 +62,7 @@ input {
         <label>
           <span>Image</span>
           <input type="text" v-model="ad.image" placeholder="https://...." />
-          <small>URL to PNG image. Can be <code>https://</code>, <code>bzz://</code>, or <code>data:image/png,base64,...</code> encoded</small>
+          <small>URL to PNG image. Can be <code>https://</code>, <code>ipfs://</code>, <code>bzz://</code>, or <code>data:image/png,base64,...</code> encoded</small>
         </label>
         <label>
           <span>NSFW</span>
@@ -72,7 +72,7 @@ input {
         <div>
           <h3>Live preview</h3>
           <p>
-            <a :href="ad.link" target="_blank"><img class="previewAd" :src="ad.image" :style="{ width: (ad.width*10) + 'px', height: (ad.height*10) + 'px'}" :title="ad.title" /></a>
+            <Ad :showNSFW="showNSFW" :ad="ad"></Ad>
           </p>
         </div>
         <input type="submit" value="Publish Changes" />
@@ -89,8 +89,10 @@ input {
 </template>
 
 <script>
+import Ad from './Ad.vue'
+
 export default {
-  props: ["web3", "contract"],
+  props: ["web3", "contract", "showNSFW"],
   data() {
     return {
       ad: false,
@@ -107,6 +109,9 @@ export default {
       }.bind(this));
       return false;
     },
+  },
+  components: {
+    Ad,
   },
 }
 </script>
