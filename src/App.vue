@@ -9,7 +9,7 @@
     </header>
 
     <template v-if="ready">
-      <Homepage v-if="ready" :web3="web3" :contract="contract" :isReadOnly="isReadOnly" :showNSFW="showNSFW"></Homepage>
+      <Homepage v-if="ready" :web3="web3" :contract="contract" :isReadOnly="isReadOnly" :showNSFW="showNSFW" :prerendered="prerendered"></Homepage>
     </template>
     <template v-else>
       <div class="adGrid">
@@ -73,11 +73,19 @@ const deployConfig = {
     contractAddr: '0xb88404dd8fe4969ef67841250baef7f04f6b1a5e',
     web3Fallback: 'https://rinkeby.infura.io/VZCd1IVOZ1gcPsrc9gd7',
     etherscanLink: 'https://rinkeby.etherscan.io/address/0xb88404dd8fe4969ef67841250baef7f04f6b1a5e',
+    prerendered: {
+      image: 'https://storage.googleapis.com/ketherhomepage/rinkeby.png',
+      data: 'https://storage.googleapis.com/ketherhomepage/rinkeby.json'
+    },
   },
   "MainNet": {
     contractAddr: '0xb5fe93ccfec708145d6278b0c71ce60aa75ef925',
     web3Fallback: 'https://mainnet.infura.io/VZCd1IVOZ1gcPsrc9gd7',
     etherscanLink: 'https://etherscan.io/address/0xb5fe93ccfec708145d6278b0c71ce60aa75ef925',
+    prerendered: {
+      image: 'https://storage.googleapis.com/ketherhomepage/mainnet.png',
+      data: 'https://storage.googleapis.com/ketherhomepage/mainnet.json'
+    },
   }
 }
 const web3Networks = [
@@ -138,6 +146,7 @@ export default {
       'ready': false,
       'isReadOnly': false,
       'showNSFW': false,
+      'prerendered': null,
     }
   },
   methods: {
@@ -169,6 +178,7 @@ export default {
           const contract = this.web3.eth.contract(contractJSON.abi);
           this.contract = Object.freeze(contract.at(options.contractAddr));
           this.ready = true;
+          this.prerendered = options.prerendered;
         }.bind(this))
       }.bind(this));
     },

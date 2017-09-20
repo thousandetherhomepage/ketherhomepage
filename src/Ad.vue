@@ -1,6 +1,7 @@
 <template>
   <a :href="link" target="_blank">
-    <img :src="image" :style="style" :title="title" :class="{ nsfwAd: !shown }" />
+    <div v-if="skipImage" :style="style" :title="title" :class="{ nsfwAd: !shown }" />
+    <img v-else :src="image" :style="style" :title="title" :class="{ nsfwAd: !shown }" />
   </a>
 </template>
 
@@ -26,7 +27,7 @@ function adStyle(ad) {
 }
 
 export default {
-  props: ["ad", "showNSFW"],
+  props: ["ad", "showNSFW", "skipImage"],
   computed: {
     shown() {
       return !this.ad.NSFW || this.showNSFW;
@@ -40,7 +41,6 @@ export default {
       return this.ad.title;
     },
     image() {
-      if (!this.shown) return ""
       return gatewayURL(this.ad.image);
     },
     style() {
