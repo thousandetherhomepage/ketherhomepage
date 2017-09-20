@@ -47,7 +47,7 @@ input {
         </p>
         <ul>
           <li>If your ad contains adult content, please self-mark it as NSFW. NSFW ads are opt-in by viewers. You can change it later if you self-mark as NSFW.</li>
-          <li>Don't put inappropriate or illegal content in the ad.</li>
+          <li>Don't link to, or put, inappropriate or illegal content in the ad.</li>
           <li>Keep your image size small, under 100KB. PNG is preferred, but JPG or non-animated GIF is acceptable.</li>
           <li>If your ad breaks any rules, it can be forced to NSFW by the moderators of this contract and then only a moderator can change it back to non-NSFW.</li>
         </ul>
