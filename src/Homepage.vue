@@ -117,7 +117,16 @@ export default {
     }.bind(this));
 
     this.loadAds();
+
+    // Setup event monitoring:
+
     this.contract.Buy().watch(function(err, res) {
+      if (err) {
+        // TODO: Surface this in UI?
+        console.log("Buy event monitoring disabled, will need to refresh to see changes.")
+        return;
+      }
+
       this.$store.commit('addAd', res.args);
 
       const previewAd = this.$store.state.previewAd;
@@ -129,6 +138,12 @@ export default {
     }.bind(this))
 
     this.contract.Publish().watch(function(err, res) {
+      if (err) {
+        // TODO: Surface this in UI?
+        console.log("Publish event monitoring disabled, will need to refresh to see changes.")
+        return;
+      }
+
       this.$store.commit('addAd', res.args);
     }.bind(this))
   },

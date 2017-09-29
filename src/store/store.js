@@ -34,7 +34,7 @@ function grid_array2d(w, h) {
     },
     setBox: function(x1, y1, x2, y2) {
       for (let x=Number(x1); x<=x2; x++) {
-        for(let y=Number(y1); y<=y2; y++) {
+        for (let y=Number(y1); y<=y2; y++) {
           grid[x][y] = true;
         }
       }
@@ -109,13 +109,13 @@ export default new Vuex.Store({
         state.ads.length = ad.idx;
       }
       const existingAd = state.ads[ad.idx];
-      if (existingAd !== undefined) {
+      if (existingAd !== undefined && existingAd.width !== undefined) {
         // Already counted, update values
         if (existingAd.NSFW && !ad.NSFW) {
           // Toggled from nsfw to not-nsfw
           state.numNSFW -= 1;
         }
-        Object.assign(existingAd, ad);
+        state.ads[ad.idx] = Object.assign(existingAd, ad);
         return;
       }
 
@@ -129,7 +129,6 @@ export default new Vuex.Store({
       }
 
       // Not counted yet
-      state.adsPixels += ad.width * ad.height * 100;
       if (ad.NSFW) {
         state.numNSFW += 1;
       }
@@ -138,6 +137,13 @@ export default new Vuex.Store({
       state.ads.splice(ad.idx, 1, ad)
       if (state.accounts[ad.owner]) addAdOwned(state, ad);
 
+      if (ad.width === undefined) {
+        // This is just a publish event, will fill this out when it comes
+        // back with the buy event (race condition)
+        return;
+      }
+
+      state.adsPixels += ad.width * ad.height * 100;
       if (state.grid !== null) {
         // Fill grid cache if it's already loaded
 

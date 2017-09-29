@@ -17,6 +17,11 @@ function gatewayURL(url) {
 }
 
 function adStyle(ad) {
+  if (!ad.width) {
+    return {
+      "display": "none",
+    }
+  }
   const s = {
     "left": ad.x * 10 + "px",
     "top": ad.y * 10 + "px",
