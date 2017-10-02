@@ -46,6 +46,7 @@ export default {
       return this.ad.title;
     },
     image() {
+      if (!this.shown) return "";
       return gatewayURL(this.ad.image);
     },
     style() {
