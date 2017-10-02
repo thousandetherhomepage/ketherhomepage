@@ -28,6 +28,10 @@ function adStyle(ad) {
     "width": ad.width * 10 + "px",
     "height": ad.height * 10 + "px",
   }
+
+  if (!ad.image) {
+    s["background"] = "rgba(255, 255, 255, 0.5)";
+  }
   return s;
 }
 
