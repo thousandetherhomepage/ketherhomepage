@@ -47,8 +47,6 @@
 </template>
 
 <script>
-import jsonp from 'jsonp'
-
 import Ad from './Ad.vue'
 import Buy from './Buy.vue'
 import Publish from './Publish.vue'
