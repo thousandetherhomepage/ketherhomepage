@@ -121,11 +121,13 @@ export default new Vuex.Store({
 
       // Is it a buy-only ad? Prefill default values
       if (ad.link === undefined) {
-        ad.link = "";
-        ad.image = "";
-        ad.title = ""
-        ad.NSFW = false;
-        ad.forcedNSFW = false;
+        ad = Object.assign({
+          link: "",
+          image: "",
+          title: "",
+          NSFW: false,
+          forcedNSFW: false
+        }, ad);
       }
 
       // Not counted yet

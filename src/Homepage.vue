@@ -5,7 +5,7 @@
     display: block;
     overflow: hidden;
     font-size: 11px;
-    color: #888;
+    color: rgba(255, 255, 255, 0.5);
     white-space: nowrap;
   }
 
@@ -47,6 +47,8 @@
 </template>
 
 <script>
+import jsonp from 'jsonp'
+
 import Ad from './Ad.vue'
 import Buy from './Buy.vue'
 import Publish from './Publish.vue'
@@ -102,6 +104,24 @@ export default {
 
       }.bind(this));
     },
+    loadAdsStatic() {
+      this.$store.commit('clearAds');
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", this.prerendered.data, true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+
+        const ads = JSON.parse(xhr.responseText);
+        this.$store.commit('setAdsLength', ads.length);
+        for (let i=0; i<ads.length; i++) {
+          const ad = ads[i];
+          // FIXME: Remove polyfill from old version
+          if (ad.userNSFW) ad.NSFW = ad.userNSFW;
+          this.$store.commit('addAd', ad);
+        }
+      }.bind(this);
+      xhr.send();
+    },
     gridStyle(config) {
       if (!config) return;
       return {
@@ -117,6 +137,7 @@ export default {
     }.bind(this));
 
     this.loadAds();
+    // this.loadAdsStatic();
 
     // Setup event monitoring:
 
