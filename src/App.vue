@@ -179,6 +179,19 @@ export default {
           this.contract = Object.freeze(contract.at(options.contractAddr));
           this.ready = true;
           this.prerendered = options.prerendered;
+
+          if (web3.currentProvider.isMetaMask) {
+            // Poll for network changes, because MetaMask no longer reloads
+            const app = this;
+            const interval = setInterval(function() {
+              web3.version.getNetwork(function(error, newNetworkVersion) {
+                if (error || newNetworkVersion !== networkVersion) {
+                  clearInterval(interval)
+                  app.setNetwork();
+                }
+              }.bind(this));
+            }, 2000);
+          }
         }.bind(this))
       }.bind(this));
     },
