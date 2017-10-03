@@ -5,7 +5,7 @@
     display: block;
     overflow: hidden;
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(0, 0, 0, 0.7);
     white-space: nowrap;
   }
 
@@ -26,6 +26,21 @@
     background: #ffcc47;
   }
 }
+
+.edit {
+  display: inline-block;
+  margin-top: 1em;
+  margin-left: 5px;
+  padding: 5px 10px;
+  border-radius: 3px;
+  background: #246648;
+  color: white;
+  font-weight: bold;
+
+  button {
+    margin-left: 5px;
+  }
+}
 </style>
 
 <template>
@@ -39,7 +54,9 @@
       </vue-draggable-resizable>
     </div>
 
-    <p v-if="$store.state.numOwned > 0">{{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button></p>
+    <div class="edit" v-if="$store.state.numOwned > 0">
+      {{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button>
+    </div>
     <Publish v-if="showPublish" :web3="web3" :contract="contract" :showNSFW="showNSFW"></Publish>
 
     <Offline v-if="isReadOnly"></Offline>
