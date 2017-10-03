@@ -88,7 +88,7 @@ export default new Vuex.Store({
       }
     },
     updatePreview(state, ad) {
-      state.previewAd = ad;
+      state.previewAd = Object.assign(state.previewAd || {}, ad);
     },
     clearPreview(state) {
       state.previewAd = null;
