@@ -42,6 +42,7 @@ export default {
     },
     link() {
       if (!this.shown) return "";
+      if (this.ad.link && this.ad.link.startsWith('javascript:')) return "";
       return this.ad.link;
     },
     title() {
