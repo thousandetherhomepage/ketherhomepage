@@ -74,8 +74,8 @@ const deployConfig = {
     web3Fallback: 'https://rinkeby.infura.io/VZCd1IVOZ1gcPsrc9gd7',
     etherscanLink: 'https://rinkeby.etherscan.io/address/0xb88404dd8fe4969ef67841250baef7f04f6b1a5e',
     prerendered: {
-      image: 'https://storage.googleapis.com/ketherhomepage/rinkeby.png',
-      data: 'https://storage.googleapis.com/ketherhomepage/rinkeby.json'
+      image: 'https://storage.googleapis.com/storage.thousandetherhomepage.com/rinkeby.png',
+      data: 'https://storage.googleapis.com/storage.thousandetherhomepage.com/rinkeby.json'
     },
   },
   "MainNet": {
@@ -83,8 +83,8 @@ const deployConfig = {
     web3Fallback: 'https://mainnet.infura.io/VZCd1IVOZ1gcPsrc9gd7',
     etherscanLink: 'https://etherscan.io/address/0xb5fe93ccfec708145d6278b0c71ce60aa75ef925',
     prerendered: {
-      image: 'https://storage.googleapis.com/ketherhomepage/mainnet.png',
-      data: 'https://storage.googleapis.com/ketherhomepage/mainnet.json'
+      image: 'https://storage.googleapis.com/storage.thousandetherhomepage.com/mainnet.png',
+      data: 'https://storage.googleapis.com/storage.thousandetherhomepage.com/mainnet.json'
     },
   }
 }
