@@ -92,7 +92,7 @@ export default {
     return {
       previewLocked: false,
       showPublish: false,
-      loadRemoteImages: true,
+      loadRemoteImages: this.prerendered ? this.prerendered.loadRemoteImages : true,
     }
   },
   methods: {
@@ -132,7 +132,8 @@ export default {
       xhr.onreadystatechange = function() {
         if (xhr.readyState !== 4) return;
 
-        const ads = JSON.parse(xhr.responseText);
+        const resp = JSON.parse(xhr.responseText);
+        const ads = resp.ads;
         this.$store.commit('setAdsLength', ads.length);
         for (let i=0; i<ads.length; i++) {
           const ad = ads[i];
@@ -157,8 +158,8 @@ export default {
       }
     }.bind(this));
 
+    //this.loadAdsStatic();
     this.loadAds();
-    // this.loadAdsStatic();
 
     // Setup event monitoring:
 
