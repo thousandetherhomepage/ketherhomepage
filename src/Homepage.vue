@@ -158,11 +158,14 @@ export default {
       }
     }.bind(this));
 
-    //this.loadAdsStatic();
+    if (!this.prerendered.loadFromWeb3) {
+      this.loadAdsStatic();
+      return;
+    }
+
     this.loadAds();
 
     // Setup event monitoring:
-
     this.contract.Buy().watch(function(err, res) {
       if (err) {
         // TODO: Surface this in UI?

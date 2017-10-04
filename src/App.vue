@@ -14,7 +14,7 @@
     <template v-else>
       <div class="adGrid">
         <p style="text-align: center; padding: 2em; color: #666;">
-          Waiting for Web3...
+          Waiting for Web3... (Must be on MainNet or Rinkeby)
         </p>
       </div>
     </template>
@@ -26,6 +26,9 @@
     <div class="info">
       <p>
         Ads displayed above are loaded directly from the Ethereum Blockchain. This Decentralized Application (<a href="https://ethereum.stackexchange.com/questions/383/what-is-a-dapp">DApp</a>) does not have a traditional backend. No MVC framework, no SQL database. It's just a JavaScript application served statically from Github which speaks to the Ethereum blockchain using <a href="https://github.com/ethereum/web3.js/">Web3.js</a>. Pretty cool, right?
+      </p>
+      <p>
+        Want to see it in action? <a href="https://gfycat.com/BleakSimilarGermanspaniel">Here's a GIF!</a>
       </p>
     </div>
 
@@ -76,7 +79,8 @@ const deployConfig = {
     prerendered: {
       image: 'https://storage.googleapis.com/storage.thousandetherhomepage.com/rinkeby.png',
       data: 'https://storage.thousandetherhomepage.com/rinkeby.json',
-      loadRemoteImages: true
+      loadRemoteImages: true,
+      loadFromWeb3: true,
     },
   },
   "MainNet": {
@@ -86,7 +90,8 @@ const deployConfig = {
     prerendered: {
       image: 'https://storage.googleapis.com/storage.thousandetherhomepage.com/mainnet.png',
       data: 'https://storage.thousandetherhomepage.com/mainnet.json',
-      loadRemoteImages: true
+      loadRemoteImages: true,
+      loadFromWeb3: true,
     },
   }
 }

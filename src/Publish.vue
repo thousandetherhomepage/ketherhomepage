@@ -19,13 +19,32 @@ input {
   border-left: 10px solid #eee;
   padding-left: 10px;
 
-  .previewAd {
+  .previewAd img {
     display: block;
     overflow: hidden;
-    background: #000;
     font-size: 11px;
-    color: #eee;
+    color: rgba(0, 0, 0, 0.7);
     white-space: nowrap;
+  }
+
+  small {
+    color: #966;
+    margin: 0.5em;
+    display: inline-block;
+  }
+
+  input[type="submit"] {
+    font-size: 1em;
+    padding: 5px;
+    background: #fff8db;
+    display: block;
+    border-width: 2px;
+  }
+
+  .mini-adGrid {
+    padding: 10px;
+    background: #ddd;
+    margin-bottom: 1em;
   }
 }
 
@@ -48,7 +67,7 @@ input {
         <ul>
           <li>If your ad contains adult content, please self-mark it as NSFW. NSFW ads are opt-in by viewers. You can change it later if you self-mark as NSFW.</li>
           <li>Don't link to, or put, inappropriate or illegal content in the ad.</li>
-          <li>Keep your image size small, under 100KB. PNG is preferred, but JPG or non-animated GIF is acceptable.</li>
+          <li><strong>Keep your image size small, under 100KB.</strong> PNG is preferred, but JPG or non-animated GIF is acceptable.</li>
           <li>If your ad breaks any rules, it can be forced to NSFW by the moderators of this contract and then only a moderator can change it back to non-NSFW.</li>
         </ul>
         <label>
@@ -58,11 +77,12 @@ input {
         <label>
           <span>Link</span>
           <input type="text" v-model="ad.link" placeholder="https://..." />
+          <small class="error" v-if="ad.link && ad.link.indexOf('://') === -1">Missing https://?</small>
         </label>
         <label>
           <span>Image</span>
           <input type="text" v-model="ad.image" placeholder="https://...." />
-          <small>URL to PNG image. Can be <code>https://</code>, <code>ipfs://</code>, <code>bzz://</code>, or <code>data:image/png,base64,...</code> encoded</small>
+          <small>URL to PNG image. Can be <code>https://</code>, <code>ipfs://</code>, <code>bzz://</code>, or <code>data:image/png,base64,...</code> encoded.<br />Must be less than 100KB.</small>
         </label>
         <label>
           <span>NSFW</span>
@@ -70,12 +90,17 @@ input {
           <strong v-if="ad.forcedNSFW">Forced NSFW by moderator</strong>
         </label>
         <div>
-          <h3>Live preview</h3>
-          <p>
-            <Ad :showNSFW="showNSFW" :ad="ad"></Ad>
-          </p>
+          <h3>Preview <small>(not published yet)</small></h3>
+          <div class="mini-adGrid">
+            <Ad :showNSFW="showNSFW" :ad="ad" class="previewAd"></Ad>
+          </div>
         </div>
         <input type="submit" value="Publish Changes" />
+        <small>
+          It can take between 10 seconds to a few minutes for your published ad
+          to get mined into the blockchain and show up. The fees are paid to miners
+          to get the changes into the next block.
+        </small>
       </div>
     </form>
     <p v-else>
