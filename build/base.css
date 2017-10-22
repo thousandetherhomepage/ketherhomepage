@@ -74,3 +74,9 @@ footer li {
     height: 1000px;
     background: #ddd;
 }
+article ul {
+    list-style: none;
+}
+article li {
+    margin-bottom: 0.5em;
+}
