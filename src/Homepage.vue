@@ -147,7 +147,8 @@ export default {
     gridStyle(config) {
       if (!config) return;
       return {
-        'background-image': 'url(' + config.image + ')',
+        'background-image': `url(${config.image})`,
+        'background': `-webkit-image-set(url("${config.image}") 1x, url("${config.image2x})" 2x)`,
       }
     },
   },
