@@ -41,6 +41,7 @@
       <ul>
         <li><h3>Project</h3></li>
         <li><a href="/faq">FAQ</a></li>
+        <li><a href="/press">Press</a></li>
         <li><a href="https://github.com/thousandetherhomepage">Source code</a></li>
       </ul>
       <ul>
