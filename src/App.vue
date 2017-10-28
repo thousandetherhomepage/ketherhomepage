@@ -183,7 +183,9 @@ export default {
           const options = deployConfig[this.activeNetwork];
           this.networkConfig = options;
           const contract = this.web3.eth.contract(contractJSON.abi);
-          this.contract = Object.freeze(contract.at(options.contractAddr));
+          const contractAt = contract.at(options.contractAddr);
+          contractAt._network = this.activeNetwork;
+          this.contract = Object.freeze(contractAt);
           this.ready = true;
           this.prerendered = options.prerendered;
 
