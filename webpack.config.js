@@ -77,7 +77,7 @@ module.exports = {
       inject: false
     }),
     new HtmlWebpackPlugin({
-      title: 'The Thousand Ether Homepage &middot; Own a piece of blockchain history!',
+      title: 'FAQ &middot; The Thousand Ether Homepage',
       filename: 'faq/index.html',
       template: 'src/templates/faq.ejs',
       inject: false
