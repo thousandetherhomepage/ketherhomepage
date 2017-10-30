@@ -1,11 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <title>FAQ &middot; The Thousand Ether Homepage</title>
-    <link rel="stylesheet" href="/build/base.css">
-    <link rel="shortcut icon" type="image/png" href="/build/icon-32px.png">
-    <base target="_blank">
+    <%- include _head %>
   </head>
   <body>
     <div id="app" class="container">
@@ -86,11 +82,6 @@
           If you mark your ad as NSFW, then you can always change it later. If we have to go in and override your ad to NSFW, then only we can change it to not-NSFW later. We don’t want to do it, but we don’t want to be liable for promoting questionable content.
         </p>
 
-        <h2>Have you considered a shorter URL?</h2>
-        <p>
-            We have some handy aliases like <a href="https://1000eth.com">1000eth.com</a>, <a href="https://1000ether.com/">1000ether</a>, and <a href="https://1000etherhomepage.com/">1000etherhomepage</a>. They all lead back to the Thousand Ether Homepage.
-        </p>
-
         <h2>What’s cool about your smart contract?</h2>
         <p>
           So glad you asked! Obviously, all the ad unit management happens on the blockchain. If you buy the ad slot, you own it forever (or until you transfer it to someone else).
@@ -129,33 +120,9 @@
           contract on the Ethereum blockchain. It feels like magic every time.
         </p>
       </article>
-
-      <footer>
-        <ul>
-          <li><h3>Authors</h3></li>
-          <li><a href="https://keybase.io/shazow">shazow</a></li>
-          <li><a href="https://keybase.io/mveytsman">mveytsman</a></li>
-        </ul>
-        <ul>
-          <li><h3>Project</h3></li>
-          <li><a href="/faq">FAQ</a></li>
-          <li><a href="/press">Press</a></li>
-          <li><a href="https://github.com/thousandetherhomepage">Source code</a></li>
-        </ul>
-      </footer>
+      <%- include _footer %>
     </div>
-
-    <script async src='https://www.google-analytics.com/analytics.js'></script>
-    <script>
-      switch (window.location.hostname) {
-        case "localhost":
-        case "127.0.0.1":
-          break;
-        default:
-          window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-          ga('create', 'UA-105335104-1', 'auto');
-          ga('send', 'pageview');
-      }
+    <%- include _analytics%>
     </script>
   </body>
 </html>

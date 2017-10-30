@@ -1,11 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <title>Press &middot; The Thousand Ether Homepage</title>
-    <link rel="stylesheet" href="/build/base.css">
-    <link rel="shortcut icon" type="image/png" href="/build/icon-32px.png">
-    <base target="_blank">
+    <%- include _head%>
   </head>
   <body>
     <div id="app" class="container">
@@ -81,33 +77,8 @@
           </li>
         </ul>
       </article>
-
-      <footer>
-        <ul>
-          <li><h3>Authors</h3></li>
-          <li><a href="https://keybase.io/shazow">shazow</a></li>
-          <li><a href="https://keybase.io/mveytsman">mveytsman</a></li>
-        </ul>
-        <ul>
-          <li><h3>Project</h3></li>
-          <li><a href="/faq">FAQ</a></li>
-          <li><a href="/press">Press</a></li>
-          <li><a href="https://github.com/thousandetherhomepage">Source code</a></li>
-        </ul>
-      </footer>
+      <%- include _footer %>
     </div>
-
-    <script async src='https://www.google-analytics.com/analytics.js'></script>
-    <script>
-      switch (window.location.hostname) {
-        case "localhost":
-        case "127.0.0.1":
-          break;
-        default:
-          window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-          ga('create', 'UA-105335104-1', 'auto');
-          ga('send', 'pageview');
-      }
-    </script>
+    <%- include _analytics %>
   </body>
 </html>

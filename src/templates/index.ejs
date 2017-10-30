@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
+  <head>
+    <%- include _head %>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' www.google-analytics.com *.infura.io 'sha256-87Klt/UgO2rT2F3T3VzTH5GP8hORFujTILA05Z7dcQw='; connect-src *.infura.io storage.thousandetherhomepage.com http://127.0.0.1:8545/rpc/; style-src 'self' 'unsafe-inline'; img-src * data:;" />
+    <meta name="twitter:card" content="summary" />
+    <meta property="og:url" content="https://thousandetherhomepage.com"/>
+    <meta property="og:title" content="The Thousand Ether Homepage" />
+    <meta property="og:description" content="The Million Dollar Homepage as an Ethereum Smart Contract and DApp: A glimpse into what the future of web integrated with modern blockchain technology could be like." />
+    <meta property="og:image" content="https://storage.thousandetherhomepage.com/mainnet.png" />
+  </head>
+  <body>
+    <div id="app" class="container">
+      <header>
+        <h1>The Thousand Ether Homepage</h1>
+        <h2>1,000,000 pixels &middot; 0.001 ETH per pixel &middot; Own a piece of blockchain history!</h2>
+      </header>
+
+      <div class="adGrid"></div>
+
+    <%- include _footer %>
+    </div>
+    <%- include _analytics %>
+    <script src="/js/build.js"></script>
+  </body>
+</html>
