@@ -11,7 +11,7 @@ run: deps contracts
 
 deploy-dapp: build ../thousandetherhomepage.github.io
 	tar -C build -c js css img press faq index.html | tar -C ../thousandetherhomepage.github.io/ -xv
-	cd ../thousandetherhomepage.github.io; git commit -v -a
+	cd ../thousandetherhomepage.github.io; git add -v -A; git commit -v -a
 	echo "Push it."
 
 deploy-contract:
