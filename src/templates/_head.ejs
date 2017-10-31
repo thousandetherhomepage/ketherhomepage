@@ -1,0 +1,13 @@
+<script type="text/javascript">
+ baseHref = document.location.protocol + '//' + document.location.host;
+ if (document.location.pathname.startsWith('/ipfs') || document.location.pathname.startsWith('/ipns')) {
+   baseHref += document.location.pathname.split('/').slice(0,3).join('/') + '/'
+
+ }
+ document.write('<base href="' + baseHref + '" />');
+</script>
+<title><%= htmlWebpackPlugin.options.title %></title>
+<link rel="stylesheet" href="css/base.css" />
+<link rel="shortcut icon" type="image/png" href="img/icon-32px.png" />
+<base target="_blank" />
+<meta charset="utf-8" />

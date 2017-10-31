@@ -1,12 +1,14 @@
 var path = require('path')
 var webpack = require('webpack')
+var HtmlWebpackPlugin = require('html-webpack-plugin');
+
 
 module.exports = {
   entry: './src/main.js',
   output: {
     path: path.resolve(__dirname, './build'),
-    publicPath: '/build/',
-    filename: 'build.js'
+    publicPath: '/',
+    filename: 'js/build.js'
   },
   module: {
     rules: [
@@ -37,6 +39,10 @@ module.exports = {
         }
       },
       {
+        test: /\.ejs$/,
+        loader: 'ejs-compiled-loader'
+      },
+      {
         // Disable the hot-reloader
         test: path.resolve(__dirname, 'node_modules/webpack-dev-server/client'),
         loader: "null-loader"
@@ -50,12 +56,33 @@ module.exports = {
   },
   devServer: {
     historyApiFallback: true,
-    noInfo: true
+    noInfo: true,
+    contentBase: 'build/'
   },
   performance: {
     hints: false
   },
-  devtool: '#source-map'
+  devtool: '#source-map',
+  plugins: [
+    new HtmlWebpackPlugin({
+      title: 'The Thousand Ether Homepage &middot; Own a piece of blockchain history!',
+      filename: 'index.html',
+      template: 'src/templates/index.ejs',
+      inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: 'Press &middot; The Thousand Ether Homepage',
+      filename: 'press/index.html',
+      template: 'src/templates/press.ejs',
+      inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: 'FAQ &middot; The Thousand Ether Homepage',
+      filename: 'faq/index.html',
+      template: 'src/templates/faq.ejs',
+      inject: false
+    })
+  ]
 }
 
 if (process.env.NODE_ENV === 'production') {
