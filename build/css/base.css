@@ -80,3 +80,12 @@ article ul {
 article li {
     margin-bottom: 0.5em;
 }
+
+#floating-chat {
+    width: 2.5em;
+    height: 2.5em;
+    fill: #4a90e2;
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+}
