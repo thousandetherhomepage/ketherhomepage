@@ -17,7 +17,8 @@
 
 <template>
   <div class="container">
-    <AdGrid :web3="web3" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered"></AdGrid>
+    <AdGrid v-if="$store.state.gridVis" :web3="web3" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered"></AdGrid>
+    <AdList v-else :showNSFW="showNSFW"></AdList>
 
     <div class="edit" v-if="$store.state.numOwned > 0">
       {{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button>
@@ -30,6 +31,7 @@
 
 <script>
 import AdGrid from './AdGrid.vue'
+import AdList from './AdList.vue'
 import Publish from './Publish.vue'
 import Offline from './Offline.vue'
 
@@ -137,6 +139,7 @@ export default {
     Publish,
     Offline,
     AdGrid,
+    AdList,
   },
 }
 </script>

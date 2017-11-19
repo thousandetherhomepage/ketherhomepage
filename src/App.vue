@@ -57,6 +57,10 @@
             Contract on Etherscan
           </a>
         </li>
+        <li>
+          <a v-if="$store.state.gridVis" v-on:click="$store.commit('setVis', 'list')">List View</a>
+          <a v-else v-on:click="$store.commit('setVis', 'grid')">Grid View</a>
+        </li>
         <li v-if="$store.state.numNSFW > 0">
           <a v-if="!showNSFW" v-on:click="showNSFW = true">Show NSFW ({{$store.state.numNSFW}})</a>
           <a v-else v-on:click="showNSFW = false">Hide NSFW</a>
