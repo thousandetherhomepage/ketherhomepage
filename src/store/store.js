@@ -96,6 +96,7 @@ export default new Vuex.Store({
       state.previewAd = null;
     },
     clearAds(state) {
+      state.grid = null;
       state.ads = [];
       state.adsPixels = 0;
       state.numNSFW = 0;
