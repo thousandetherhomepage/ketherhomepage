@@ -7,6 +7,12 @@
     padding: 5px;
   }
 
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
   li {
     background: #ddd;
     margin-bottom: 0.5em;
@@ -16,12 +22,14 @@
 
 <template>
   <div class="adList">
-    <ul v-for="ad in $store.state.ads" v-if="ad && ad.image">
+    <p>Listing {{ num }} published ads and omitting {{ omitted }} empty ads.</p>
+    <p><strong>Newest ad first:</strong></p>
+
+    <ul v-for="ad in listAds" v-if="ad && ad.image">
       <li>
         <Ad :showNSFW="showNSFW" :ad="ad"></Ad>
       </li>
     </ul>
-    <p>Empty ads are omitted in list view.</p>
   </div>
 </template>
 
@@ -30,6 +38,29 @@ import Ad from './Ad.vue'
 
 export default {
   props: ["showNSFW"],
+  data() {
+    return {
+      omitted: 0,
+      num: 0,
+    }
+  },
+  computed: {
+    listAds() {
+      let omitted = 0, num = 0;
+      const ads = [];
+      for (let ad of this.$store.state.ads) {
+        if (!ad || !ad.image) {
+          omitted += 1;
+        }
+        num += 1;
+        ads.push(ad);
+      }
+      ads.reverse();
+      this.omitted = omitted;
+      this.num = num;
+      return ads;
+    },
+  },
   components: {
     Ad,
   },
