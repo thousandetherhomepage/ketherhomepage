@@ -73,6 +73,7 @@ export default new Vuex.Store({
     pixelsOwned: 0,
     grid: null, // lazy load
     previewAd: null,
+    gridVis: true,
   },
   mutations: {
     setAccount(state, account) {
@@ -88,18 +89,24 @@ export default new Vuex.Store({
       }
     },
     updatePreview(state, ad) {
+      state.gridVis = true; // Buy button forces grid view
       state.previewAd = Object.assign(state.previewAd || {}, ad);
     },
     clearPreview(state) {
       state.previewAd = null;
     },
     clearAds(state) {
+      state.grid = null;
       state.ads = [];
       state.adsPixels = 0;
       state.numNSFW = 0;
       state.ownedAds = {};
       state.numOwned = 0;
       state.pixelsOwned = 0;
+    },
+    setVis(state, vis) {
+      // Valid values: 'grid' and 'list', default to 'grid'
+      state.gridVis = vis !== 'list';
     },
     setAdsLength(state, len) {
       state.ads.length = len;
