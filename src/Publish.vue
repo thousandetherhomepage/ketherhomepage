@@ -126,29 +126,35 @@ export default {
   },
   methods: {
     publish() {
-      ga('send', {
-        hitType: 'event',
-        eventCategory: this.contract._network,
-        eventAction: 'publish-submit',
-      });
-      this.contract.publish.sendTransaction(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW), { from: this.ad.owner }, function(err, res) {
+      if (typeof ga === "function") {
         ga('send', {
           hitType: 'event',
           eventCategory: this.contract._network,
-          eventAction: 'publish-error',
-          eventLabel: JSON.stringify(err),
+          eventAction: 'publish-submit',
         });
+      }
+      this.contract.publish.sendTransaction(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW), { from: this.ad.owner }, function(err, res) {
+        if (typeof ga === "function") {
+          ga('send', {
+            hitType: 'event',
+            eventCategory: this.contract._network,
+            eventAction: 'publish-error',
+            eventLabel: JSON.stringify(err),
+          });
+        }
 
         this.ad = false;
         if (err) {
           this.error = err;
           return;
         }
-        ga('send', {
-          hitType: 'event',
-          eventCategory: this.contract._network,
-          eventAction: 'publish-success',
-        });
+        if (typeof ga === "function") {
+          ga('send', {
+            hitType: 'event',
+            eventCategory: this.contract._network,
+            eventAction: 'publish-success',
+          });
+        }
       }.bind(this));
       return false;
     },
