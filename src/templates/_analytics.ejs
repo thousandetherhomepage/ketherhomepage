@@ -1,11 +1,11 @@
 <script async src='https://www.google-analytics.com/analytics.js'></script>
     <script>
+      window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
       switch (window.location.hostname) {
         case "localhost":
         case "127.0.0.1":
           break;
         default:
-          window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
           ga('create', 'UA-105335104-1', 'auto');
           ga('send', 'pageview');
       }
