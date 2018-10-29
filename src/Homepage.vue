@@ -67,6 +67,10 @@ export default {
 
         for (let i=0; i<num; i++) {
           this.contract.ads.call(i, function(err, res) {
+            if (err) {
+              console.log("Failed to load metadata for ad #" + i);
+              return;
+            }
             this.$store.commit('addAd', toAd(i, res));
           }.bind(this));
         }
