@@ -115,7 +115,7 @@ function waitForWeb3(options, cb) {
   function getWeb3() {
     let web3 = window.ethereum;
     if (typeof web3 !== 'undefined') {
-      // we're using metamask
+      // we're using a wallet browser
       window.ethereum.enable()
       web3 = new Web3(window.ethereum)
     } else {
