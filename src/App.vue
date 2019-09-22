@@ -113,10 +113,13 @@ function waitForWeb3(options, cb) {
   const web3Fallback = options.web3Fallback || "http://localhost:8545/";
 
   function getWeb3() {
-    let web3 = window.web3;
+    let web3 = window.ethereum;
     if (typeof web3 !== 'undefined') {
-      web3 = new Web3(web3.currentProvider);
+      // we're using metamask
+      window.ethereum.enable()
+      web3 = new Web3(window.ethereum)
     } else {
+      // we're using a fallback
       web3 = new Web3(new Web3.providers.HttpProvider(web3Fallback));
     }
     try {
