@@ -112,7 +112,7 @@ export default {
             eventLabel: JSON.stringify(err),
           });
 
-          if (err.message && err.message.indexOf('User denied transaction signature.') !== -1)  {
+          if ((err.stack || err.message || "").indexOf('User denied transaction signature.') !== -1)  {
             // Aborted, revert to original state.
             return;
           }
