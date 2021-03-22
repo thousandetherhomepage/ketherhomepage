@@ -129,6 +129,9 @@ function waitForWeb3(options, cb) {
     }
   }
   function startWaiting() {
+    cb(getWeb3());
+    return
+    /*
     const interval = setInterval(function() {
       let r = getWeb3()
       if (r) {
@@ -136,6 +139,7 @@ function waitForWeb3(options, cb) {
         cb(r);
       }
     }, 500);
+    */
   }
   if (window.web3Loading === true) {
     // Can't do on window load too late.
