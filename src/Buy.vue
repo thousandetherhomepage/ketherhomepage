@@ -103,8 +103,7 @@ export default {
         eventLabel: ad.width + "x" + ad.height,
       });
 
-      // XXX: Update this
-      this.contract.methods.buy.sendTransaction(x, y, width, height, { value: weiPrice, from: account }, function(err, res) {
+      this.contract.methods.buy(x, y, width, height).send({ value: weiPrice, from: account }, function(err, res) {
         if (err) {
           ga('send', {
             hitType: 'event',

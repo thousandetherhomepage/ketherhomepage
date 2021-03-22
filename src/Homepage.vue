@@ -61,12 +61,12 @@ export default {
   methods: {
     loadAds() {
       this.$store.commit('clearAds');
-      this.contract.methods.getAdsLength.call(function(err, res) {
-        const num = res.toNumber();
+      this.contract.methods.getAdsLength().call(function(err, res) {
+        const num = res;
         this.$store.commit('setAdsLength', num);
 
         for (let i=0; i<num; i++) {
-          this.contract.methods.ads.call(i, function(err, res) {
+          this.contract.methods.ads(i).call(function(err, res) {
             if (err) {
               console.log("Failed to load metadata for ad #" + i);
               return;
