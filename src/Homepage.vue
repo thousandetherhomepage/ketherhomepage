@@ -119,10 +119,10 @@ export default {
         return;
       }
 
-      this.$store.commit('addAd', res.args);
+      this.$store.commit('addAd', res.returnValues);
 
       const previewAd = this.$store.state.previewAd;
-      if (this.previewLocked && Number(res.args.x*10) == previewAd.x && Number(res.args.y*10) == previewAd.y) {
+      if (this.previewLocked && Number(res.returnValues.x*10) == previewAd.x && Number(res.returnValues.y*10) == previewAd.y) {
         // Colliding ad purchased
         this.previewLocked = false;
         this.$store.commit('clearPreview');
@@ -136,7 +136,7 @@ export default {
         return;
       }
 
-      this.$store.commit('addAd', res.args);
+      this.$store.commit('addAd', res.returnValues);
     }.bind(this))
   },
   components: {
