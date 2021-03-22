@@ -92,7 +92,7 @@ export default {
         this.error = `Slot is not available: ${ad}`
         return;
       }
-      const weiPrice = this.web3.toWei(this.price(ad.width, ad.height), "ether");
+      const weiPrice = this.web3.utils.toWei(this.price(ad.width, ad.height).toString(), "ether");
       const x = Math.floor(ad.x/10), y = Math.floor(ad.y/10), width = Math.floor(ad.width/10), height = Math.floor(ad.height/10);
       const account = this.$store.state.activeAccount;
       ga('send', {
