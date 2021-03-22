@@ -77,7 +77,7 @@ import Web3 from 'web3'
 import contractJSON from 'json-loader!../build/contracts/KetherHomepage.json'
 
 const deployConfig = {
-  "TestNet (Rinkeby)": {
+  "rinkeby": {
     contractAddr: '0xb88404dd8fe4969ef67841250baef7f04f6b1a5e',
     web3Fallback: 'https://rinkeby.infura.io/v3/fa9f29a052924745babfc1d119465148',
     etherscanLink: 'https://rinkeby.etherscan.io/address/0xb88404dd8fe4969ef67841250baef7f04f6b1a5e',
@@ -88,7 +88,7 @@ const deployConfig = {
       loadFromWeb3: true,
     },
   },
-  "MainNet": {
+  "main": {
     contractAddr: '0xb5fe93ccfec708145d6278b0c71ce60aa75ef925',
     web3Fallback: 'https://mainnet.infura.io/v3/fa9f29a052924745babfc1d119465148',
     etherscanLink: 'https://etherscan.io/address/0xb5fe93ccfec708145d6278b0c71ce60aa75ef925',
@@ -101,10 +101,10 @@ const deployConfig = {
   }
 }
 const web3Networks = [
-  undefined, 'MainNet', undefined, undefined, 'TestNet (Rinkeby)',
+  undefined, 'main', undefined, undefined, 'rinkeby',
 ];
 
-const defaultNetwork = 'MainNet';
+const defaultNetwork = 'main';
 
 import Dropdown from './Dropdown.vue'
 import Homepage from './Homepage.vue'
@@ -113,6 +113,7 @@ function waitForWeb3(options, cb) {
   const web3Fallback = options.web3Fallback || "http://localhost:8545/";
 
   function getWeb3() {
+    window.Web3 = Web3;
     let web3 = window.ethereum;
     if (typeof web3 !== 'undefined') {
       // we're using a wallet browser
@@ -120,26 +121,26 @@ function waitForWeb3(options, cb) {
       web3 = new Web3(window.ethereum)
     } else {
       // we're using a fallback
+      //web3 = new Web3(Web3.givenProvider || web3Fallback);
       web3 = new Web3(new Web3.providers.HttpProvider(web3Fallback));
     }
+    return web3;
+    /*
     try {
-      if (web3.currentProvider.isConnected()) return web3;
+      if (web3.currentProvider.connected) return web3;
     } catch (_) {
       return null;
     }
+    */
   }
   function startWaiting() {
-    cb(getWeb3());
-    return
-    /*
     const interval = setInterval(function() {
       let r = getWeb3()
       if (r) {
         clearInterval(interval)
         cb(r);
       }
-    }, 500);
-    */
+    }, 1000);
   }
   if (window.web3Loading === true) {
     // Can't do on window load too late.
@@ -177,7 +178,7 @@ export default {
         // VueJS tries to inspect/walk/observe objects unless they're frozen. This breaks web3.
         this.web3 = Object.freeze(web3);
 
-        this.web3.version.getNetwork(function(error, networkVersion) {
+        this.web3.eth.net.getNetworkType(function(error, networkVersion) {
           if (error) throw error;
 
           if (this.activeNetwork === undefined) {
@@ -205,7 +206,7 @@ export default {
             // Poll for network changes, because MetaMask no longer reloads
             const app = this;
             const interval = setInterval(function() {
-              web3.version.getNetwork(function(error, newNetworkVersion) {
+              web3.eth.net.getNetworkType(function(error, newNetworkVersion) {
                 if (error || newNetworkVersion !== networkVersion) {
                   clearInterval(interval)
                   app.setNetwork();
