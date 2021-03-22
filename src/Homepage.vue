@@ -61,12 +61,12 @@ export default {
   methods: {
     loadAds() {
       this.$store.commit('clearAds');
-      this.contract.getAdsLength.call(function(err, res) {
+      this.contract.methods.getAdsLength.call(function(err, res) {
         const num = res.toNumber();
         this.$store.commit('setAdsLength', num);
 
         for (let i=0; i<num; i++) {
-          this.contract.ads.call(i, function(err, res) {
+          this.contract.methods.ads.call(i, function(err, res) {
             if (err) {
               console.log("Failed to load metadata for ad #" + i);
               return;
@@ -112,7 +112,7 @@ export default {
     this.loadAds();
 
     // Setup event monitoring:
-    this.contract.Buy().watch(function(err, res) {
+    this.contract.events.Buy(function(err, res) {
       if (err) {
         // TODO: Surface this in UI?
         console.log("Buy event monitoring disabled, will need to refresh to see changes.")
@@ -129,7 +129,7 @@ export default {
       }
     }.bind(this))
 
-    this.contract.Publish().watch(function(err, res) {
+    this.contract.events.Publish(function(err, res) {
       if (err) {
         // TODO: Surface this in UI?
         console.log("Publish event monitoring disabled, will need to refresh to see changes.")

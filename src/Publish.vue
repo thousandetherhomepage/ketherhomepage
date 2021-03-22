@@ -131,7 +131,7 @@ export default {
         eventCategory: this.contract._network,
         eventAction: 'publish-submit',
       });
-      this.contract.publish.sendTransaction(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW), { from: this.ad.owner }, function(err, res) {
+      this.contract.methods.publish.sendTransaction(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW), { from: this.ad.owner }, function(err, res) {
         ga('send', {
           hitType: 'event',
           eventCategory: this.contract._network,

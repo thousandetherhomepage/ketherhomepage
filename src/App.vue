@@ -182,7 +182,7 @@ export default {
           if (error) throw error;
 
           if (this.activeNetwork === undefined) {
-            this.activeNetwork = web3Networks[networkVersion];
+            this.activeNetwork = networkVersion;
           }
 
           const providerHost = this.web3.currentProvider.host
@@ -195,8 +195,7 @@ export default {
           // Load contract data
           const options = deployConfig[this.activeNetwork];
           this.networkConfig = options;
-          const contract = this.web3.eth.contract(contractJSON.abi);
-          const contractAt = contract.at(options.contractAddr);
+          const contractAt = new this.web3.eth.Contract(contractJSON.abi, options.contractAddr);
           contractAt._network = this.activeNetwork;
           this.contract = Object.freeze(contractAt);
           this.ready = true;
