@@ -94,12 +94,14 @@ if (process.env.NODE_ENV === 'production') {
         NODE_ENV: '"production"'
       }
     }),
+    /* FIXME: Uglify is borken?
     new webpack.optimize.UglifyJsPlugin({
       sourceMap: true,
       compress: {
         warnings: false
       }
     }),
+    */
     new webpack.LoaderOptionsPlugin({
       minimize: true
     })
