@@ -1,18 +1,23 @@
+const { BN } = require("ethereumjs-util");
+
+const KetherHomepage = await ethers.getContractFactory("KetherHomepage");
+
 describe('KetherHomepage', function(accounts) {
   // TODO should I query the contract to make sure the above values are right?
-  const weiPixelPrice = web3.utils.toWei("0.001", "ether");
-  const pixelsPerCell = 100;
-  const oneHundredCellPrice = 10 * 10 * pixelsPerCell * weiPixelPrice;
+  const weiPixelPrice = new BN(web3.utils.toWei("0.001", "ether"));
+  const pixelsPerCell = new BN(100);
+  const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(new BN(100));
 
-  const KetherHomepage = ethers.getContractFactory("KetherHomepage");
 
-  const owner = accounts[0]; // this is the account we deploy as owner, see 2_deploy_contracts.js
-  const withdrawWallet = accounts[1];
-  const account1 = accounts[2];
-  const account2 = accounts[3];
-
+  let owner, withdrawWallet, account1, account2;
   before(async () => {
     // Initialize
+    const accounts = await web3.eth.getAccounts()
+    owner = accounts[0]; // this is the account we deploy as owner, see 2_deploy_contracts.js
+    withdrawWallet = accounts[1];
+    account1 = accounts[2];
+    account2 = accounts[3];
+
     await web3.eth.sendTransaction({
       from: owner,
       to: account1,
@@ -29,33 +34,22 @@ describe('KetherHomepage', function(accounts) {
         return KH.weiPixelPrice.call();
       })
       .then(function(wpp) {
-        assert.equal(weiPixelPrice, wpp.toNumber());
+        assert.equal(weiPixelPrice.toString(), wpp.toString());
         return KH.pixelsPerCell.call();
       })
       .then(function(ppc) {
-        assert.equal(pixelsPerCell, ppc.toNumber());
+        assert.equal(pixelsPerCell.toString(), ppc.toString());
       });
   });
 
   it("should be a kether", function() {
-    assert.equal(1, web3.fromWei(weiPixelPrice * pixelsPerCell * 100 * 100, 'kether'));
-  });
-
-  it("should have an owner", function() {
-    let KH;
-    return KetherHomepage.new(owner, withdrawWallet)
-      .then(function(instance) {
-        KH = instance;
-
-        return KH.contractOwner.call();
-      })
-      .then(function(result) {
-        assert.equal(result, owner);
-      });
+    const fullSize = new BN('10000'); // 100 * 100
+    const amount = weiPixelPrice.mul(pixelsPerCell).mul(fullSize);
+    const kether = web3.utils.fromWei(amount, 'kether');
+    assert.equal(1, kether);
   });
 
   it("shouldn't let users buy if they don't send enough eth", function() {
-
     let KH;
     return KetherHomepage.new(owner, withdrawWallet)
       .then(function(instance) {
@@ -69,7 +63,7 @@ describe('KetherHomepage', function(accounts) {
       })
       .catch(function(error) {
         // revert / require present as an invalid opcode error (at least in my environment)
-        assert(error.message.indexOf("invalid opcode") >= 0);
+        assert(error.message.indexOf("reverted") >= 0, error.message);
       });
   });
 
@@ -135,7 +129,7 @@ describe('KetherHomepage', function(accounts) {
         assert.fail();
       })
       .catch(function(error) {
-        assert(error.message.indexOf("invalid opcode") >= 0);
+        assert(error.message.indexOf("reverted") >= 0, error.message);
       })
   });
 
@@ -181,7 +175,7 @@ describe('KetherHomepage', function(accounts) {
         assert.fail();
       })
       .catch(function(error) {
-        assert(error.message.indexOf("invalid opcode") >= 0);
+        assert(error.message.indexOf("reverted") >= 0, error.message);
       })
   });
 
@@ -245,7 +239,7 @@ describe('KetherHomepage', function(accounts) {
         //	would work. Instead it's off by 2857000000000000 wei...
         // What happened?
         web3.eth.getBalance(withdrawWallet, function(error, balance) {
-          assert(balance.toNumber() > initialBalance.toNumber());
+          assert(balance.gt(initialBalance));
         });
       })
   });
@@ -265,7 +259,7 @@ describe('KetherHomepage', function(accounts) {
         assert.fail();
       })
       .catch(function(error) {
-        assert(error.message.indexOf("invalid opcode") >= 0);
+        assert(error.message.indexOf("reverted") >= 0, error.message);
       })
   });
 
@@ -280,7 +274,7 @@ describe('KetherHomepage', function(accounts) {
       })
       .catch(function(error) {
         // catch revert / require
-        assert(error.message.indexOf("invalid opcode") >= 0);
+        assert(error.message.indexOf("reverted") >= 0, error.message);
       });
   });
 
@@ -295,7 +289,7 @@ describe('KetherHomepage', function(accounts) {
       })
       .catch(function(error) {
         // catch revert / require
-        assert(error.message.indexOf("invalid opcode") >= 0);
+        assert(error.message.indexOf("reverted") >= 0, error.message);
       });
   });
 
@@ -310,7 +304,7 @@ describe('KetherHomepage', function(accounts) {
       })
       .catch(function(error) {
         // catch revert / require
-        assert(error.message.indexOf("invalid opcode") >= 0);
+        assert(error.message.indexOf("reverted") >= 0, error.message);
       });
   });
 
@@ -367,7 +361,7 @@ describe('KetherHomepage', function(accounts) {
       })
       .catch(function(error) {
         // catch revert / require
-        assert(error.message.indexOf("invalid opcode") >= 0);
+        assert(error.message.indexOf("reverted") >= 0, error.message);
       });
   });
 });
