@@ -1,10 +1,10 @@
 TRUFFLEBIN := ./node_modules/.bin/truffle
 
 build: deps contracts
-	npm run build
+	npmx hardhat build
 
 test: deps contracts
-	npm run truffle-test
+	npmx hardhat test
 
 run: deps contracts
 	npm run dev

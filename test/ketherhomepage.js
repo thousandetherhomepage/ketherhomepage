@@ -1,17 +1,24 @@
-const KetherHomepage = artifacts.require("./KetherHomepage.sol");
-// TODO should I query the contract to make sure the above values are right?
-const weiPixelPrice = web3.toWei(1000/1000000, "ether");
-const pixelsPerCell = 100;
+describe('KetherHomepage', function(accounts) {
+  // TODO should I query the contract to make sure the above values are right?
+  const weiPixelPrice = web3.utils.toWei("0.001", "ether");
+  const pixelsPerCell = 100;
+  const oneHundredCellPrice = 10 * 10 * pixelsPerCell * weiPixelPrice;
 
-const oneHundredCellPrice = 10 * 10 * pixelsPerCell * weiPixelPrice;
+  const KetherHomepage = ethers.getContractFactory("KetherHomepage");
 
-contract('KetherHomepage', function(accounts) {
   const owner = accounts[0]; // this is the account we deploy as owner, see 2_deploy_contracts.js
   const withdrawWallet = accounts[1];
   const account1 = accounts[2];
   const account2 = accounts[3];
 
-  web3.eth.sendTransaction({from:owner, to:account1, value: 10000000000000000000 }, function(err, r) { /* NOP */ });
+  before(async () => {
+    // Initialize
+    await web3.eth.sendTransaction({
+      from: owner,
+      to: account1,
+      value: "10000000000000000000"
+    })
+  })
 
   it("should have correct constants by default", function() {
     let KH;
