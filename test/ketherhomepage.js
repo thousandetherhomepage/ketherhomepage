@@ -86,7 +86,7 @@ describe('KetherHomepage', function(accounts) {
     await KH.connect(account1).buy(0, 0, 10, 10, { value: oneHundredCellPrice });
     await expect(
       KH.connect(account2).buy(5, 5, 10, 10, { value: oneHundredCellPrice })
-    ).to.be.revertedWith("Transaction reverted without a reason");
+    ).to.be.reverted
   });
 
   it("should let a user publish their own ad", async function() {
@@ -110,192 +110,91 @@ describe('KetherHomepage', function(accounts) {
     await KH.connect(account1).buy(0, 0, 10, 10, { value: oneHundredCellPrice });
     await expect(
       KH.connect(account2).publish(0, "link", "image", "title", false)
-    ).to.be.revertedWith("Transaction reverted without a reason");
+    ).to.be.reverted
   });
 
-  xit("should let the contract owner forceNSFW", function() {
-    let KH;
-    return KetherHomepage.new(owner, withdrawWallet)
-      .then(function(instance) {
-        KH = instance;
+  it("should let the contract owner forceNSFW", async function() {
+    await KH.connect(account1).buy(0, 0, 10, 10, { value: oneHundredCellPrice });
+    await KH.connect(owner).forceNSFW(0, true);
+    const ad = await KH.ads(0);
 
-        return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
-      })
-      .then(function() {
-        return KH.forceNSFW(0, true, { from: owner })
-      })
-      .then(function() {
-        return KH.ads.call(0);
-      })
-      .then(function(ad) {
-        // Make sure we set the nsfw on the ad
-        assert.equal(true, ad[9]);
-      })
+    // Make sure we set the nsfw on the ad
+    expect(ad[9]).to.be.true;
   });
 
-  xit("shouldn't let non contract owners forceNSFW", function() {
-    let KH;
-    return KetherHomepage.new(owner, withdrawWallet)
-      .then(function(instance) {
-        KH = instance;
-
-        return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
-      })
-      .then(function() {
-        return KH.forceNSFW(0, true, { from: account1 })
-      })
-      .then(function() {
-        assert.fail();
-      })
-      .catch(function(error) {
-        assert(error.message.indexOf("invalid opcode") >= 0);
-      })
+  it("shouldn't let non contract owners forceNSFW", async function() {
+    await KH.connect(account1).buy(0, 0, 10, 10, { value: oneHundredCellPrice });
+    await expect(
+      KH.connect(account1).forceNSFW(0, true)
+    ).to.be.reverted
   });
 
-  xit("should let the owner withdraw", function() {
-    let initialBalance;
-    let newBalance;
-    let KH;
-    let gas;
-    return KetherHomepage.new(owner, withdrawWallet)
-      .then(function(instance) {
-        KH = instance;
+  it("should let the owner withdraw", async function() {
+    const tx = await KH.connect(account1).buy(0, 0, 10, 10, { value: oneHundredCellPrice });
+    const receipt = await tx.wait();
+    const initialBalance = await withdrawWallet.getBalance();
 
-        return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
-      })
-      .then(function(tx) {
-        gas = tx.receipt.gasUsed;
-        web3.eth.getBalance(owner, function(error, balance) { initialBalance = balance; });
-        return KH.withdraw({ from: owner })
-      })
-      .then(function() {
-        // TOOD: I would expect that assert.equal(newBalance.toNumber(), initialBalance.toNumber() + oneHundredCellPrice + gas);
-        //	would work. Instead it's off by 2857000000000000 wei...
-        // What happened?
-        web3.eth.getBalance(withdrawWallet, function(error, balance) {
-          assert(balance.gt(initialBalance));
-        });
-      })
+    await KH.connect(owner).withdraw();
+
+    const newBalance = await withdrawWallet.getBalance();
+    expect(newBalance).to.equal(initialBalance.add(oneHundredCellPrice));
   });
 
-  xit("shouldn't let non-owners withdraw", function() {
-    let KH;
-    return KetherHomepage.new(owner, withdrawWallet)
-      .then(function(instance) {
-        KH = instance;
-
-        return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
-      })
-      .then(function() {
-        return KH.withdraw({ from: account1 })
-      })
-      .then(function() {
-        assert.fail();
-      })
-      .catch(function(error) {
-        assert(error.message.indexOf("reverted") >= 0, error.message);
-      })
+  it("shouldn't let non-owners withdraw", async function() {
+    await KH.connect(account1).buy(0, 0, 10, 10, { value: oneHundredCellPrice });
+    await expect(
+      KH.connect(account1).withdraw()
+    ).to.be.reverted
   });
 
-  xit("shouldn't let users buy 0-width space", function() {
-    return KetherHomepage.new(owner, withdrawWallet)
-      .then(function(instance) {
-        return instance.buy(0, 0, 10, 0, { value: oneHundredCellPrice, from: account1 })
-      })
-      .then(function(returnValue) {
-        // This should not be hit since we threw an error
-        assert.fail();
-      })
-      .catch(function(error) {
-        // catch revert / require
-        assert(error.message.indexOf("reverted") >= 0, error.message);
-      });
+  it("shouldn't let users buy 0-width space", async function() {
+    await expect(
+      KH.connect(account1).buy(0, 0, 10, 0, { value: oneHundredCellPrice })
+    ).to.be.reverted
   });
 
-  xit("shouldn't let users buy negative space", function() {
-    return KetherHomepage.new(owner, withdrawWallet)
-      .then(function(instance) {
-        return instance.buy(30, 30, -10, -10, { value: oneHundredCellPrice, from: account1 })
-      })
-      .then(function(returnValue) {
-        // This should not be hit since we threw an error
-        assert.fail();
-      })
-      .catch(function(error) {
-        // catch revert / require
-        assert(error.message.indexOf("reverted") >= 0, error.message);
-      });
+  it("shouldn't let users buy negative space", async function() {
+    await expect(
+      KH.connect(account1).buy(30, 30, -10, -10, { value: oneHundredCellPrice })
+    ).to.be.reverted
   });
 
-  xit("shouldn't let users buy out of bounds space", function() {
-    return KetherHomepage.new(owner, withdrawWallet)
-      .then(function(instance) {
-        return instance.buy(99, 99, 10, 10, { value: oneHundredCellPrice, from: account1 })
-      })
-      .then(function(returnValue) {
-        // This should not be hit since we threw an error
-        assert.fail();
-      })
-      .catch(function(error) {
-        // catch revert / require
-        assert(error.message.indexOf("reverted") >= 0, error.message);
-      });
+  it("shouldn't let users buy out of bounds space", async function() {
+    await expect(
+      KH.connect(account1).buy(99, 99, 10, 10, { value: oneHundredCellPrice })
+    ).to.be.reverted
   });
 
-  xit("should let a user setAdOwner on their own ad", function() {
-    let KH;
-    return KetherHomepage.new(owner, withdrawWallet)
-      .then(function(instance) {
-        KH = instance;
-        return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
-      })
-      .then(function() {
-        return KH.ads.call(0);
-      })
-      .then(function(ad) {
-        assert.equal(account1, ad[0]);
+  it("should let a user setAdOwner on their own ad", async function() {
+    await KH.connect(account1).buy(0, 0, 10, 10, { value: oneHundredCellPrice });
+    {
+      const ad = await KH.ads(0);
+      expect(await account1.getAddress()).to.equal(ad[0]);
+    }
+    const result = await KH.connect(account1).setAdOwner(0, await account2.getAddress());
+    const receipt = await result.wait();
 
-        return KH.setAdOwner(0, account2, { from: account1 });
-      })
-      .then(function(result) {
-        // Make sure we issued the right SetAdOwner() event
-        assert.equal("SetAdOwner", result.logs[0].event);
-        const event = result.logs[0].args;
+    const events = await KH.queryFilter(KH.filters.SetAdOwner(), receipt.blockHash)
+    const event = events[0].args;
 
-        assert.equal(0, event.idx);
-
-        assert.equal(account1, event.from);
-        assert.equal(account2, event.to);
-
-        return KH.ads.call(0)
-      })
-      .then(function(ad) {
-        assert.equal(account2, ad[0]);
-      });
+    expect(0).to.equal(event.idx);
+    expect(await account1.getAddress()).to.equal(event.from);
+    expect(await account2.getAddress()).to.equal(event.to);
+    {
+      const ad = await KH.ads(0);
+      expect(await account2.getAddress()).to.equal(ad[0]);
+    }
   });
 
-  xit("shouldn't let a user setAdOwner on another user's ad", function() {
-    let KH;
-    return KetherHomepage.new(owner, withdrawWallet)
-      .then(function(instance) {
-        KH = instance;
-        return KH.buy(0, 0, 10, 10, { value: oneHundredCellPrice, from: account1 })
-      })
-      .then(function() {
-        return KH.ads.call(0);
-      })
-      .then(function(ad) {
-        assert.equal(account1, ad[0]);
+  it("shouldn't let a user setAdOwner on another user's ad", async function() {
+    await KH.connect(account1).buy(0, 0, 10, 10, { value: oneHundredCellPrice });
+    {
+      const ad = await KH.ads(0);
+      expect(await account1.getAddress()).to.equal(ad[0]);
+    }
 
-        return KH.setAdOwner(0, account2, { from: account2 });
-      })
-      .then(function(returnValue) {
-        // This should not be hit since we threw an error
-        assert.fail();
-      })
-      .catch(function(error) {
-        // catch revert / require
-        assert(error.message.indexOf("reverted") >= 0, error.message);
-      });
+    await expect(
+      KH.connect(account2).setAdOwner(0, await account2.getAddress())
+    ).to.be.reverted;
   });
 });
