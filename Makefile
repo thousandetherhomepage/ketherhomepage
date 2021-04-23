@@ -1,10 +1,7 @@
-TRUFFLEBIN := ./node_modules/.bin/truffle
-
 build: deps contracts
-	npmx hardhat build
 
 test: deps contracts
-	npmx hardhat test
+	npx hardhat test
 
 run: deps contracts
 	npm run dev
@@ -15,17 +12,17 @@ deploy-dapp: build ../thousandetherhomepage.github.io
 	echo "Push it."
 
 deploy-contract:
-	$(TRUFFLEBIN) migrate -f 2 --network rinkeby --reset
+	# TODO: $(TRUFFLEBIN) migrate -f 2 --network rinkeby --reset
 
 withdraw:
-	$(TRUFFLEBIN) exec scripts/withdraw.js --network live
+	# TODO: $(TRUFFLEBIN) exec scripts/withdraw.js --network live
 
 deps: node_modules/
 
 contracts: build/contracts/*
 
 build/contracts/%.json: contracts/%.sol
-	npm run truffle-compile
+	npx hardhat compile
 
 node_modules/: package.json
 	npm install
