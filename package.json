@@ -6,9 +6,6 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
-    "truffle-compile": "truffle compile",
-    "truffle-serve": "truffle serve",
-    "truffle-test": "truffle test --network test"
   },
   "dependencies": {
     "vue": "^2.4.4",
@@ -18,7 +15,6 @@
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
-    "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "babel-core": "^6.26.3",
@@ -40,8 +36,6 @@
     "node-sass": "^4.9.4",
     "null-loader": "^0.1.1",
     "sass-loader": "^5.0.1",
-    "truffle": "^3.4.11",
-    "truffle-contract": "^1.1.6",
     "vue-loader": "^12.1.0",
     "vue-template-compiler": "^2.4.4",
     "webpack": "^2.6.1",
