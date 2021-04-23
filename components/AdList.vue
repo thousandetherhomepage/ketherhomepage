@@ -25,7 +25,7 @@
     <p>Listing {{ num }} published ads and omitting {{ omitted }} empty ads.</p>
     <p><strong>Newest ad first:</strong></p>
 
-    <ul v-for="ad in listAds" v-if="ad && ad.image">
+    <ul v-for="ad in listAds" :key="ad.idx"> <!-- TOOD  v-if="ad && ad.image">-->
       <li>
         <Ad :showNSFW="showNSFW" :ad="ad"></Ad>
       </li>

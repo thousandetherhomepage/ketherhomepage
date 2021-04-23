@@ -74,7 +74,7 @@
 
 <script>
 import Web3 from 'web3'
-import contractJSON from 'json-loader!../build/contracts/KetherHomepage.json'
+import contractJSON from '../build/contracts/KetherHomepage.json'
 
 const deployConfig = {
   "rinkeby": {

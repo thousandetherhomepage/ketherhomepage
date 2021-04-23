@@ -56,7 +56,7 @@ input {
     <form v-if="$store.state.numOwned > 0" v-on:submit='publish' v-on:submit.prevent>
       <select v-model="ad">
         <option disabled value="">Select ad to edit</option>
-        <option v-for="ad of $store.state.ownedAds" :value="ad">
+        <option v-for="ad of $store.state.ownedAds" :key="ad.idx">
           {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ ad.link || "(no link)" }}
         </option>
       </select>
