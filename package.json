@@ -3,10 +3,6 @@
   "description": "Thousand Ether Homepage",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "dev": "cross-env NODE_ENV=development webpack-dev-server",
-    "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
-  },
   "dependencies": {
     "vue": "^2.4.4",
     "vue-draggable-resizable": "^1.5.1",
