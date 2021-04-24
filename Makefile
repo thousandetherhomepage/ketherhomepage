@@ -15,7 +15,7 @@ deploy-contract:
 	# TODO: $(TRUFFLEBIN) migrate -f 2 --network rinkeby --reset
 
 withdraw:
-	# TODO: $(TRUFFLEBIN) exec scripts/withdraw.js --network live
+	npx hardhat run scripts/withdraw.js --network mainnet
 
 deps: node_modules/
 
