@@ -13,5 +13,6 @@
         <a href="https://github.com/thousandetherhomepage">Source code</a>
       </li>
     </ul>
+    <slot></slot>
   </footer>
 </template>
