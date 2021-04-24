@@ -22,8 +22,7 @@ export default {
 
     ],
     link: [
-      // TODO fix
-      { rel: 'icon', type: 'image/x-icon', href: '/img/icon-32px.png' }
+      { rel: 'icon', type: 'image/x-icon', href: '/icon-32px.png' }
     ]
   },
 
@@ -48,5 +47,8 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
-  }
+  },
+
+  // Disable SSR while developing
+  ssr: false
 }
