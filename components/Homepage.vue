@@ -15,17 +15,16 @@
 }
 </style>
 
-<template>
+<template v-if="ready">
   <div class="container">
-    <AdGrid v-if="$store.state.gridVis" :web3="web3" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered"></AdGrid>
-    <AdList v-else :showNSFW="showNSFW"></AdList>
+    <AdGrid v-if="$store.state.gridVis" :provider="provider" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered"></AdGrid>
 
     <div class="edit" v-if="$store.state.numOwned > 0">
       {{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button>
     </div>
-    <Publish v-if="showPublish" :web3="web3" :contract="contract" :showNSFW="showNSFW"></Publish>
+    <Publish v-if="showPublish" :provider="provider" :contract="contract" :showNSFW="showNSFW"></Publish>
 
-    <Offline v-if="isReadOnly"></Offline>
+
   </div>
 </template>
 
@@ -59,23 +58,16 @@ export default {
     }
   },
   methods: {
-    loadAds() {
+    async loadAds() {
       this.$store.commit('clearAds');
-      this.contract.methods.getAdsLength().call(function(err, res) {
-        const num = res;
-        this.$store.commit('setAdsLength', num);
+      // TODO: error handling?
+      let numAds = await this.contract.getAdsLength();
+      this.$store.commit('setAdsLength', numAds);
+      let ads = [...Array(numAds.toNumber()).keys()].map(i => this.contract.ads(i));
+      for await (const [i, ad] of ads.entries()) {
+        this.$store.commit('addAd', toAd(i, await ad));
+      }
 
-        for (let i=0; i<num; i++) {
-          this.contract.methods.ads(i).call(function(err, res) {
-            if (err) {
-              console.log("Failed to load metadata for ad #" + i);
-              return;
-            }
-            this.$store.commit('addAd', toAd(i, res));
-          }.bind(this));
-        }
-
-      }.bind(this));
     },
     loadAdsStatic() {
       this.$store.commit('clearAds');
@@ -98,46 +90,47 @@ export default {
     },
   },
   created() {
-    this.web3.eth.getAccounts(function(err, res) {
-      for (const acct of res) {
-        this.$store.commit('addAccount', acct)
-      }
-    }.bind(this));
+    //this.web3.eth.getAccounts(function(err, res) {
+    //  for (const acct of res) {
+    //    this.$store.commit('addAccount', acct)
+    //  }
+    //}.bind(this));
 
-    if (!this.prerendered.loadFromWeb3) {
-      this.loadAdsStatic();
-      return;
-    }
+   // if (!this.prerendered.loadFromWeb3) {
+   //   this.loadAdsStatic();
+   //   return;
+   // }
 
     this.loadAds();
 
     // Setup event monitoring:
-    this.contract.events.Buy(function(err, res) {
-      if (err) {
-        // TODO: Surface this in UI?
-        console.log("Buy event monitoring disabled, will need to refresh to see changes.")
-        return;
-      }
 
-      this.$store.commit('addAd', res.returnValues);
+    // this.contract.events.Buy(function(err, res) {
+    //   if (err) {
+    //     // TODO: Surface this in UI?
+    //     console.log("Buy event monitoring disabled, will need to refresh to see changes.")
+    //     return;
+    //   }
 
-      const previewAd = this.$store.state.previewAd;
-      if (this.previewLocked && Number(res.returnValues.x*10) == previewAd.x && Number(res.returnValues.y*10) == previewAd.y) {
-        // Colliding ad purchased
-        this.previewLocked = false;
-        this.$store.commit('clearPreview');
-      }
-    }.bind(this))
+    //   this.$store.commit('addAd', res.returnValues);
 
-    this.contract.events.Publish(function(err, res) {
-      if (err) {
-        // TODO: Surface this in UI?
-        console.log("Publish event monitoring disabled, will need to refresh to see changes.")
-        return;
-      }
+    //   const previewAd = this.$store.state.previewAd;
+    //   if (this.previewLocked && Number(res.returnValues.x*10) == previewAd.x && Number(res.returnValues.y*10) == previewAd.y) {
+    //     // Colliding ad purchased
+    //     this.previewLocked = false;
+    //     this.$store.commit('clearPreview');
+    //   }
+    // }.bind(this))
 
-      this.$store.commit('addAd', res.returnValues);
-    }.bind(this))
+    // this.contract.events.Publish(function(err, res) {
+    //   if (err) {
+    //     // TODO: Surface this in UI?
+    //     console.log("Publish event monitoring disabled, will need to refresh to see changes.")
+    //     return;
+    //   }
+
+    //   this.$store.commit('addAd', res.returnValues);
+    // }.bind(this))
   },
   components: {
     Publish,
