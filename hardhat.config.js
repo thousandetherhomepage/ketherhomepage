@@ -27,12 +27,12 @@ module.exports = {
     compilers: [
       {
         // Original KetherHomepage contract
-        version: "0.4.15"
+        version: "0.4.15",
       },
       {
-        version: "0.7.3",
-      }
-    ]
-  }
+        version: "0.8.0",
+      },
+    ],
+  },
 };
 

@@ -1,21 +1,23 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.7;
+pragma solidity ^0.8;
 
 // FIXME: Use 4.x pre-release which slims down the 721 implementation
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-import "KetherHomepage.sol";
+import "./IKetherHomepage.sol";
 
 contract KetherNFT is ERC721 {
   /// instance is the KetherHomepage contract that this wrapper interfaces with.
-  KetherHomepage public instance;
+  IKetherHomepage public instance;
 
-  address public constant metadataSigner = 0x0; // TODO: ...
+  /// metadataSigner provides oracle authenticity for tokenURI content.
+  address public metadataSigner;
 
   // TODO: Do we want to emit events?
 
-  constructor(address _ketherContract) ERC721("Thousand Ether Homepage Ad", "1KAD") {
-    instance = KetherHomepage(_ketherContract);
+  constructor(address _ketherContract, address _metadataSigner) ERC721("Thousand Ether Homepage Ad", "1KAD") {
+    instance = IKetherHomepage(_ketherContract);
+    metadataSigner = _metadataSigner;
   }
 
   function wrap(uint _idx) external {
@@ -24,13 +26,14 @@ contract KetherNFT is ERC721 {
 
     // Transfer contract ownership to this contract as a delegate.
     // -> KetherHomepage(_ketherContract).setAdOwner(_idx, newOwner);
-    (bool success, bytes memory returnData) = address(instance).delegatecall(
-      bytes4(keccak256("setAdOwner(uint, address)")), _idx, address(this));
-    require(success);
+    (bool success,) = address(instance).delegatecall(
+      abi.encodePacked(bytes4(keccak256("setAdOwner(uint, address)")), _idx, address(this))
+    );
+    require(success, "KetherNFT: wrap delegatecall setAdOwner failed");
   }
 
   function unwrap(uint _idx, address _newOwner) external {
-    require(ownerOf(_idx) == msg.sender);
+    require(ownerOf(_idx) == msg.sender, "KetherNFT: unwrap for sender that is not owner");
 
     // TODO: Test that if this fails, the rest of the call fails
     instance.setAdOwner(_idx, _newOwner);
@@ -39,10 +42,11 @@ contract KetherNFT is ERC721 {
   }
 
   // TODO: Should we have a setTokenURI function so owners can change the rendering of their token?
+  // TODO: If we let people set their own tokenURI, do we need another NSFW flag option here?
 
-  function tokenURI(uint256 _tokenId) external pure view override(ERC721) returns (string memory) {
+  function tokenURI(uint256 _tokenId) public view virtual override(ERC721) returns (string memory) {
     // FIXME: Replace with IPFS URI? Perhaps set on wrap?
-    return "ipfs://1000ether.com/ad/" + _tokenID; // FIXME: Need to convert the uint256 to string, maybe Strings.uint2str?
+    return "ipfs://1000ether.com/ad/TODO"; // FIXME: Need to convert the uint256 to string, maybe Strings.uint2str?
   }
 
   /// publish is a delegated proxy for KetherHomapage's publish function.
@@ -57,9 +61,9 @@ contract KetherNFT is ERC721 {
   ///  - ipfs://Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu
   /// Images should be valid PNG.
   /// Content-addressable storage links like IPFS are encouraged.
-  function publish(uint _idx, string _link, string _image, string _title, bool _NSFW) external {
+  function publish(uint _idx, string calldata _link, string calldata _image, string calldata _title, bool _NSFW) external {
     // FIXME: Should this be ownerOf? Letting approved accounts publish would allow lending.
-    require(getApproved(_idx) == msg.sender);
+    require(getApproved(_idx) == msg.sender, "KetherNFT: publish for sender that is not approved");
 
     instance.publish(_idx, _link, _image, _title, _NSFW);
   }
