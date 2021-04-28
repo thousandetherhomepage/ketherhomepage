@@ -10,14 +10,56 @@ import "./IKetherHomepage.sol";
 // XXX
 import "hardhat/console.sol";
 
+
+// 1. Precompute deterministic contract address 0xSWAP
+// 2. Call on-chain KetherHomepage.setAdOwner(_idx, 0xSWAP)
+// 3. Call on-chain deploy TransientOwnerSwapper(address(KetherNFT), _idx) to address 0xSWAP
+//    -> Inside, it calls KetherNFT.wrap(_idx)?
+
+contract TransientOwnerSwapper {
+  uint idx;
+  address to;
+  IKetherHomepage kether;
+
+  constructor(IKetherHomepage _kether, KetherNFT _target, uint _idx) {
+    idx = _idx;
+    to = address(_target);
+    kether = _kether;
+
+    _target.wrap(_idx, msg.sender);
+
+    selfdestruct();
+  }
+
+  function transfer() external {
+    _kether.setAdOwner(idx, to);
+  }
+}
+
+contract Wrapper {
+  address authorized;
+
+  constructor(address _authorized) {
+    authorized = _authorized;
+  }
+
+  function call(address target, bytes memory payload) (bool, bytes memory) {
+    require(msg.sender == authorized, "Wrapper: call must be done by authorized sender");
+
+    return target.call(payload);
+  }
+}
+
+interface Transferer {
+  function transfer(address _from, address _to, uint _tokenId) external;
+}
+
 contract KetherNFT is ERC721 {
   /// instance is the KetherHomepage contract that this wrapper interfaces with.
   IKetherHomepage public instance;
 
   /// metadataSigner provides oracle authenticity for tokenURI content.
   address public metadataSigner;
-
-  mapping (uint => address) prewrapped;
 
   // TODO: Do we want to emit events?
 
@@ -26,43 +68,47 @@ contract KetherNFT is ERC721 {
     metadataSigner = _metadataSigner;
   }
 
+  function precompute(address _owner) pure public (bytes32 salt, address wrapper) {
+    bytes32 salt = bytes32(_owner);
 
-  /*
-     Migration process:
-     1. KetherNFT.prepare(_idx) as KetherHomepage owner
-     2. KetherHomepage.setAdOwner(_idx, address(KetherNFT))
-     3. KetherNFT.wrap(_idx); as owner
-  */
-
-  /// prepare an ad unit to be wrapped. It confirms that the sender is the owner of the ad unit.
-  function prepare(uint _idx) external {
-    require(instance.ads[_idx].owner == msg.sender, "KetherNFT: prepare for sender that is not owner");
-
-    prewrapped[idx] = msg.sender;
+    address predictedAddress = address(uint160(uint(keccak256(abi.encodePacked(
+      bytes1(0xff),
+      address(this),
+      salt,
+      keccak256(abi.encodePacked(
+        type(D).creationCode,
+        arg
+      ))
+    )))));
+    return salt, predictedAddress;
   }
 
   /// wrap mints an NFT if the ad unit's ownership has been trasnferred to this contract.
-  function wrap(uint _idx) external {
-    require(prewrapped[_idx] == msg.sender, "KetherNFT: wrap for sender that was not prewrapped");
-    require(instance.ads[_idx].owner == address(this), "KetherNFT: owner needs to be this contract before wrapping");
+  function wrap(uint _idx, address _owner) external {
+    bytes32 salt, address precomputerWrapper = precompute(_owner);
 
-    _mint(msg.sender, _idx);
+    require(instance.ads[_idx].owner == precomputedWrapper, "KetherNFT: owner needs to be our wrapper");
 
-    // Transfer contract ownership to this contract as a delegate.
-    // -> KetherHomepage(_ketherContract).setAdOwner(_idx, newOwner);
+    // TODO: Check if wrapper already exists on precomputed address, use that instead.
+    Wrapper w = new Wrapper{salt: salt}(address(this));
+    require(address(w) == precomputedWrapper, "KetherNFT: precomputedWrapper is incorrect");
 
-    //bytes memory callEncoded = abi.encodePacked(bytes4(keccak256("setAdOwner(uint256,address)")), _idx, address(this));
-    //bytes memory callEncoded = abi.encodeWithSignature("setAdOwner(uint256,address)", _idx, address(this));
-    //Address.functionDelegateCall(address(instance), callEncoded, "KetherNFT: wrap delegatecall setAdOwner failed");
+    (bool success,) = w.call(
+      address(instance),
+      abi.encodeWithSignature("setAdOwner(uint256,address)", _idx, address(this)));
+    require(success, "KetherNFT: setAdOwner call failed");
 
-    //(bool success, bytes memory data) = address(instance).delegatecall(callEncoded);
+    require(instance.ads[_idx].owner == address(this), "KetherNFT: owner needs to be KetherNFT");
+    _mint(_owner, _idx);
   }
 
   function unwrap(uint _idx, address _newOwner) external {
     require(ownerOf(_idx) == msg.sender, "KetherNFT: unwrap for sender that is not owner");
 
-    // TODO: Test that if this fails, the rest of the call fails
-    instance.setAdOwner(_idx, _newOwner);
+    (bool success,) = w.call(
+      address(instance),
+      abi.encodeWithSignature("setAdOwner(uint256,address)", _idx, msg.sender));
+    require(success, "KetherNFT: setAdOwner call failed");
 
     _burn(_idx);
   }
@@ -88,10 +134,14 @@ contract KetherNFT is ERC721 {
   /// Images should be valid PNG.
   /// Content-addressable storage links like IPFS are encouraged.
   function publish(uint _idx, string calldata _link, string calldata _image, string calldata _title, bool _NSFW) external {
-    // FIXME: Should this be ownerOf? Letting approved accounts publish would allow lending.
     require(getApproved(_idx) == msg.sender, "KetherNFT: publish for sender that is not approved");
 
-    instance.publish(_idx, _link, _image, _title, _NSFW);
+    // TODO: Finish this lol
+    (bool success,) = w.call(
+      address(instance),
+      abi.encodeWithSignature("publish(uint256,string,string,string,bool)", _idx, _link, _image, _title, _NSFW));
+
+    require(success, "KetherNFT: publish call failed");
   }
 
 }
