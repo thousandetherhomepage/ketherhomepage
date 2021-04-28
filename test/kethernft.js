@@ -6,7 +6,7 @@ const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
 
 describe('KetherNFT', function() {
   it("deploy KetherNFT", async function() {
-    const KetherHomepage = await ethers.getContractFactory("KetherHomepage");
+    const KetherHomepage = await ethers.getContractFactory("KetherHomepageV2");
     const [owner, withdrawWallet, metadataSigner, account1, account2] = await ethers.getSigners();
     const KH = await KetherHomepage.deploy(await owner.getAddress(), await withdrawWallet.getAddress());
 

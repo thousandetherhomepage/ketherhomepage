@@ -3,8 +3,12 @@ pragma solidity ^0.8;
 
 // FIXME: Use 4.x pre-release which slims down the 721 implementation
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 import "./IKetherHomepage.sol";
+
+// XXX
+import "hardhat/console.sol";
 
 contract KetherNFT is ERC721 {
   /// instance is the KetherHomepage contract that this wrapper interfaces with.
@@ -13,6 +17,8 @@ contract KetherNFT is ERC721 {
   /// metadataSigner provides oracle authenticity for tokenURI content.
   address public metadataSigner;
 
+  mapping (uint => address) prewrapped;
+
   // TODO: Do we want to emit events?
 
   constructor(address _ketherContract, address _metadataSigner) ERC721("Thousand Ether Homepage Ad", "1KAD") {
@@ -20,16 +26,36 @@ contract KetherNFT is ERC721 {
     metadataSigner = _metadataSigner;
   }
 
+
+  /*
+     Migration process:
+     1. KetherNFT.prepare(_idx) as KetherHomepage owner
+     2. KetherHomepage.setAdOwner(_idx, address(KetherNFT))
+     3. KetherNFT.wrap(_idx); as owner
+  */
+
+  /// prepare an ad unit to be wrapped. It confirms that the sender is the owner of the ad unit.
+  function prepare(uint _idx) external {
+    require(instance.ads[_idx].owner == msg.sender, "KetherNFT: prepare for sender that is not owner");
+
+    prewrapped[idx] = msg.sender;
+  }
+
+  /// wrap mints an NFT if the ad unit's ownership has been trasnferred to this contract.
   function wrap(uint _idx) external {
-    // FIXME: Should this be _safeMint? It's more gas but guarantees receiver supports ERC721
+    require(prewrapped[_idx] == msg.sender, "KetherNFT: wrap for sender that was not prewrapped");
+    require(instance.ads[_idx].owner == address(this), "KetherNFT: owner needs to be this contract before wrapping");
+
     _mint(msg.sender, _idx);
 
     // Transfer contract ownership to this contract as a delegate.
     // -> KetherHomepage(_ketherContract).setAdOwner(_idx, newOwner);
-    (bool success,) = address(instance).delegatecall(
-      abi.encodePacked(bytes4(keccak256("setAdOwner(uint, address)")), _idx, address(this))
-    );
-    require(success, "KetherNFT: wrap delegatecall setAdOwner failed");
+
+    //bytes memory callEncoded = abi.encodePacked(bytes4(keccak256("setAdOwner(uint256,address)")), _idx, address(this));
+    //bytes memory callEncoded = abi.encodeWithSignature("setAdOwner(uint256,address)", _idx, address(this));
+    //Address.functionDelegateCall(address(instance), callEncoded, "KetherNFT: wrap delegatecall setAdOwner failed");
+
+    //(bool success, bytes memory data) = address(instance).delegatecall(callEncoded);
   }
 
   function unwrap(uint _idx, address _newOwner) external {
