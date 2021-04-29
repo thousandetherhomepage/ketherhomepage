@@ -23,8 +23,19 @@ describe('KetherNFT', function() {
 
     await KH.connect(account1).publish(idx, "link", "image", "title", false);
 
+    // TODO: Test wrapping to non-owner
+    // TODO: Test wrapping by non-owner
+
+    const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
+
+    // TODO: Check precompute in js
+    expect(precomputeAddress).to.not.equal("0x0");
+    expect(salt).to.not.equal("0x0");
+
+    await KH.connect(account1).setAdOwner(idx, precomputeAddress);
+
     // Wrap ad
-    await KNFT.connect(account1).wrap(idx);
+    await KNFT.connect(account1).wrap(idx, await account1.getAddress());
 
     // Confirm owner can't publish directly anymore
     expect(
@@ -32,7 +43,7 @@ describe('KetherNFT', function() {
     ).to.revert;
 
     const ad = await KH.ads(idx);
-    expect(ad).to.equal([await account1.getAddress(), 0, 0, 10, 10, idx, "link", "image", "title", false, false]);
+    expect(ad).to.equal([await KNFT.getAddress(), 0, 0, 10, 10, idx, "link", "image", "title", false, false]);
   });
 });
 
