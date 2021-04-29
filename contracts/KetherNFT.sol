@@ -3,12 +3,8 @@ pragma solidity ^0.8;
 
 // FIXME: Use 4.x pre-release which slims down the 721 implementation
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 
 import "./IKetherHomepage.sol";
-
-// XXX
-import "hardhat/console.sol";
 
 
 // TODO: Name this something really cool
@@ -16,6 +12,7 @@ contract Wrapper {
   constructor(address target, bytes memory payload) {
     (bool success,) = target.call(payload);
     require(success, "Wrapper: target call failed");
+
     selfdestruct(payable(target));
   }
 }
@@ -38,17 +35,27 @@ contract KetherNFT is ERC721 {
     return abi.encodeWithSignature("setAdOwner(uint256,address)", _idx, address(this));
   }
 
+  function _wrapCreation(uint _idx) internal view returns (bytes memory) {
+    return abi.encodePacked(
+      type(Wrapper).creationCode,
+      abi.encode(address(instance), _wrapPayload(_idx)));
+  }
+
   function precompute(uint _idx, address _owner) public view returns (bytes32 salt, address predictedAddress) {
     salt = sha256(abi.encodePacked(_owner)); // FIXME: This can be more gas-efficient? Also worth salting something random here like block number?
-    predictedAddress = address(uint160(uint(keccak256(abi.encodePacked(
-      bytes1(0xff),
-      address(this),
-      salt,
-      keccak256(abi.encodePacked( // FIXME: Should this be encodeWithSignature?
-        type(Wrapper).creationCode,
-        address(instance), _wrapPayload(_idx)
-      ))
-    )))));
+
+    bytes memory bytecode = _wrapCreation(_idx);
+
+    bytes32 hash = keccak256(
+      abi.encodePacked(
+        bytes1(0xff),
+        address(this),
+        salt,
+        keccak256(bytecode)
+      )
+    );
+
+    predictedAddress = address(uint160(uint256(hash)));
     return (salt, predictedAddress);
   }
 
@@ -73,6 +80,7 @@ contract KetherNFT is ERC721 {
 
   function unwrap(uint _idx, address _newOwner) external {
     require(ownerOf(_idx) == msg.sender, "KetherNFT: unwrap for sender that is not owner");
+
 
     instance.setAdOwner(_idx, _newOwner);
     _burn(_idx);

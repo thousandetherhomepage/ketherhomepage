@@ -1,11 +1,14 @@
 const { expect } = require('chai');
 
+const BN = ethers.BigNumber.from;
+
 const weiPixelPrice = ethers.utils.parseUnits("0.001", "ether");
 const pixelsPerCell = ethers.BigNumber.from(100);
 const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
 
 describe('KetherNFT', function() {
   it("deploy KetherNFT", async function() {
+    // NOTE: We're using V2 here because it's ported to newer solidity so we can debug more easily. It should also work with V1.
     const KetherHomepage = await ethers.getContractFactory("KetherHomepageV2");
     const [owner, withdrawWallet, metadataSigner, account1, account2] = await ethers.getSigners();
     const KH = await KetherHomepage.deploy(await owner.getAddress(), await withdrawWallet.getAddress());
@@ -26,11 +29,26 @@ describe('KetherNFT', function() {
     // TODO: Test wrapping to non-owner
     // TODO: Test wrapping by non-owner
 
+    const Wrapper = await ethers.getContractFactory("Wrapper");
+
     const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
 
-    // TODO: Check precompute in js
-    expect(precomputeAddress).to.not.equal("0x0");
+    // TODO: Test salt
     expect(salt).to.not.equal("0x0");
+
+    const wrappedPayload = KH.interface.encodeFunctionData("setAdOwner", [idx, KNFT.address]); // Confirmed this matches KetherNFT._wrapPayload
+
+    const bytecode = ethers.utils.hexlify(
+      ethers.utils.concat([
+        Wrapper.bytecode,
+        // KH.address, wrappedPayload,
+        ethers.utils.defaultAbiCoder.encode(['address', 'bytes'], [KH.address, wrappedPayload]),
+      ]));
+
+    const precomputed = ethers.utils.getCreate2Address(KNFT.address, salt, ethers.utils.keccak256(bytecode));
+
+    // TODO: Check precompute in js
+    expect(precomputeAddress).to.equal(precomputed);
 
     await KH.connect(account1).setAdOwner(idx, precomputeAddress);
 
@@ -40,10 +58,10 @@ describe('KetherNFT', function() {
     // Confirm owner can't publish directly anymore
     expect(
       KH.connect(account1).publish(idx, "foo", "bar", "baaz", false)
-    ).to.revert;
+    ).to.reverted;
 
     const ad = await KH.ads(idx);
-    expect(ad).to.equal([await KNFT.getAddress(), 0, 0, 10, 10, idx, "link", "image", "title", false, false]);
+    //expect(ad).to.eql([await KNFT.address, BN(0), BN(0), BN(10), BN(10), "link", "image", "title", false, false]);
   });
 });
 

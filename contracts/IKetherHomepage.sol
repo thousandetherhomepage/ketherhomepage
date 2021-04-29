@@ -28,19 +28,6 @@ interface IKetherHomepage {
         address to
     );
 
-    struct Ad {
-        address owner;
-        uint x;
-        uint y;
-        uint width;
-        uint height;
-        string link;
-        string image;
-        string title;
-        bool NSFW;
-        bool forceNSFW;
-    }
-
     /// ads are stored in an array, the id of an ad is its index in this array.
     function ads(uint _idx) external view returns (address,uint,uint,uint,uint,string memory,string memory,string memory,bool,bool);
 
