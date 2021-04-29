@@ -15,7 +15,7 @@ import "hardhat/console.sol";
 contract Wrapper {
   constructor(address target, bytes memory payload) {
     (bool success,) = target.call(payload);
-    require(success);
+    require(success, "Wrapper: target call failed");
     selfdestruct(payable(target));
   }
 }
@@ -53,7 +53,8 @@ contract KetherNFT is ERC721 {
   }
 
   function _getAdOwner(uint _idx) internal view returns (address) {
-      return instance.ads(_idx).owner;
+      (address owner,,,,,,,,,) = instance.ads(_idx);
+      return owner;
   }
 
   /// wrap mints an NFT if the ad unit's ownership has been transferred to the

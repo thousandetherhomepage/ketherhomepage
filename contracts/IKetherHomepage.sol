@@ -42,7 +42,7 @@ interface IKetherHomepage {
     }
 
     /// ads are stored in an array, the id of an ad is its index in this array.
-    function ads(uint _idx) external view returns (Ad memory);
+    function ads(uint _idx) external view returns (address,uint,uint,uint,uint,string memory,string memory,string memory,bool,bool);
 
     function buy(uint _x, uint _y, uint _width, uint _height) external payable returns (uint idx);
 
