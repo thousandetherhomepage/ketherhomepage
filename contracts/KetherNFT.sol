@@ -13,10 +13,10 @@ import "hardhat/console.sol";
 
 // TODO: Name this something really cool
 contract Wrapper {
-  constructor(address target, bytes calldata payload) {
+  constructor(address target, bytes memory payload) {
     (bool success,) = target.call(payload);
     require(success);
-    selfdestruct();
+    selfdestruct(payable(target));
   }
 }
 
@@ -34,35 +34,39 @@ contract KetherNFT is ERC721 {
     metadataSigner = _metadataSigner;
   }
 
-  function _wrapPayload(uint _idx, address _owner) internal pure bytes32 {
+  function _wrapPayload(uint _idx) internal view returns (bytes memory) {
     return abi.encodeWithSignature("setAdOwner(uint256,address)", _idx, address(this));
   }
 
-  function precompute(uint _idx, address _owner) pure public (bytes32 salt, address wrapper) {
-    bytes32 salt = bytes32(_owner);
-
-    address predictedAddress = address(uint160(uint(keccak256(abi.encodePacked(
+  function precompute(uint _idx, address _owner) public view returns (bytes32 salt, address predictedAddress) {
+    salt = sha256(abi.encodePacked(_owner)); // FIXME: This can be more gas-efficient? Also worth salting something random here like block number?
+    predictedAddress = address(uint160(uint(keccak256(abi.encodePacked(
       bytes1(0xff),
       address(this),
       salt,
       keccak256(abi.encodePacked( // FIXME: Should this be encodeWithSignature?
         type(Wrapper).creationCode,
-        address(instance), _wrapPayload(_idx, _owner),
+        address(instance), _wrapPayload(_idx)
       ))
     )))));
-    return salt, predictedAddress;
+    return (salt, predictedAddress);
   }
 
-  /// wrap mints an NFT if the ad unit's ownership has been trasnferred to this contract.
+  function _getAdOwner(uint _idx) internal view returns (address) {
+      return instance.ads(_idx).owner;
+  }
+
+  /// wrap mints an NFT if the ad unit's ownership has been transferred to the
+  /// precomputed escrow address.
   function wrap(uint _idx, address _owner) external {
-    bytes32 salt, address precomputerWrapper = precompute(_owner);
+    (bytes32 salt, address precomputedWrapper) = precompute(_idx, _owner);
 
-    require(instance.ads[_idx].owner == precomputedWrapper, "KetherNFT: owner needs to be our wrapper");
+    require(_getAdOwner(_idx) == precomputedWrapper, "KetherNFT: owner needs to be our wrapper before wrap");
 
-    // Wrapper self-destructs on construction
-    new Wrapper{salt: salt}(_wrapPayload(_idx, _owner));
+    // Wrapper completes the transfer escrow atomically and self-destructs.
+    new Wrapper{salt: salt}(address(instance), _wrapPayload(_idx));
 
-    require(instance.ads[_idx].owner == address(this), "KetherNFT: owner needs to be KetherNFT");
+    require(_getAdOwner(_idx) == address(this), "KetherNFT: owner needs to be KetherNFT after wrap");
     _mint(_owner, _idx);
   }
 
