@@ -69,7 +69,7 @@ contract KetherNFT is ERC721 {
   function wrap(uint _idx, address _owner) external {
     (bytes32 salt, address precomputedWrapper) = precompute(_idx, _owner);
 
-    require(_getAdOwner(_idx) == precomputedWrapper, "KetherNFT: owner needs to be our wrapper before wrap");
+    require(_getAdOwner(_idx) == precomputedWrapper, "KetherNFT: owner needs to be the correct precommitted address");
 
     // Wrapper completes the transfer escrow atomically and self-destructs.
     new Wrapper{salt: salt}(address(instance), _wrapPayload(_idx));
@@ -107,7 +107,7 @@ contract KetherNFT is ERC721 {
   /// Images should be valid PNG.
   /// Content-addressable storage links like IPFS are encouraged.
   function publish(uint _idx, string calldata _link, string calldata _image, string calldata _title, bool _NSFW) external {
-    require(getApproved(_idx) == msg.sender, "KetherNFT: publish for sender that is not approved");
+    require(_isApprovedOrOwner(msg.sender, _idx), "KetherNFT: publish for sender that is not approved");
 
     instance.publish(_idx, _link, _image, _title, _NSFW);
   }

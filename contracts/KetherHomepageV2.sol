@@ -65,7 +65,7 @@ contract KetherHomepageV2 is IKetherHomepage {
             for(uint j=0; j<_height; j++) {
                 if (grid[_x+i][_y+j]) {
                     // Already taken, undo.
-                    revert();
+                    revert("KetherHomepage: buy ad slot already taken");
                 }
                 grid[_x+i][_y+j] = true;
             }
