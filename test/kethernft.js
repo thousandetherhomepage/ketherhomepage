@@ -60,8 +60,13 @@ describe('KetherNFT', function() {
       KH.connect(account1).publish(idx, "foo", "bar", "baaz", false)
     ).to.reverted;
 
-    const ad = await KH.ads(idx);
-    //expect(ad).to.eql([await KNFT.address, BN(0), BN(0), BN(10), BN(10), "link", "image", "title", false, false]);
+    {
+      const [addr,,,,,link,image,title] = await KH.ads(idx);
+      expect(addr).to.equal(KNFT.address);
+      expect(link).to.equal("link");
+      expect(image).to.equal("image");
+      expect(title).to.equal("title");
+    }
   });
 });
 
