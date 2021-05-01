@@ -2,7 +2,7 @@
 pragma solidity ^0.8;
 
 // FIXME: Use 4.x pre-release which slims down the 721 implementation
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 import "./IKetherHomepage.sol";
 
@@ -17,7 +17,7 @@ contract Wrapper {
   }
 }
 
-contract KetherNFT is ERC721 {
+contract KetherNFT is ERC721URIStorage {
   /// instance is the KetherHomepage contract that this wrapper interfaces with.
   IKetherHomepage public instance;
 
@@ -86,12 +86,14 @@ contract KetherNFT is ERC721 {
     _burn(_idx);
   }
 
-  // TODO: Should we have a setTokenURI function so owners can change the rendering of their token?
-  // TODO: If we let people set their own tokenURI, do we need another NSFW flag option here?
+  // FIXME: If we let people set their own tokenURI, do we need another NSFW flag option here?
 
-  function tokenURI(uint256 _tokenId) public view virtual override(ERC721) returns (string memory) {
-    // FIXME: Replace with IPFS URI? Perhaps set on wrap?
-    return "ipfs://1000ether.com/ad/TODO"; // FIXME: Need to convert the uint256 to string, maybe Strings.uint2str?
+  /// setTokenURI lets owners set their own token metadata URI to reflect their
+  /// published ad unit.
+  function setTokenURI(uint256 _idx, string memory _tokenURI) external {
+    require(_isApprovedOrOwner(msg.sender, _idx), "KetherNFT: setTokenURI for sender that is not approved");
+
+    _setTokenURI(_idx, _tokenURI);
   }
 
   /// publish is a delegated proxy for KetherHomapage's publish function.

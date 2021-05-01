@@ -40,9 +40,6 @@ describe('KetherNFT', function() {
     const idx = await buyAd(account1);
     expect(idx).to.equal(0);
 
-    // TODO: Test wrapping to non-owner
-    // TODO: Test wrapping by non-owner
-
     const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
 
     // Set owner to precommitted wrap address
@@ -116,6 +113,50 @@ describe('KetherNFT', function() {
     // FIXME: Is this desirable? It allows non-owner to pay for the wrap, which is nice.
     await KNFT.connect(account3).wrap(idx, await account2.getAddress())
 
+  });
+
+  it("change tokenURI after wrapping", async function() {
+    const {account1, account2} = accounts;
+    const idx = await buyAd(account1);
+    const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
+
+    await KH.connect(account1).setAdOwner(idx, precomputeAddress);
+    await KNFT.connect(account1).wrap(idx, await account1.getAddress());
+    await KNFT.connect(account1).setTokenURI(idx, "foo");
+
+    expect(await KNFT.connect(account1).tokenURI(idx)).to.equal("foo");
+    await expect(
+      KNFT.connect(account2).setTokenURI(idx, "bar")
+    ).to.be.revertedWith("KetherNFT: setTokenURI for sender that is not approved")
+  });
+
+  it("unwrap", async function() {
+    const {account1, account2} = accounts;
+    const idx = await buyAd(account1);
+    const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
+
+    await KH.connect(account1).setAdOwner(idx, precomputeAddress);
+    await KNFT.connect(account1).wrap(idx, await account1.getAddress());
+
+    expect(await KNFT.connect(account2).balanceOf(await account1.getAddress())).to.equal(1);
+    expect(await KNFT.connect(account2).tokenURI(idx)).to.equal("");
+
+    await expect(
+      KNFT.connect(account2).unwrap(idx, await account2.getAddress())
+    ).to.be.revertedWith("KetherNFT: unwrap for sender that is not owner")
+
+    await KNFT.connect(account1).unwrap(idx, await account2.getAddress());
+
+    {
+      const [addr] = await KH.ads(idx);
+      expect(addr).to.equal(await account2.getAddress());
+    }
+
+    // Confirm that the NFT is gone
+    expect(await KNFT.connect(account2).balanceOf(await account2.getAddress())).to.equal(0);
+    await expect(
+      KNFT.connect(account2).tokenURI(idx)
+    ).to.be.revertedWith("ERC721URIStorage: URI query for nonexistent token")
   });
 
   it("verify precompute", async function() {
