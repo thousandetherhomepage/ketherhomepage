@@ -7,15 +7,25 @@ const pixelsPerCell = ethers.BigNumber.from(100);
 const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
 
 describe('KetherNFT', function() {
-  it("deploy KetherNFT", async function() {
+  let KetherHomepage, KetherNFT, Wrapper;
+  let accounts, KH, KNFT;
+
+  before(async() => {
     // NOTE: We're using V2 here because it's ported to newer solidity so we can debug more easily. It should also work with V1.
-    const KetherHomepage = await ethers.getContractFactory("KetherHomepageV2");
+    KetherHomepage = await ethers.getContractFactory("KetherHomepageV2");
+    KetherNFT = await ethers.getContractFactory("KetherNFT");
+    Wrapper = await ethers.getContractFactory("Wrapper");
+
+
     const [owner, withdrawWallet, metadataSigner, account1, account2] = await ethers.getSigners();
-    const KH = await KetherHomepage.deploy(await owner.getAddress(), await withdrawWallet.getAddress());
+    accounts = {owner, withdrawWallet, metadataSigner, account1, account2};
 
-    const KetherNFT = await ethers.getContractFactory("KetherNFT");
+    KH = await KetherHomepage.deploy(await owner.getAddress(), await withdrawWallet.getAddress());
+    KNFT = await KetherNFT.deploy(KH.address, await metadataSigner.getAddress());
+  });
 
-    const KNFT = await KetherNFT.deploy(KH.address, await metadataSigner.getAddress());
+  it("wrap ad with KetherNFT", async function() {
+    const {owner, withdrawWallet, metadataSigner, account1, account2} = accounts;
 
     // Buy an ad
     const txn = await KH.connect(account1).buy(0, 0, 10, 10, { value: oneHundredCellPrice });
@@ -29,27 +39,9 @@ describe('KetherNFT', function() {
     // TODO: Test wrapping to non-owner
     // TODO: Test wrapping by non-owner
 
-    const Wrapper = await ethers.getContractFactory("Wrapper");
-
     const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
 
-    // TODO: Test salt
-    expect(salt).to.not.equal("0x0");
-
-    const wrappedPayload = KH.interface.encodeFunctionData("setAdOwner", [idx, KNFT.address]); // Confirmed this matches KetherNFT._wrapPayload
-
-    const bytecode = ethers.utils.hexlify(
-      ethers.utils.concat([
-        Wrapper.bytecode,
-        // KH.address, wrappedPayload,
-        ethers.utils.defaultAbiCoder.encode(['address', 'bytes'], [KH.address, wrappedPayload]),
-      ]));
-
-    const precomputed = ethers.utils.getCreate2Address(KNFT.address, salt, ethers.utils.keccak256(bytecode));
-
-    // TODO: Check precompute in js
-    expect(precomputeAddress).to.equal(precomputed);
-
+    // Set owner to precommitted wrap address
     await KH.connect(account1).setAdOwner(idx, precomputeAddress);
 
     // Wrap ad
@@ -68,5 +60,41 @@ describe('KetherNFT', function() {
       expect(title).to.equal("title");
     }
   });
+
+  it("verify precompute", async function() {
+    const idx = 42;
+    const account = accounts.account1;
+
+    const [salt, precomputeAddress] = await KNFT.connect(account).precompute(42, await account.getAddress());
+
+    {
+      // Validate salt generation
+      const expected = ethers.utils.sha256(await account.getAddress());
+      expect(salt).to.equal(expected);
+    }
+
+    const wrappedPayload = KH.interface.encodeFunctionData("setAdOwner", [idx, KNFT.address]); // Confirmed this matches KetherNFT._wrapPayload
+
+    {
+      // Validate wrapped payload encoding
+      const expected = KH.interface.encodeFunctionData('setAdOwner', [idx, KNFT.address]);
+      expect(wrappedPayload).to.equal(expected);
+    }
+
+    const bytecode = ethers.utils.hexlify(
+      ethers.utils.concat([
+        Wrapper.bytecode,
+        Wrapper.interface.encodeDeploy([KH.address, wrappedPayload]),
+        // Same as: ethers.utils.defaultAbiCoder.encode(['address', 'bytes'], [KH.address, wrappedPayload]),
+      ]));
+
+    {
+      // Validate full create2 address precompute
+      const expected = ethers.utils.getCreate2Address(KNFT.address, salt, ethers.utils.keccak256(bytecode));
+      expect(precomputeAddress).to.equal(expected);
+    }
+
+  });
+
 });
 
