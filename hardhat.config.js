@@ -1,4 +1,5 @@
 require("@nomiclabs/hardhat-waffle");
+require("hardhat-gas-reporter");
 
 const INFURA_API_KEY = process.env['INFURA_API_KEY'];
 
@@ -33,6 +34,10 @@ module.exports = {
         version: "0.8.0",
       },
     ],
+  },
+  gasReporter: {
+    currency: 'USD',
+    gasPrice: 21
   },
 };
 
