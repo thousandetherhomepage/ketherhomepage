@@ -115,7 +115,7 @@ describe('KetherNFT', function() {
 
   });
 
-  it("should change tokenURI after wrapping", async function() {
+  it("should generate tokenURI based on wrapped ad", async function() {
     const {account1, account2} = accounts;
     const idx = await buyAd(account1);
     const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
@@ -125,7 +125,24 @@ describe('KetherNFT', function() {
 
     await KNFT.connect(account1).wrap(idx, await account1.getAddress());
 
-    expect(await KNFT.connect(account1).tokenURI(idx)).to.equal("foo");
+    {
+      const expected = {
+        "name": "Thousand Ether Homepage Ad: 10x10 at [0,0]",
+        "description": "This NFT represents an ad unit on https://1000ether.com/, the owner of the NFT controls the content of this ad unit.",
+        "image": "omitted for testing", // TODO: Test image elsewhere
+      };
+      const r = await KNFT.connect(account1).tokenURI(idx);
+      const prefix = 'data:application/json;base64';
+      expect(r).to.to.have.string(prefix);
+
+      const got = Buffer.from(r.slice(prefix.length), 'base64').toString();
+
+      const parsed = JSON.parse(got);
+      expect(parsed['image']).to.have.string('data:image/svg+xml;base64,');
+
+      parsed['image'] = expected['image'];
+      expect(parsed).to.deep.equal(expected);
+    }
   });
 
   it("should unwrap", async function() {
@@ -137,7 +154,7 @@ describe('KetherNFT', function() {
     await KNFT.connect(account1).wrap(idx, await account1.getAddress());
 
     expect(await KNFT.connect(account2).balanceOf(await account1.getAddress())).to.equal(1);
-    expect(await KNFT.connect(account2).tokenURI(idx)).to.equal("");
+    expect(await KNFT.connect(account2).tokenURI(idx)).to.not.equal("");
 
     await expect(
       KNFT.connect(account2).unwrap(idx, await account2.getAddress())
@@ -154,7 +171,7 @@ describe('KetherNFT', function() {
     expect(await KNFT.connect(account2).balanceOf(await account2.getAddress())).to.equal(0);
     await expect(
       KNFT.connect(account2).tokenURI(idx)
-    ).to.be.revertedWith("ERC721URIStorage: URI query for nonexistent token")
+    ).to.be.revertedWith("KetherNFT: tokenId does not exist");
   });
 
   it("should generate correct precompute address and salt", async function() {
