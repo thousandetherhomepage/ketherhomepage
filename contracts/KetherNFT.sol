@@ -86,7 +86,7 @@ contract KetherNFT is ERC721 {
   }
 
   function unwrap(uint _idx, address _newOwner) external {
-    require(ownerOf(_idx) == _msgSender(), "KetherNFT: unwrap for sender that is not owner");
+    require(_isApprovedOrOwner(_msgSender(), _idx), "KetherNFT: unwrap for sender that is not owner");
 
     instance.setAdOwner(_idx, _newOwner);
     require(_getAdOwner(_idx) == _newOwner, "KetherNFT: unwrap ownership transfer failed");
