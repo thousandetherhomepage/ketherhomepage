@@ -24,6 +24,6 @@ contracts: build/contracts/*
 build/contracts/%.json: contracts/%.sol
 	npx hardhat compile
 
-node_modules/: package.json
+node_modules/: package.json package-lock.json
 	npm install
 	touch node_modules/

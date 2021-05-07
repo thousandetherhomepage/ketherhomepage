@@ -27,17 +27,20 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        // Original KetherHomepage contract
-        version: "0.4.15",
+        version: "0.8.4",
       },
       {
-        version: "0.8.0",
+        // Original KetherHomepage contract
+        version: "0.4.15",
       },
     ],
   },
   gasReporter: {
+    enabled: (process.env.REPORT_GAS) ? true : false,
     currency: 'USD',
-    gasPrice: 21
+    // Note: Prices are hardcoded for now
+    gasPrice: 21,
+    ethPrice: 3500,
   },
 };
 

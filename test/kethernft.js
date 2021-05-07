@@ -33,7 +33,7 @@ describe('KetherNFT', function() {
     return idx;
   }
 
-  it("wrap ad with KetherNFT", async function() {
+  it("should wrap ad with KetherNFT", async function() {
     const {account1} = accounts;
 
     // Buy an ad
@@ -62,19 +62,19 @@ describe('KetherNFT', function() {
     }
 
     // Confirm NFT owner can publish through the NFT
-    await KNFT.connect(account1).publish(idx, "foo2", "bar2", "baaz2", false);
+    await KNFT.connect(account1).publish(idx, "foo2", "baar2", "baaz2", false);
 
     {
       const [addr,,,,,link,image,title] = await KH.ads(idx);
       expect(addr).to.equal(KNFT.address);
       expect(link).to.equal("foo2");
-      expect(image).to.equal("bar2");
+      expect(image).to.equal("baar2");
       expect(title).to.equal("baaz2");
     }
 
   });
 
-  it('wrap to non-owner', async function() {
+  it('should wrap to non-owner', async function() {
     const {account1, account2, account3} = accounts;
     const idx = await buyAd(account1);
     {
@@ -115,22 +115,20 @@ describe('KetherNFT', function() {
 
   });
 
-  it("change tokenURI after wrapping", async function() {
+  it("should change tokenURI after wrapping", async function() {
     const {account1, account2} = accounts;
     const idx = await buyAd(account1);
     const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
 
+    await KH.connect(account1).publish(idx, "link", "image", "title", false);
     await KH.connect(account1).setAdOwner(idx, precomputeAddress);
+
     await KNFT.connect(account1).wrap(idx, await account1.getAddress());
-    await KNFT.connect(account1).setTokenURI(idx, "foo");
 
     expect(await KNFT.connect(account1).tokenURI(idx)).to.equal("foo");
-    await expect(
-      KNFT.connect(account2).setTokenURI(idx, "bar")
-    ).to.be.revertedWith("KetherNFT: setTokenURI for sender that is not approved")
   });
 
-  it("unwrap", async function() {
+  it("should unwrap", async function() {
     const {account1, account2} = accounts;
     const idx = await buyAd(account1);
     const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
@@ -159,7 +157,7 @@ describe('KetherNFT', function() {
     ).to.be.revertedWith("ERC721URIStorage: URI query for nonexistent token")
   });
 
-  it("verify precompute", async function() {
+  it("should generate correct precompute address and salt", async function() {
     const idx = 42;
     const account = accounts.account1;
 

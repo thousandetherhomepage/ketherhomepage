@@ -1,10 +1,11 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8;
+pragma solidity >=0.8.4;
 
 // FIXME: Use 4.x pre-release which slims down the 721 implementation
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 import "./IKetherHomepage.sol";
+import "base64-sol/base64.sol";
 
 
 // TODO: Name this something really cool
@@ -17,34 +18,36 @@ contract Wrapper {
   }
 }
 
-contract KetherNFT is ERC721URIStorage {
+contract KetherNFT is ERC721 {
   /// instance is the KetherHomepage contract that this wrapper interfaces with.
   IKetherHomepage public instance;
 
-  /// metadataSigner provides oracle authenticity for tokenURI content.
-  address public metadataSigner;
+  /// admin controls upgrading the tokenURI renderer and releasing trapped funds.
+  address admin;
 
-  // TODO: Do we want to emit events?
+  /// disableRenderUpgrade is whether we can still upgrade the tokenURI renderer.
+  /// Once it is set it cannot be unset.
+  // TODO: bool disableRenderUpgrade = false;
 
-  constructor(address _ketherContract, address _metadataSigner) ERC721("Thousand Ether Homepage Ad", "1KAD") {
+  constructor(address _ketherContract, address _admin) ERC721("Thousand Ether Homepage Ad", "1KAD") {
     instance = IKetherHomepage(_ketherContract);
-    metadataSigner = _metadataSigner;
+    admin = _admin;
   }
 
-  function _wrapPayload(uint _idx) internal view returns (bytes memory) {
-    return abi.encodeWithSignature("setAdOwner(uint256,address)", _idx, address(this));
-  }
-
-  function _wrapCreation(uint _idx) internal view returns (bytes memory) {
+  function _encodeWrapper(uint _idx) internal view returns (bytes memory) {
     return abi.encodePacked(
       type(Wrapper).creationCode,
-      abi.encode(address(instance), _wrapPayload(_idx)));
+      abi.encode(address(instance), _encodeWrapperPayload(_idx)));
+  }
+
+  function _encodeWrapperPayload(uint _idx) internal view returns (bytes memory) {
+    return abi.encodeWithSignature("setAdOwner(uint256,address)", _idx, address(this));
   }
 
   function precompute(uint _idx, address _owner) public view returns (bytes32 salt, address predictedAddress) {
     salt = sha256(abi.encodePacked(_owner)); // FIXME: This can be more gas-efficient? Also worth salting something random here like block number?
 
-    bytes memory bytecode = _wrapCreation(_idx);
+    bytes memory bytecode = _encodeWrapper(_idx);
 
     bytes32 hash = keccak256(
       abi.encodePacked(
@@ -72,28 +75,18 @@ contract KetherNFT is ERC721URIStorage {
     require(_getAdOwner(_idx) == precomputedWrapper, "KetherNFT: owner needs to be the correct precommitted address");
 
     // Wrapper completes the transfer escrow atomically and self-destructs.
-    new Wrapper{salt: salt}(address(instance), _wrapPayload(_idx));
+    new Wrapper{salt: salt}(address(instance), _encodeWrapperPayload(_idx));
 
     require(_getAdOwner(_idx) == address(this), "KetherNFT: owner needs to be KetherNFT after wrap");
-    _mint(_owner, _idx);
+    _safeMint(_owner, _idx);
   }
 
   function unwrap(uint _idx, address _newOwner) external {
-    require(ownerOf(_idx) == msg.sender, "KetherNFT: unwrap for sender that is not owner");
+    require(ownerOf(_idx) == _msgSender(), "KetherNFT: unwrap for sender that is not owner");
 
 
     instance.setAdOwner(_idx, _newOwner);
     _burn(_idx);
-  }
-
-  // FIXME: If we let people set their own tokenURI, do we need another NSFW flag option here?
-
-  /// setTokenURI lets owners set their own token metadata URI to reflect their
-  /// published ad unit.
-  function setTokenURI(uint256 _idx, string memory _tokenURI) external {
-    require(_isApprovedOrOwner(msg.sender, _idx), "KetherNFT: setTokenURI for sender that is not approved");
-
-    _setTokenURI(_idx, _tokenURI);
   }
 
   /// publish is a delegated proxy for KetherHomapage's publish function.
@@ -109,7 +102,7 @@ contract KetherNFT is ERC721URIStorage {
   /// Images should be valid PNG.
   /// Content-addressable storage links like IPFS are encouraged.
   function publish(uint _idx, string calldata _link, string calldata _image, string calldata _title, bool _NSFW) external {
-    require(_isApprovedOrOwner(msg.sender, _idx), "KetherNFT: publish for sender that is not approved");
+    require(_isApprovedOrOwner(_msgSender(), _idx), "KetherNFT: publish for sender that is not approved");
 
     instance.publish(_idx, _link, _image, _title, _NSFW);
   }

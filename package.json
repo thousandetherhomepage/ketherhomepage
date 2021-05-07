@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "base64-sol": "^1.0.1",
     "vue": "^2.4.4",
     "vue-draggable-resizable": "^1.5.1",
     "vuex": "^2.4.1",
