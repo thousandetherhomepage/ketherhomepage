@@ -88,8 +88,9 @@ contract KetherNFT is ERC721 {
   function unwrap(uint _idx, address _newOwner) external {
     require(ownerOf(_idx) == _msgSender(), "KetherNFT: unwrap for sender that is not owner");
 
-
     instance.setAdOwner(_idx, _newOwner);
+    require(_getAdOwner(_idx) == _newOwner, "KetherNFT: unwrap ownership transfer failed");
+
     _burn(_idx);
   }
 
@@ -140,4 +141,21 @@ contract KetherNFT is ERC721 {
     instance.publish(_idx, _link, _image, _title, _NSFW);
   }
 
+
+  /// adminRecoverTrapped allows us to transfer ownership of ads that were
+  /// incorrectly transferred to this contract without an NFT being minted.
+  /// This should never happen, but we include this recovery function in case
+  /// there is a bug in the DApp that somehow falls into this condition.
+  /// Note that this function does *not* give admin any control over properly
+  /// minted ads/NFTs.
+  function adminRecoverTrapped(uint _idx, address _to) external {
+    require(_msgSender() == admin, "KetherNFT: recovery must be done by admin");
+    require(!_exists(_idx), "KetherNFT: recovery can only be done on unminted ads");
+    require(_getAdOwner(_idx) == address(this), "KetherNFT: ad not held by contract");
+
+    instance.setAdOwner(_idx, _to);
+  }
+
+  // TODO: adminTransfer
+  // TODO: adminDisableRenderUpgrade
 }

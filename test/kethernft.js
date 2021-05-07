@@ -148,13 +148,16 @@ describe('KetherNFT', function() {
   it("should unwrap", async function() {
     const {account1, account2} = accounts;
     const idx = await buyAd(account1);
-    const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
 
-    await KH.connect(account1).setAdOwner(idx, precomputeAddress);
-    await KNFT.connect(account1).wrap(idx, await account1.getAddress());
+    {
+      // Wrap from account1 to account2
+      const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
+      await KH.connect(account1).setAdOwner(idx, precomputeAddress);
+      await KNFT.connect(account1).wrap(idx, await account1.getAddress());
 
-    expect(await KNFT.connect(account2).balanceOf(await account1.getAddress())).to.equal(1);
-    expect(await KNFT.connect(account2).tokenURI(idx)).to.not.equal("");
+      expect(await KNFT.connect(account2).balanceOf(await account1.getAddress())).to.equal(1);
+      expect(await KNFT.connect(account2).tokenURI(idx)).to.not.equal("");
+    }
 
     await expect(
       KNFT.connect(account2).unwrap(idx, await account2.getAddress())
@@ -172,6 +175,16 @@ describe('KetherNFT', function() {
     await expect(
       KNFT.connect(account2).tokenURI(idx)
     ).to.be.revertedWith("KetherNFT: tokenId does not exist");
+
+    {
+      // Wrap again, from account2 to account2
+      const [salt, precomputeAddress] = await KNFT.connect(account2).precompute(idx, await account2.getAddress());
+      await KH.connect(account2).setAdOwner(idx, precomputeAddress);
+      await KNFT.connect(account2).wrap(idx, await account2.getAddress());
+
+      expect(await KNFT.connect(account2).balanceOf(await account2.getAddress())).to.equal(1);
+      expect(await KNFT.connect(account2).tokenURI(idx)).to.not.equal("");
+    }
   });
 
   it("should generate correct precompute address and salt", async function() {
@@ -208,5 +221,19 @@ describe('KetherNFT', function() {
     }
   });
 
+  it("should not allow eth receive", async function() {
+    const {account1} = accounts;
+
+    expect(
+      account1.sendTransaction({
+        to: KNFT.address,
+        value: ethers.utils.parseEther("42.0")
+      })
+    ).to.be.reverted;
+  });
+
+  xit("should be recoverable if ownership is transferred without minting", async function() {
+    // TODO: ...
+  });
 });
 
