@@ -7,13 +7,14 @@ const pixelsPerCell = ethers.BigNumber.from(100);
 const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
 
 describe('KetherNFT', function() {
-  let KetherHomepage, KetherNFT, Wrapper;
-  let accounts, KH, KNFT;
+  let KetherHomepage, KetherNFT, KetherNFTRender, Wrapper;
+  let accounts, KH, KNFT, KNFTrender;
 
   beforeEach(async() => {
     // NOTE: We're using V2 here because it's ported to newer solidity so we can debug more easily. It should also work with V1.
     KetherHomepage = await ethers.getContractFactory("KetherHomepageV2");
     KetherNFT = await ethers.getContractFactory("KetherNFT");
+    KetherNFTRender = await ethers.getContractFactory("KetherNFTRender");
     Wrapper = await ethers.getContractFactory("Wrapper");
 
 
@@ -21,7 +22,8 @@ describe('KetherNFT', function() {
     accounts = {owner, withdrawWallet, metadataSigner, account1, account2, account3};
 
     KH = await KetherHomepage.deploy(await owner.getAddress(), await withdrawWallet.getAddress());
-    KNFT = await KetherNFT.deploy(KH.address, await metadataSigner.getAddress());
+    KNFTrender = await KetherNFTRender.deploy();
+    KNFT = await KetherNFT.deploy(KH.address, KNFTrender.address);
   });
 
   const buyAd = async function(account, x=0, y=0, width=10, height=10, link="link", image="image", title="title", NSFW=false, value=oneHundredCellPrice) {

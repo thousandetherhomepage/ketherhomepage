@@ -2,12 +2,10 @@
 pragma solidity >=0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import '@openzeppelin/contracts/utils/Strings.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./IKetherHomepage.sol";
-import "base64-sol/base64.sol";
-
-import "hardhat/console.sol"; // XXX
+import "./KetherNFTRender.sol";
 
 
 // TODO: Name this something really cool
@@ -20,22 +18,19 @@ contract Wrapper {
   }
 }
 
-contract KetherNFT is ERC721 {
-  using Strings for uint;
-
+contract KetherNFT is ERC721, Ownable {
   /// instance is the KetherHomepage contract that this wrapper interfaces with.
   IKetherHomepage public instance;
-
-  /// admin controls upgrading the tokenURI renderer and releasing trapped funds.
-  address admin;
 
   /// disableRenderUpgrade is whether we can still upgrade the tokenURI renderer.
   /// Once it is set it cannot be unset.
   // TODO: bool disableRenderUpgrade = false;
 
-  constructor(address _ketherContract, address _admin) ERC721("Thousand Ether Homepage Ad", "1KAD") {
+  ITokenRenderer public renderer;
+
+  constructor(address _ketherContract, address _renderer) ERC721("Thousand Ether Homepage Ad", "1KAD") {
     instance = IKetherHomepage(_ketherContract);
-    admin = _admin;
+    renderer = ITokenRenderer(_renderer);
   }
 
   function _encodeWrapper(uint _idx) internal view returns (bytes memory) {
@@ -94,33 +89,9 @@ contract KetherNFT is ERC721 {
     _burn(_idx);
   }
 
-  function _renderNFTImage(uint x, uint y, uint width, uint height) internal pure returns (string memory) {
-    return Base64.encode(bytes(abi.encodePacked(
-      '<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g>',
-      '<rect x="',x.toString(),'" y="',y.toString(),'" width="',width.toString(),'" height="',height.toString(),'" fill="orange"></rect>',
-      '</g></svg>')));
-  }
-
   function tokenURI(uint256 tokenId) public view override(ERC721) returns (string memory) {
     require(_exists(tokenId), "KetherNFT: tokenId does not exist");
-
-    (,uint x,uint y,uint width,uint height,,,,,) = instance.ads(tokenId);
-
-    // TODO: return tokenRenderer.tokenURI(this, tokenId);
-    return string(
-      abi.encodePacked(
-        'data:application/json;base64,',
-        Base64.encode(bytes(abi.encodePacked(
-              '{"name":"Thousand Ether Homepage Ad: ',
-              width.toString(), 'x', height.toString(), ' at [', x.toString(), ',', y.toString(), ']',
-              '", "description":"This NFT represents an ad unit on https://1000ether.com/, the owner of the NFT controls the content of this ad unit.',
-              '", "image": "data:image/svg+xml;base64,',
-              _renderNFTImage(x, y, width, height),
-              '"}'
-        )))
-      )
-    );
-
+    return renderer.tokenURI(instance, tokenId);
   }
 
   /// publish is a delegated proxy for KetherHomapage's publish function.
@@ -148,14 +119,15 @@ contract KetherNFT is ERC721 {
   /// there is a bug in the DApp that somehow falls into this condition.
   /// Note that this function does *not* give admin any control over properly
   /// minted ads/NFTs.
-  function adminRecoverTrapped(uint _idx, address _to) external {
-    require(_msgSender() == admin, "KetherNFT: recovery must be done by admin");
+  function adminRecoverTrapped(uint _idx, address _to) external onlyOwner {
     require(!_exists(_idx), "KetherNFT: recovery can only be done on unminted ads");
     require(_getAdOwner(_idx) == address(this), "KetherNFT: ad not held by contract");
-
     instance.setAdOwner(_idx, _to);
   }
 
-  // TODO: adminTransfer
-  // TODO: adminDisableRenderUpgrade
+  function adminSetRenderer(address _renderer) external onlyOwner {
+    renderer = ITokenRenderer(_renderer);
+  }
+
+  // TODO: adminDisableRenderUpgrade?
 }
