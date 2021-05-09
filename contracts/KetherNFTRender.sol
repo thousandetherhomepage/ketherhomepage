@@ -24,16 +24,24 @@ contract KetherNFTRender is ITokenRenderer {
   function tokenURI(IKetherHomepage instance, uint256 tokenId) public view override(ITokenRenderer) returns (string memory) {
     (,uint x,uint y,uint width,uint height,,,,,) = instance.ads(tokenId);
 
+    // Units are 1/10
+    x *= 10;
+    y *= 10;
+    width *= 10;
+    height *= 10;
+
+    // TODO: Add NSFW property
+
     return string(
       abi.encodePacked(
         'data:application/json;base64,',
         Base64.encode(bytes(abi.encodePacked(
-              '{"name":"Thousand Ether Homepage Ad: ',
-              width.toString(), 'x', height.toString(), ' at [', x.toString(), ',', y.toString(), ']',
-              '", "description":"This NFT represents an ad unit on https://1000ether.com/, the owner of the NFT controls the content of this ad unit.',
-              '", "image": "data:image/svg+xml;base64,',
-              _renderNFTImage(x, y, width, height),
-              '"}'
+              '{"name":"Thousand Ether Homepage Ad: ', width.toString(), 'x', height.toString(), ' at [', x.toString(), ',', y.toString(), ']"',
+              ',"description":"This NFT represents an ad unit on thousandetherhomepage.com, the owner of the NFT controls the content of this ad unit."',
+              ',"external_url":"https://thousandetherhomepage.com"',
+              ',"image":"data:image/svg+xml;base64,', _renderNFTImage(x, y, width, height), '"',
+              ',"properties":{"width":', width.toString(),',"height":',height.toString(),'}',
+              '}'
         )))
       )
     );

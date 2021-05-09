@@ -119,7 +119,7 @@ describe('KetherNFT', function() {
 
   it("should generate tokenURI based on wrapped ad", async function() {
     const {account1, account2} = accounts;
-    const idx = await buyAd(account1);
+    const idx = await buyAd(account1, 1, 2, 3, 4);
     const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
 
     await KH.connect(account1).publish(idx, "link", "image", "title", false);
@@ -129,9 +129,11 @@ describe('KetherNFT', function() {
 
     {
       const expected = {
-        "name": "Thousand Ether Homepage Ad: 10x10 at [0,0]",
-        "description": "This NFT represents an ad unit on https://1000ether.com/, the owner of the NFT controls the content of this ad unit.",
+        "name": "Thousand Ether Homepage Ad: 30x40 at [10,20]",
+        "description": "This NFT represents an ad unit on thousandetherhomepage.com, the owner of the NFT controls the content of this ad unit.",
+        "external_url": "https://thousandetherhomepage.com",
         "image": "omitted for testing", // TODO: Test image elsewhere
+        "properties": {"width": 30, "height": 40},
       };
       const r = await KNFT.connect(account1).tokenURI(idx);
       const prefix = 'data:application/json;base64';
@@ -139,7 +141,13 @@ describe('KetherNFT', function() {
 
       const got = Buffer.from(r.slice(prefix.length), 'base64').toString();
 
-      const parsed = JSON.parse(got);
+      let parsed;
+      try {
+        parsed = JSON.parse(got);
+      } catch (e) {
+        console.log("Failed to parse:", got);
+        throw e;
+      }
       expect(parsed['image']).to.have.string('data:image/svg+xml;base64,');
 
       parsed['image'] = expected['image'];
