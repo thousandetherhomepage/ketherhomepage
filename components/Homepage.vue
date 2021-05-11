@@ -51,7 +51,7 @@ function toAd(i, r) {
 }
 
 export default {
-  props: ["web3", "contract", "isReadOnly", "showNSFW", "prerendered"],
+  props: ["provider", "contract", "isReadOnly", "showNSFW", "prerendered"],
   data() {
     return {
       showPublish: false,
