@@ -13,6 +13,12 @@ export const state = () => ({
 })
 
 export const mutations = {
+  initGrid(state) {
+    if (state.grid === null) {
+      // Compute grid and cache it
+      state.grid = filledGrid(grid_array2d(100, 100), state.ads);
+    }
+  },
   setAccount(state, account) {
     state.activeAccount = account
   },
@@ -91,7 +97,7 @@ export const mutations = {
 
     state.adsPixels += ad.width * ad.height * 100;
     if (state.grid !== null) {
-      // Fill grid cache if it's already loaded
+      // If the grid is already cached, update to include new ad.
 
       // Ad properties might be BigNumbers maybe which don't play well with +'s...
       // TODO: Fix this in a more general way?
@@ -105,8 +111,7 @@ export const mutations = {
 export const getters = {
   isColliding: (state, getters) => (x1, y1, x2, y2) => {
     if (state.grid === null) {
-      // Compute grid and cache it
-      state.grid = filledGrid(grid_array2d(100, 100), state.ads);
+      throw "state.grid not initialized"
     }
     return state.grid.checkBox(x1, y1, x2, y2);
   }

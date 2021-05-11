@@ -53,7 +53,7 @@ export default {
       eventCategory: this.contract._network,
       eventAction: 'buy-open',
     });
-
+    this.$store.commit('initGrid')
     return {
       error: null,
       success: null,
