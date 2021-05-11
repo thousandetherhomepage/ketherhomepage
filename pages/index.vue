@@ -11,5 +11,7 @@
 </template>
 
 <script>
+// Stub for ga. TODO should we cut this entirely?
+window.ga = function () {};
 export default {}
 </script>
