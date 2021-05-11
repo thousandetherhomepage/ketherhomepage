@@ -99,7 +99,6 @@ const deployConfig = {
     },
   },
   main: {
-    //TODO this was called "main" in web3, but ethers calls mainnet "homestead". Will using the name homestead break during some furture eth upgrade?
     contractAddr: "0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
     web3Fallback:
       "https://mainnet.infura.io/v3/fa9f29a052924745babfc1d119465148",
@@ -114,6 +113,7 @@ const deployConfig = {
     },
   },
 };
+deployConfig["homestead"] = deployConfig["main"];
 const defaultNetwork = "main";
 
 import Dropdown from "./Dropdown.vue";
@@ -186,7 +186,7 @@ export default {
         // Using MetaMask or equivalent
         this.provider = new ethers.providers.Web3Provider(window.ethereum, "any");
         this.activeNetwork = await this.provider.getNetwork();
-        this.networkConfig = deployConfig[this.activeNetwork];
+        this.networkConfig = deployConfig[this.activeNetwork.name];
         this.signer = this.provider.getSigner();
         this.isReadOnly = false;
 
@@ -205,18 +205,14 @@ export default {
         // TODO switch networks
         let network = null;
         this.networkConfig = deployConfig[network || defaultNetwork];
-          console.log(this.networkConfig)
-
         const web3Fallback = this.networkConfig.web3Fallback || "http://localhost:8545/";
         this.provider = new ethers.providers.JsonRpcProvider(web3Fallback)
         this.activeNetwork = await this.provider.getNetwork();
         this.signer = null;
         this.isReadOnly = true;
       }
-  console.log(this.networkConfig)
-    this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
-  console.log("A")
-   this.ready = true;
+      this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
+      this.ready = true;
     },
     async setNetwork(network) {
 //todo

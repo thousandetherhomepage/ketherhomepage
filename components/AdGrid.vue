@@ -30,7 +30,7 @@
 
 <template>
   <div :class="{ adGrid: true, active: !!$store.state.previewAd }" :style="gridStyle(prerendered)">
-    <template v-for="ad in $store.state.ads"> <!-- TODO replace with computed pro v-if="ad"> (I think I did this but not sure of intention - @mveystman) -->
+    <template v-for="ad in $store.state.ads">
       <Ad :showNSFW="showNSFW" :ad="ad" :skipImage="!loadRemoteImages" v-if="ad" :key="ad.idx"></Ad>
 
     </template>
