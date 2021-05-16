@@ -1,15 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <%- include _head%>
-  </head>
-  <body>
-    <div id="app" class="container">
-      <header>
-        <h1><a href="">The Thousand Ether Homepage</a></h1>
-        <h2>1,000,000 pixels &middot; 0.001 ETH per pixel &middot; Own a piece of blockchain history!</h2>
-      </header>
-
+<template>
+  <div id="app" class="container">
+      <Header/>
       <article>
         <h1>Press & Media</h1>
         <h2>Articles</h2>
@@ -84,8 +75,6 @@
           </li>
         </ul>
       </article>
-      <%- include _footer %>
+      <Footer/>
     </div>
-    <%- include _analytics %>
-  </body>
-</html>
+</template>

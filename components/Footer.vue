@@ -7,8 +7,8 @@
     </ul>
     <ul>
       <li><h3>Project</h3></li>
-      <li><a href="faq">FAQ</a></li>
-      <li><a href="press">Press</a></li>
+      <li><NuxtLink to="faq">FAQ</NuxtLink></li>
+      <li><NuxtLink to="press">Press</NuxtLink></li>
       <li>
         <a href="https://github.com/thousandetherhomepage">Source code</a>
       </li>
