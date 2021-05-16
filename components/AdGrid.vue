@@ -34,7 +34,11 @@
       <Ad :showNSFW="showNSFW" :ad="ad" :skipImage="!loadRemoteImages" v-if="ad" :key="ad.idx"></Ad>
 
     </template>
-    <vue-draggable-resizable ref="draggable" :active="true" :minw="10" :minh="10" :x="$store.state.previewAd.x" :y="$store.state.previewAd.y" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="$store.state.previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
+    <vue-draggable-resizable ref="draggable" :active="true" :minWidth="10" :minHeight="10"
+      :x="$store.state.previewAd.x" :y="$store.state.previewAd.y"
+      :w="80" :h="40" :grid="[10,10]" :parent="true"
+      @dragstop="updatePreview" @resizestop="updatePreview"
+      :draggable="!previewLocked" :resizable="!previewLocked" v-if="$store.state.previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
       <Buy :web3="web3" :contract="contract" :isReadOnly="isReadOnly" @buy="onBuy"></Buy>
     </vue-draggable-resizable>
   </div>
