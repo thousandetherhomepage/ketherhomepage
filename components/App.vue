@@ -49,11 +49,11 @@
             :disabled="!isReadOnly"
             invalidName="Unsupported Network"
           ></Dropdown>
-          <span v-if="!networkConfig.etherscanLink">
+          <span v-if="!networkConfig">
             Contract is only on MainNet and Rinkeby.
           </span>
         </li>
-        <li v-if="networkConfig.etherscanLink">
+        <li v-if="networkConfig">
           <a :href="networkConfig.etherscanLink" target="_blank">
             Contract on Etherscan
           </a>
@@ -84,21 +84,8 @@ import { ethers } from "ethers";
 import contractJSON from "../build/contracts/KetherHomepage.json";
 
 const deployConfig = {
-  rinkeby: {
-    contractAddr: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
-    web3Fallback:
-      "https://rinkeby.infura.io/v3/fa9f29a052924745babfc1d119465148",
-    etherscanLink:
-      "https://rinkeby.etherscan.io/address/0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
-    prerendered: {
-      image:
-        "https://storage.googleapis.com/storage.thousandetherhomepage.com/rinkeby.png",
-      data: "https://storage.thousandetherhomepage.com/rinkeby.json",
-      loadRemoteImages: true,
-      loadFromWeb3: true,
-    },
-  },
-  main: {
+  homestead: {
+    name: "main",
     contractAddr: "0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
     web3Fallback:
       "https://mainnet.infura.io/v3/fa9f29a052924745babfc1d119465148",
@@ -112,9 +99,23 @@ const deployConfig = {
       loadFromWeb3: true,
     },
   },
+  rinkeby: {
+    name: "rinkeby",
+    contractAddr: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
+    web3Fallback:
+      "https://rinkeby.infura.io/v3/fa9f29a052924745babfc1d119465148",
+    etherscanLink:
+      "https://rinkeby.etherscan.io/address/0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
+    prerendered: {
+      image:
+        "https://storage.googleapis.com/storage.thousandetherhomepage.com/rinkeby.png",
+      data: "https://storage.thousandetherhomepage.com/rinkeby.json",
+      loadRemoteImages: true,
+      loadFromWeb3: true,
+    },
+  },
 };
-deployConfig["homestead"] = deployConfig["main"];
-const defaultNetwork = "main";
+const defaultNetwork = "homestead";
 
 import Dropdown from "./Dropdown.vue";
 import Homepage from "./Homepage.vue";
@@ -187,9 +188,12 @@ export default {
         this.provider = new ethers.providers.Web3Provider(window.ethereum, "any");
         this.activeNetwork = (await this.provider.getNetwork()).name;
         this.networkConfig = deployConfig[this.activeNetwork];
-        this.signer = this.provider.getSigner();
-        this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
-        this.isReadOnly = false;
+        if (this.networkConfig) {
+          this.signer = this.provider.getSigner();
+          this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
+          this.isReadOnly = false;
+          this.ready = true;
+        }
 
         // When the network changes, refresh the page.
         // see https://docs.ethers.io/v5/concepts/best-practices/#best-practices
@@ -204,13 +208,13 @@ export default {
       } else {
         // Use an HTTP proxy
         await this.setReadOnlyNetwork(defaultNetwork);
+        this.ready = true;
       }
-      this.ready = true;
     },
     async setReadOnlyNetwork(network) {
+      this.activeNetwork = network;
       const web3Fallback = deployConfig[network].web3Fallback || "http://localhost:8545/";
       this.provider = new ethers.providers.JsonRpcProvider(web3Fallback);
-      this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
       this.signer = null;
       this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
