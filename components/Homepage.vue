@@ -69,6 +69,7 @@ export default {
       }
 
     },
+    // TODO I think we can cut this
     loadAdsStatic() {
       this.$store.commit('clearAds');
       var xhr = new XMLHttpRequest();
@@ -88,6 +89,11 @@ export default {
       }.bind(this);
       xhr.send();
     },
+  },
+  watch: {
+    contract() {
+      this.loadAds();
+    }
   },
   created() {
     //this.web3.eth.getAccounts(function(err, res) {

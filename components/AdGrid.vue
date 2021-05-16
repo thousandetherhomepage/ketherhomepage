@@ -52,7 +52,7 @@ import 'vue-draggable-resizable/dist/VueDraggableResizable.css'
 
 
 export default {
-  props: ["web3", "contract", "isReadOnly", "showNSFW", "prerendered"],
+  props: ["provider", "contract", "isReadOnly", "showNSFW", "prerendered"],
   data() {
     return {
       previewLocked: false,

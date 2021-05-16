@@ -6,7 +6,7 @@
     <template v-if="ready">
       <Homepage
         v-if="ready"
-        :provier="provider"
+        :provider="provider"
         :contract="contract"
         :isReadOnly="isReadOnly"
         :showNSFW="showNSFW"
@@ -45,7 +45,7 @@
           <Dropdown
             :options="availableNetworks"
             :default="activeNetwork"
-            @selected="setNetwork"
+            @selected="setReadOnlyNetwork"
             :disabled="!isReadOnly"
             invalidName="Unsupported Network"
           ></Dropdown>
@@ -185,9 +185,10 @@ export default {
       if (window.ethereum) {
         // Using MetaMask or equivalent
         this.provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-        this.activeNetwork = await this.provider.getNetwork();
-        this.networkConfig = deployConfig[this.activeNetwork.name];
+        this.activeNetwork = (await this.provider.getNetwork()).name;
+        this.networkConfig = deployConfig[this.activeNetwork];
         this.signer = this.provider.getSigner();
+        this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
         this.isReadOnly = false;
 
         // When the network changes, refresh the page.
@@ -202,20 +203,18 @@ export default {
         });
       } else {
         // Use an HTTP proxy
-        // TODO switch networks
-        let network = null;
-        this.networkConfig = deployConfig[network || defaultNetwork];
-        const web3Fallback = this.networkConfig.web3Fallback || "http://localhost:8545/";
-        this.provider = new ethers.providers.JsonRpcProvider(web3Fallback)
-        this.activeNetwork = await this.provider.getNetwork();
-        this.signer = null;
-        this.isReadOnly = true;
+        await this.setReadOnlyNetwork(defaultNetwork);
       }
-      this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
       this.ready = true;
     },
-    async setNetwork(network) {
-//todo
+    async setReadOnlyNetwork(network) {
+      const web3Fallback = deployConfig[network].web3Fallback || "http://localhost:8545/";
+      this.provider = new ethers.providers.JsonRpcProvider(web3Fallback);
+      this.activeNetwork = (await this.provider.getNetwork()).name;
+      this.networkConfig = deployConfig[this.activeNetwork];
+      this.signer = null;
+      this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
+      this.isReadOnly = true;
     },
 
   },
