@@ -44,6 +44,8 @@
 import Ad from './Ad.vue'
 import Buy from './Buy.vue'
 import VueDraggableResizable from 'vue-draggable-resizable'
+import 'vue-draggable-resizable/dist/VueDraggableResizable.css'
+
 
 export default {
   props: ["web3", "contract", "isReadOnly", "showNSFW", "prerendered"],
