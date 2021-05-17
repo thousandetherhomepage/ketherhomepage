@@ -67,76 +67,55 @@ export default {
       for await (const [i, ad] of ads.entries()) {
         this.$store.commit('addAd', toAd(i, await ad));
       }
-
     },
-    // TODO I think we can cut this
-    loadAdsStatic() {
-      this.$store.commit('clearAds');
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", this.prerendered.data, true);
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState !== 4) return;
-
-        const resp = JSON.parse(xhr.responseText);
-        const ads = resp.ads;
-        this.$store.commit('setAdsLength', ads.length);
-        for (let i=0; i<ads.length; i++) {
-          const ad = ads[i];
-          // FIXME: Remove polyfill from old version
-          if (ad.userNSFW) ad.NSFW = ad.userNSFW;
-          this.$store.commit('addAd', ad);
-        }
-      }.bind(this);
-      xhr.send();
-    },
+    // FIXME: Removed loadAdsStatic, replace it using nuxt pregen
   },
   watch: {
     contract() {
+      // Changing networks (and thus contract instances) will reload the ads
       this.loadAds();
     }
   },
   created() {
+    this.loadAds();
+
+    // TODO: Use an open wallet flow instead
     //this.web3.eth.getAccounts(function(err, res) {
     //  for (const acct of res) {
     //    this.$store.commit('addAccount', acct)
     //  }
     //}.bind(this));
 
-   // if (!this.prerendered.loadFromWeb3) {
-   //   this.loadAdsStatic();
-   //   return;
-   // }
-
-    this.loadAds();
-
     // Setup event monitoring:
 
-    // this.contract.events.Buy(function(err, res) {
-    //   if (err) {
-    //     // TODO: Surface this in UI?
-    //     console.log("Buy event monitoring disabled, will need to refresh to see changes.")
-    //     return;
-    //   }
+    // XXX: Validate that this works
 
-    //   this.$store.commit('addAd', res.returnValues);
+    this.contract.on(this.contract.filters.Buy(), function(idx, owner, x, y, width, height) {
+      if (err) {
+        // TODO: Surface this in UI?
+        console.log("Buy event monitoring disabled, will need to refresh to see changes.")
+        return;
+      }
 
-    //   const previewAd = this.$store.state.previewAd;
-    //   if (this.previewLocked && Number(res.returnValues.x*10) == previewAd.x && Number(res.returnValues.y*10) == previewAd.y) {
-    //     // Colliding ad purchased
-    //     this.previewLocked = false;
-    //     this.$store.commit('clearPreview');
-    //   }
-    // }.bind(this))
+      this.$store.commit('addAd', {idx, owner, x, y, width, height});
 
-    // this.contract.events.Publish(function(err, res) {
-    //   if (err) {
-    //     // TODO: Surface this in UI?
-    //     console.log("Publish event monitoring disabled, will need to refresh to see changes.")
-    //     return;
-    //   }
+      const previewAd = this.$store.state.previewAd;
+      if (this.previewLocked && Number(x*10) == previewAd.x && Number(y*10) == previewAd.y) {
+        // Colliding ad purchased
+        this.previewLocked = false;
+        this.$store.commit('clearPreview');
+      }
+    }.bind(this))
 
-    //   this.$store.commit('addAd', res.returnValues);
-    // }.bind(this))
+    this.contract.on(this.contract.filters.Publish(), function(idx, link, image, title, NSFW, height) {
+      if (err) {
+        // TODO: Surface this in UI?
+        console.log("Publish event monitoring disabled, will need to refresh to see changes.")
+        return;
+      }
+
+      this.$store.commit('addAd', {idx, link, image, title, NSFW});
+    }.bind(this))
   },
   components: {
     Publish,
