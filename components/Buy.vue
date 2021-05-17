@@ -53,12 +53,15 @@ export default {
       eventCategory: this.contract._network,
       eventAction: 'buy-open',
     });
-    this.$store.commit('initGrid')
     return {
       error: null,
       success: null,
       available: false,
     }
+  },
+  mounted() {
+    // Initialize grid
+    this.$store.commit('initGrid');
   },
   computed: {
     isAvailable: function() {
