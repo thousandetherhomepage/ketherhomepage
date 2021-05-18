@@ -74,11 +74,14 @@ export default {
     },
     async checkAccounts() {
       if (window.ethereum === undefined) return;
+      // This is instead of window.ethereum.enable which causes a big warning
+      //const accounts = (await window.ethereum.send('eth_requestAccounts')).result;
 
-      window.ethereum.enable();
-      const signer = await this.provider.getSigner();
-      const addr = await signer.getAddress();
-      this.$store.commit('addAccount', addr);
+      const accounts = await window.ethereum.enable();
+
+      for (const account of accounts) {
+        this.$store.commit('addAccount', account);
+      }
     },
     checkAvailable(x, y, width, height) {
       const x1 = Math.floor(x/10);
@@ -133,7 +136,7 @@ export default {
         eventLabel: ad.width + "x" + ad.height,
       });
       // TODO: Transition to Publish route?
-    }
+    },
   },
 }
 </script>
