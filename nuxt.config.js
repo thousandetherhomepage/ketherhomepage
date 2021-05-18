@@ -4,7 +4,7 @@ export default {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'ketherhomepage',
+    title: 'The Thousand Ether Homepage',
     htmlAttrs: {
       lang: 'en',
       prefix: 'og: http://ogp.me/ns#'
