@@ -173,7 +173,6 @@ export default {
       networkConfig: {},
       selecting: false,
       provider: null,
-      signer: null,
       contract: null,
       ready: false, // TODO: do we need this still or does ethers let us await when making calls
       isReadOnly: false,
@@ -189,7 +188,6 @@ export default {
         this.activeNetwork = (await this.provider.getNetwork()).name;
         this.networkConfig = deployConfig[this.activeNetwork];
         if (this.networkConfig) {
-          this.signer = this.provider.getSigner();
           this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
           this.isReadOnly = false;
           this.ready = true;
@@ -216,7 +214,6 @@ export default {
       this.provider = new ethers.providers.JsonRpcProvider(web3Fallback);
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
-      this.signer = null;
       this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
       this.isReadOnly = true;
     },
