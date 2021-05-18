@@ -125,31 +125,37 @@ export default {
     }
   },
   methods: {
-    publish() {
+    async publish() {
       ga('send', {
         hitType: 'event',
         eventCategory: this.contract._network,
         eventAction: 'publish-submit',
       });
-      this.contract.methods.publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW)).send({ from: this.ad.owner }, function(err, res) {
+      const signer = await this.provider.getSigner();
+      const signerAddr = await signer.getAddress();
+      if (signerAddr != this.ad.owner) {
+        this.error = 'Incorrect active wallet. Must publish with: ' + this.ad.owner;
+        return;
+      }
+      try {
+        await this.contract.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
+      } catch(err) {
         ga('send', {
           hitType: 'event',
           eventCategory: this.contract._network,
           eventAction: 'publish-error',
           eventLabel: JSON.stringify(err),
         });
-
+        this.error = err;
+        return;
+      } finally {
         this.ad = false;
-        if (err) {
-          this.error = err;
-          return;
-        }
-        ga('send', {
-          hitType: 'event',
-          eventCategory: this.contract._network,
-          eventAction: 'publish-success',
-        });
-      }.bind(this));
+      }
+      ga('send', {
+        hitType: 'event',
+        eventCategory: this.contract._network,
+        eventAction: 'publish-success',
+      });
       return false;
     },
   },

@@ -39,7 +39,7 @@
       :w="80" :h="40" :grid="[10,10]" :parent="true"
       @dragstop="updatePreview" @resizestop="updatePreview"
       :draggable="!previewLocked" :resizable="!previewLocked" v-if="$store.state.previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
-      <Buy :web3="web3" :contract="contract" :isReadOnly="isReadOnly" @buy="onBuy"></Buy>
+      <Buy :provider="provider" :contract="contract" :isReadOnly="isReadOnly" @buy="onBuy"></Buy>
     </vue-draggable-resizable>
   </div>
 </template>
@@ -58,6 +58,10 @@ export default {
       previewLocked: false,
       loadRemoteImages: this.prerendered ? this.prerendered.loadRemoteImages : true,
     }
+  },
+  mounted() {
+    // Initialize grid
+    this.$store.commit('initGrid');
   },
   methods: {
     onBuy: function (ad) {
