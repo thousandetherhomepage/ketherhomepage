@@ -21,6 +21,7 @@
       </div>
     </template>
     <BuyButton v-if="ready" :x="20" :y="940" />
+    <UnlockWallet />
     <div class="info">
       <p>
         Ads displayed above are loaded directly from the Ethereum Blockchain.
