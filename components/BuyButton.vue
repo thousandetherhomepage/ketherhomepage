@@ -1,6 +1,6 @@
 <template>
   <div class="sold">
-    {{$store.state.adsPixels}} pixels sold <button v-on:click="$store.commit('updatePreview', {x: 20, y: 20})" v-if="!$store.state.previewAd">Buy Pixels</button>
+    {{$store.state.adsPixels}} pixels sold <button v-on:click="$store.commit('updatePreview', {x, y})" v-if="!$store.state.previewAd">Buy Pixels</button>
   </div>
 </template>
 
@@ -19,3 +19,9 @@
     }
   }
 </style>
+
+<script>
+export default {
+  props: ["x", "y"],
+}
+</script>

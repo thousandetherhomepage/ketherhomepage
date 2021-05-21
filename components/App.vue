@@ -1,7 +1,7 @@
 <template>
   <div id="app" class="container">
     <Header>
-      <BuyButton v-if="ready" />
+      <BuyButton v-if="ready" :x="20" :y="20" />
     </Header>
     <template v-if="ready">
       <Homepage
@@ -20,7 +20,7 @@
         </p>
       </div>
     </template>
-    <BuyButton v-if="ready" />
+    <BuyButton v-if="ready" :x="20" :y="940" />
     <div class="info">
       <p>
         Ads displayed above are loaded directly from the Ethereum Blockchain.
