@@ -20,12 +20,12 @@ export const mutations = {
     }
   },
   setAccount(state, account) {
-    state.activeAccount = account
+    state.activeAccount = account;
   },
   addAccount(state, account) {
-    if (state.activeAccount === '') state.activeAccount = account
+    if (state.activeAccount === '') state.activeAccount = account;
     if (state.accounts[account]) return;
-    state.accounts[account] = true
+    state.accounts[account] = true;
 
     for (let ad of state.ads) {
       if (ad.owner === account) addAdOwned(state, ad);
