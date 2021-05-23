@@ -180,6 +180,9 @@ export const actions = {
   },
 
   async loadAds({ commit }, contract) {
+    // TODO:
+    // if we clear on every load we will refresh all the ads when client side rendering
+    // we need to clear only when we change networks
     commit('clearAds', contract);
     commit('initGrid', contract);
 
