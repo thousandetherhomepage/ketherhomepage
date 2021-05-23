@@ -120,7 +120,6 @@ const defaultNetwork = "homestead";
 import Dropdown from "./Dropdown.vue";
 import Homepage from "./Homepage.vue";
 
-
 export default {
   name: "app",
   data() {
