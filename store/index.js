@@ -1,3 +1,39 @@
+import { ethers } from "ethers";
+import contractJSON from "../build/contracts/KetherHomepage.json";
+
+const deployConfig = {
+  homestead: {
+    name: "main",
+    contractAddr: "0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
+    web3Fallback:
+      "https://mainnet.infura.io/v3/fa9f29a052924745babfc1d119465148",
+    etherscanLink:
+      "https://etherscan.io/address/0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
+    prerendered: {
+      image:
+        "https://storage.googleapis.com/storage.thousandetherhomepage.com/mainnet.png",
+      data: "https://storage.thousandetherhomepage.com/mainnet.json",
+      loadRemoteImages: true,
+      loadFromWeb3: true,
+    },
+  },
+  rinkeby: {
+    name: "rinkeby",
+    contractAddr: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
+    web3Fallback:
+      "https://rinkeby.infura.io/v3/fa9f29a052924745babfc1d119465148",
+    etherscanLink:
+      "https://rinkeby.etherscan.io/address/0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
+    prerendered: {
+      image:
+        "https://storage.googleapis.com/storage.thousandetherhomepage.com/rinkeby.png",
+      data: "https://storage.thousandetherhomepage.com/rinkeby.json",
+      loadRemoteImages: true,
+      loadFromWeb3: true,
+    },
+  },
+};
+
 export const state = () => ({
   accounts: {},
   activeAccount: '',
@@ -128,6 +164,33 @@ export const getters = {
     }
     return state.grid.checkBox(x1, y1, x2, y2);
   }
+
+}
+
+export const actions = {
+  async nuxtServerInit({ state, dispatch }) {
+    // TODO: make this preload both?
+    // TODO: refactor this since it shares code with App.vue
+    const web3Fallback = deployConfig["homestead"].web3Fallback || "http://localhost:8545/";
+    const provider = new ethers.providers.JsonRpcProvider(web3Fallback);
+    const activeNetwork = (await provider.getNetwork()).name;
+    const networkConfig = deployConfig[activeNetwork];
+    const contract = new ethers.Contract(networkConfig.contractAddr, contractJSON.abi, provider);
+    await dispatch('loadAds', contract);
+  },
+
+  async loadAds({ commit }, contract) {
+    commit('clearAds', contract);
+    commit('initGrid', contract);
+
+    // TODO: error handling?
+    const numAds = await contract.getAdsLength();
+    commit('setAdsLength', numAds);
+    const ads = [...Array(numAds.toNumber()).keys()].map(i => contract.ads(i));
+    for await (const [i, ad] of ads.entries()) {
+      commit('addAd', toAd(i, await ad));
+    }
+  }
 }
 
 function grid_array2d(w, h) {
@@ -186,4 +249,20 @@ function addAdOwned(state, ad) {
     state.pixelsOwned += ad.width * ad.height * 100;
   }
   state.ownedAds[ad.idx] = ad;
+}
+
+function toAd(i, r) {
+  return {
+    idx: i,
+    owner: r[0].toLowerCase(),
+    x: r[1],
+    y: r[2],
+    width: r[3],
+    height: r[4],
+    link: r[5] || "",
+    image: r[6] || "",
+    title: r[7],
+    NSFW: r[8] || r[9],
+    forcedNSFW: r[9],
+  }
 }

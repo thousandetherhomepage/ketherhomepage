@@ -1,26 +1,16 @@
 <template>
   <div id="app" class="container">
     <Header>
-      <BuyButton v-if="ready" :x="20" :y="20" />
+      <BuyButton :x="20" :y="20" />
     </Header>
-    <template v-if="ready">
-      <Homepage
-        v-if="ready"
-        :provider="provider"
-        :contract="contract"
-        :isReadOnly="isReadOnly"
-        :showNSFW="showNSFW"
-        :prerendered="prerendered"
-      ></Homepage>
-    </template>
-    <template v-else>
-      <div class="adGrid">
-        <p style="text-align: center; padding: 2em; color: #666">
-          Waiting for Web3... (Must be on MainNet or Rinkeby)
-        </p>
-      </div>
-    </template>
-    <BuyButton v-if="ready" :x="20" :y="940" />
+    <Homepage
+      :provider="provider"
+      :contract="contract"
+      :isReadOnly="isReadOnly"
+      :showNSFW="showNSFW"
+      :prerendered="prerendered"
+    ></Homepage>
+    <BuyButton :x="20" :y="940" />
     <ConnectWallet />
     <div class="info">
       <p>
@@ -130,7 +120,6 @@ export default {
       selecting: false,
       provider: null,
       contract: null,
-      ready: false, // TODO: do we need this still or does ethers let us await when making calls
       isReadOnly: false,
       showNSFW: false,
       prerendered: null,
@@ -138,7 +127,9 @@ export default {
   },
   methods: {
     async connectEthereum() {
-      if (process.client && window.ethereum) {
+      // We load the ads in nuxtServerInit on the server
+      if (process.server) return;
+      if (window.ethereum) {
         // Using MetaMask or equivalent
         this.provider = new ethers.providers.Web3Provider(window.ethereum, "any");
         this.activeNetwork = (await this.provider.getNetwork()).name;
@@ -148,7 +139,6 @@ export default {
           this.setContract(contract);
 
           this.isReadOnly = false;
-          this.ready = true;
         }
 
         // When the network changes, refresh the page.
@@ -161,10 +151,39 @@ export default {
             window.location.reload();
           }
         });
+
+        // Setup event monitoring:
+
+        // XXX: Validate that this works
+        this.contract.on(this.contract.filters.Buy(), function(idx, owner, x, y, width, height) {
+        if (err) {
+          // TODO: Surface this in UI?
+          console.log("Buy event monitoring disabled, will need to refresh to see changes.")
+          return;
+        }
+
+        this.$store.commit('addAd', {idx, owner, x, y, width, height});
+
+        const previewAd = this.$store.state.previewAd;
+        if (this.previewLocked && Number(x*10) == previewAd.x && Number(y*10) == previewAd.y) {
+          // Colliding ad purchased
+          this.previewLocked = false;
+          this.$store.commit('clearPreview');
+        }
+      }.bind(this))
+
+      this.contract.on(this.contract.filters.Publish(), function(idx, link, image, title, NSFW, height) {
+        if (err) {
+          // TODO: Surface this in UI?
+          console.log("Publish event monitoring disabled, will need to refresh to see changes.")
+          return;
+        }
+
+        this.$store.commit('addAd', {idx, link, image, title, NSFW});
+      }.bind(this))
       } else {
         // Use an HTTP proxy
         await this.setReadOnlyNetwork(defaultNetwork);
-        this.ready = true;
       }
     },
     async setReadOnlyNetwork(network) {
@@ -206,6 +225,7 @@ export default {
   async created() {
     await this.connectEthereum();
   },
+
   components: {
     Homepage: Homepage,
     Dropdown: Dropdown,

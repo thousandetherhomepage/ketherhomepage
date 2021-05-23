@@ -15,7 +15,7 @@
 }
 </style>
 
-<template v-if="ready">
+<template>
   <div class="container">
     <AdGrid v-if="$store.state.gridVis" :provider="provider" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered"></AdGrid>
     <AdList v-else="$store.state.gridVis" ></AdList>
@@ -35,22 +35,6 @@ import AdList from './AdList.vue'
 import Publish from './Publish.vue'
 import Offline from './Offline.vue'
 
-function toAd(i, r) {
-  return {
-    idx: i,
-    owner: r[0].toLowerCase(),
-    x: r[1],
-    y: r[2],
-    width: r[3],
-    height: r[4],
-    link: r[5] || "",
-    image: r[6] || "",
-    title: r[7],
-    NSFW: r[8] || r[9],
-    forcedNSFW: r[9],
-  }
-}
-
 export default {
   props: ["provider", "contract", "isReadOnly", "showNSFW", "prerendered"],
   data() {
@@ -58,29 +42,16 @@ export default {
       showPublish: false,
     }
   },
-  methods: {
-    async loadAds() {
-      this.$store.commit('clearAds');
-      this.$store.commit('initGrid');
-
-      // TODO: error handling?
-      let numAds = await this.contract.getAdsLength();
-      this.$store.commit('setAdsLength', 37);
-      let ads = [...Array(numAds.toNumber()).keys()].map(i => this.contract.ads(i));
-      for await (const [i, ad] of ads.entries()) {
-        this.$store.commit('addAd', toAd(i, await ad));
-      }
-    },
-    // FIXME: Removed loadAdsStatic, replace it using nuxt pregen
-  },
   watch: {
     contract() {
       // Changing networks (and thus contract instances) will reload the ads
-      this.loadAds();
+      this.$store.dispatch('loadAds', this.contract);
     }
   },
-  fetch() {
-    this.loadAds();
+  created() {
+    if (process.client) {
+      this.$store.dispatch('loadAds', this.contract);
+    }
   },
   components: {
     Publish,
