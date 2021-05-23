@@ -65,7 +65,7 @@ export default {
 
       // TODO: error handling?
       let numAds = await this.contract.getAdsLength();
-      this.$store.commit('setAdsLength', numAds);
+      this.$store.commit('setAdsLength', 37);
       let ads = [...Array(numAds.toNumber()).keys()].map(i => this.contract.ads(i));
       for await (const [i, ad] of ads.entries()) {
         this.$store.commit('addAd', toAd(i, await ad));
@@ -79,7 +79,7 @@ export default {
       this.loadAds();
     }
   },
-  created() {
+  fetch() {
     this.loadAds();
   },
   components: {
