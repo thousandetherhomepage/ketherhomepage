@@ -138,7 +138,7 @@ export default {
   },
   methods: {
     async connectEthereum() {
-      if (window.ethereum) {
+      if (process.client && window.ethereum) {
         // Using MetaMask or equivalent
         this.provider = new ethers.providers.Web3Provider(window.ethereum, "any");
         this.activeNetwork = (await this.provider.getNetwork()).name;
