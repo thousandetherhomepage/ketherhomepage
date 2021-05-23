@@ -12,6 +12,8 @@
 
 <script>
 // Stub for ga. TODO should we cut this entirely?
-window.ga = function () {};
+if (process.client) {
+  window.ga = function () {};
+}
 export default {}
 </script>
