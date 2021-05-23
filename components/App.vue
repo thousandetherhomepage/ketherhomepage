@@ -79,7 +79,6 @@
 </template>
 
 <script>
-import Web3 from "web3";
 import { ethers } from "ethers";
 
 import contractJSON from "../build/contracts/KetherHomepage.json";
@@ -121,49 +120,6 @@ const defaultNetwork = "homestead";
 import Dropdown from "./Dropdown.vue";
 import Homepage from "./Homepage.vue";
 
-function waitForWeb3(options, cb) {
-  const web3Fallback = options.web3Fallback || "http://localhost:8545/";
-
-  function getWeb3() {
-    window.Web3 = Web3;
-    let web3 = window.ethereum;
-    if (typeof web3 !== "undefined") {
-      // we're using a wallet browser
-      window.ethereum.enable();
-      web3 = new Web3(window.ethereum);
-    } else {
-      // we're using a fallback
-      //web3 = new Web3(Web3.givenProvider || web3Fallback);
-      web3 = new Web3(new Web3.providers.HttpProvider(web3Fallback));
-    }
-    return web3;
-    /*
-    try {
-      if (web3.currentProvider.connected) return web3;
-    } catch (_) {
-      return null;
-    }
-    */
-  }
-  function startWaiting() {
-    const interval = setInterval(function () {
-      let r = getWeb3();
-      if (r) {
-        clearInterval(interval);
-        cb(r);
-      }
-    }, 1000);
-  }
-  if (window.web3Loading === true) {
-    // Can't do on window load too late.
-    return;
-  }
-  window.addEventListener("load", function () {
-    debugger;
-    window.web3Loading = true;
-    startWaiting();
-  });
-}
 
 export default {
   name: "app",
