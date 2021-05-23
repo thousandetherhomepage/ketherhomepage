@@ -60,6 +60,8 @@ export default {
   methods: {
     async loadAds() {
       this.$store.commit('clearAds');
+      this.$store.commit('initGrid');
+
       // TODO: error handling?
       let numAds = await this.contract.getAdsLength();
       this.$store.commit('setAdsLength', numAds);
@@ -78,44 +80,6 @@ export default {
   },
   created() {
     this.loadAds();
-
-    // TODO: Use an open wallet flow instead
-    //this.web3.eth.getAccounts(function(err, res) {
-    //  for (const acct of res) {
-    //    this.$store.commit('addAccount', acct)
-    //  }
-    //}.bind(this));
-
-    // Setup event monitoring:
-
-    // XXX: Validate that this works
-
-    this.contract.on(this.contract.filters.Buy(), function(idx, owner, x, y, width, height) {
-      if (err) {
-        // TODO: Surface this in UI?
-        console.log("Buy event monitoring disabled, will need to refresh to see changes.")
-        return;
-      }
-
-      this.$store.commit('addAd', {idx, owner, x, y, width, height});
-
-      const previewAd = this.$store.state.previewAd;
-      if (this.previewLocked && Number(x*10) == previewAd.x && Number(y*10) == previewAd.y) {
-        // Colliding ad purchased
-        this.previewLocked = false;
-        this.$store.commit('clearPreview');
-      }
-    }.bind(this))
-
-    this.contract.on(this.contract.filters.Publish(), function(idx, link, image, title, NSFW, height) {
-      if (err) {
-        // TODO: Surface this in UI?
-        console.log("Publish event monitoring disabled, will need to refresh to see changes.")
-        return;
-      }
-
-      this.$store.commit('addAd', {idx, link, image, title, NSFW});
-    }.bind(this))
   },
   components: {
     Publish,

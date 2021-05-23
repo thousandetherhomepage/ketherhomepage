@@ -145,7 +145,9 @@ export default {
         this.activeNetwork = (await this.provider.getNetwork()).name;
         this.networkConfig = deployConfig[this.activeNetwork];
         if (this.networkConfig) {
-          this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
+          const contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
+          this.setContract(contract);
+
           this.isReadOnly = false;
           this.ready = true;
         }
@@ -171,10 +173,36 @@ export default {
       this.provider = new ethers.providers.JsonRpcProvider(web3Fallback);
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
-      this.contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
+      const contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
+      this.setContract(contract);
       this.isReadOnly = true;
     },
+    setContract(contract) {
+      if (this.contract) {
+        this.contract.removeAllListeners();
+      }
+      this.contract = contract;
 
+      // Setup event monitoring:
+      this.contract.on('error', function(err) {
+        console.error("Contract subscription error:", err);
+      });
+
+      this.contract.on('Buy', function(idx, owner, x, y, width, height) {
+        this.$store.commit('addAd', {idx: idx.toNumber(), owner, x, y, width, height});
+
+        const previewAd = this.$store.state.previewAd;
+        if (this.previewLocked && Number(x*10) == previewAd.x && Number(y*10) == previewAd.y) {
+          // Colliding ad purchased
+          this.previewLocked = false;
+          this.$store.commit('clearPreview');
+        }
+      }.bind(this))
+
+      this.contract.on('Publish', function(idx, link, image, title, NSFW, height) {
+        this.$store.commit('addAd', {idx: idx.toNumber(), link, image, title, NSFW});
+      }.bind(this))
+    },
   },
   async created() {
     await this.connectEthereum();

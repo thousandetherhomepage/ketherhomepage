@@ -115,7 +115,7 @@ input {
 import Ad from './Ad.vue'
 
 export default {
-  props: ["contract", "showNSFW"],
+  props: ["provider", "contract", "showNSFW"],
   data() {
     return {
       ad: false,

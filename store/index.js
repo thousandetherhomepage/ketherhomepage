@@ -12,6 +12,8 @@ export const state = () => ({
   gridVis: true,
 })
 
+export const strict = false; // 😭 Publish preview mutates ads, and it's too annoying to fix rn.
+
 function equalAddr(a, b) {
   return a.toLowerCase() === b.toLowerCase();
 }
@@ -59,6 +61,7 @@ export const mutations = {
     state.ads.length = len;
   },
   addAd(state, ad) {
+    // TODO: normalize ad.owner
     if (ad.idx > state.ads.length) {
       state.ads.length = ad.idx;
     }

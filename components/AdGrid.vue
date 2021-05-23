@@ -59,10 +59,6 @@ export default {
       loadRemoteImages: this.prerendered ? this.prerendered.loadRemoteImages : true,
     }
   },
-  mounted() {
-    // Initialize grid
-    this.$store.commit('initGrid');
-  },
   methods: {
     onBuy: function (ad) {
       this.previewLocked = true;
