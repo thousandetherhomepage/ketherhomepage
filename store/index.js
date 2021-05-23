@@ -12,6 +12,10 @@ export const state = () => ({
   gridVis: true,
 })
 
+function equalAddr(a, b) {
+  return a.toLowerCase() === b.toLowerCase();
+}
+
 export const mutations = {
   initGrid(state) {
     if (state.grid === null) {
@@ -28,7 +32,7 @@ export const mutations = {
     state.accounts[account] = true;
 
     for (let ad of state.ads) {
-      if (ad.owner === account) addAdOwned(state, ad);
+      if (equalAddr(ad.owner, account)) addAdOwned(state, ad);
     }
   },
   updatePreview(state, ad) {
@@ -172,5 +176,5 @@ function addAdOwned(state, ad) {
     state.numOwned += 1
     state.pixelsOwned += ad.width * ad.height * 100;
   }
-  state.ownedAds[ad.idx] = ad
+  state.ownedAds[ad.idx] = ad;
 }
