@@ -1,7 +1,7 @@
 <template>
   <a :href="link" target="_blank">
     <div v-if="skipImage" :style="style" :title="title" :class="{ nsfwAd: !shown }" />
-    <img v-else :src="image" :style="style" :title="title" :class="{ nsfwAd: !shown }" />
+    <img v-else :src="image" :style="style" :title="title" :class="{ nsfwAd: !shown }" @error="placeholder"/>
   </a>
 </template>
 
@@ -66,6 +66,13 @@ export default {
     },
     style() {
       return adStyle(this.ad);
+    },
+  },
+  methods: {
+    placeholder(el) {
+      const color = this.ad.owner.slice(-6);
+      const svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#'+ color +'" /></svg>';
+      el.target.src = 'data:image/svg+xml;base64,' + btoa(svg);
     },
   },
 }
