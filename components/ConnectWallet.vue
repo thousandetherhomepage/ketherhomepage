@@ -1,12 +1,12 @@
 <template>
-  <div class="unlock-wallet">
-    <button @click="unlock" v-if="!$store.state.activeAccount">Unlock Wallet</button>
+  <div class="connect-wallet">
+    <button @click="connect" v-if="!$store.state.activeAccount">Connect Wallet</button>
     <span v-else>Active Account: <strong>{{$store.state.activeAccount}}</strong></span>
   </div>
 </template>
 
 <style lang="scss">
-.unlock-wallet {
+.connect-wallet {
   display: inline-block;
   padding: 5px 10px;
 }
@@ -32,8 +32,12 @@ export default {
         console.error(error);
       }
     },
-    async unlock() {
+    async connect() {
       const accounts = await this.requestAccounts();
+      if (!accounts) {
+        console.log("Failed to connect wallet");
+        return;
+      }
       for (const account of accounts) {
         this.$store.commit('addAccount', account);
       }

@@ -34,7 +34,7 @@
       <strong>Slot is available.</strong>
       <button v-on:click="buy" v-bind:disabled="isReadOnly" v-if="this.$store.state.activeAccount">Buy Pixels</button>
       <button v-on:click="checkAccounts" v-else-if="isReadOnly" disabled="disabled">Buy disabled (read-only mode)</button>
-      <button v-on:click="checkAccounts" v-else>Unlock Account to Buy</button>
+      <button v-on:click="checkAccounts" v-else>Connect Wallet to Buy</button>
     </p>
     <p v-else>
       Slot is not available.

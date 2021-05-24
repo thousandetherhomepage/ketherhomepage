@@ -37,7 +37,7 @@ import Offline from './Offline.vue'
 function toAd(i, r) {
   return {
     idx: i,
-    owner: r[0],
+    owner: r[0].toLowerCase(),
     x: r[1],
     y: r[2],
     width: r[3],

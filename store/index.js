@@ -14,8 +14,9 @@ export const state = () => ({
 
 export const strict = false; // 😭 Publish preview mutates ads, and it's too annoying to fix rn.
 
-function equalAddr(a, b) {
-  return a.toLowerCase() === b.toLowerCase();
+function normalizeAddr(addr) {
+  if (!addr) return addr;
+  return addr.toLowerCase();
 }
 
 export const mutations = {
@@ -26,15 +27,19 @@ export const mutations = {
     }
   },
   setAccount(state, account) {
+    account = normalizeAddr(account);
+
     state.activeAccount = account;
   },
   addAccount(state, account) {
+    account = normalizeAddr(account);
+
     if (state.activeAccount === '') state.activeAccount = account;
     if (state.accounts[account]) return;
     state.accounts[account] = true;
 
     for (let ad of state.ads) {
-      if (equalAddr(ad.owner, account)) addAdOwned(state, ad);
+      if (normalizeAddr(ad.owner) === normalizeAddr(account)) addAdOwned(state, ad);
     }
   },
   updatePreview(state, ad) {
@@ -61,7 +66,8 @@ export const mutations = {
     state.ads.length = len;
   },
   addAd(state, ad) {
-    // TODO: normalize ad.owner
+    ad.owner = normalizeAddr(ad.owner);
+
     if (ad.idx > state.ads.length) {
       state.ads.length = ad.idx;
     }
