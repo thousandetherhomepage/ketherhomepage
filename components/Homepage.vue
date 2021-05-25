@@ -18,6 +18,7 @@
 <template v-if="ready">
   <div class="container">
     <AdGrid v-if="$store.state.gridVis" :provider="provider" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered"></AdGrid>
+    <AdList v-else="$store.state.gridVis" ></AdList>
 
     <div class="edit" v-if="$store.state.numOwned > 0">
       {{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button>
