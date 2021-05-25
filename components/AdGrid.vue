@@ -1,5 +1,15 @@
 <style lang="scss">
 .adGrid {
+  /* Checkerboard: */
+  background-image: /* tint image */
+    linear-gradient(to right, rgba(255,255,255, 0.97), rgba(255,255,255, 0.97)),
+    /* checkered effect */
+    linear-gradient(to right, black 50%, white 50%),
+    linear-gradient(to bottom, black 50%, white 50%);
+  background-blend-mode: normal, difference, normal;
+  background-size: 20px 20px;
+  /***/
+
   img, .nsfwAd, a div {
     position: absolute;
     display: block;
@@ -7,6 +17,11 @@
     font-size: 11px;
     color: rgba(0, 0, 0, 0.7);
     white-space: nowrap;
+  }
+
+  .blank {
+    outline: 2px solid rgba(0,0,0,0.1);
+    outline-offset: -2px;
   }
 
   .nsfwAd {

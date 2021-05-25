@@ -1,9 +1,12 @@
 <template>
   <a :href="link" target="_blank">
-    <div v-if="skipImage" :style="style" :title="title" :class="{ nsfwAd: !shown }" />
-    <img v-else :src="image" :style="style" :title="title" :class="{ nsfwAd: !shown }" @error="placeholder"/>
+    <div v-if="skipImage" :style="style" :title="title" :class="classMap"></div>
+    <img v-else :src="image" :style="style" :title="title" :class="classMap" @error="placeholder"/>
   </a>
 </template>
+
+<style lang="scss">
+</style>
 
 <script>
 function gatewayURL(url) {
@@ -16,7 +19,7 @@ function gatewayURL(url) {
   return url;
 }
 
-function adStyle(ad) {
+function adStyle(ad, blank) {
   if (!ad.width) {
     return {
       "display": "none",
@@ -28,8 +31,10 @@ function adStyle(ad) {
     "width": ad.width * 10 + "px",
     "height": ad.height * 10 + "px",
   }
-  if (!ad.image) {
-    s["background"] = "rgba(255, 255, 255, 0.5)";
+  if (blank || !ad.image) {
+    s["background"] = '#' + ad.owner.slice(-6) + 'cc';
+  } else {
+    s["background"] = '#fff';
   }
   return s;
 }
@@ -47,6 +52,11 @@ function blacklist(link) {
 
 export default {
   props: ["ad", "showNSFW", "skipImage"],
+  data: () => {
+    return {
+      blank: false,
+    };
+  },
   computed: {
     shown() {
       return !this.ad.NSFW || this.showNSFW;
@@ -61,18 +71,22 @@ export default {
       return this.ad.title;
     },
     image() {
-      if (!this.shown) return "";
+      if (!this.shown || this.blank) return "";
       return gatewayURL(this.ad.image);
     },
     style() {
-      return adStyle(this.ad);
+      return adStyle(this.ad, this.blank);
+    },
+    classMap() {
+      return {
+        "nsfwAd": !this.shown,
+        "blank": this.blank,
+      };
     },
   },
   methods: {
     placeholder(el) {
-      const color = this.ad.owner.slice(-6);
-      const svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#'+ color +'" /></svg>';
-      el.target.src = 'data:image/svg+xml;base64,' + btoa(svg);
+      this.blank = true;
     },
   },
 }
