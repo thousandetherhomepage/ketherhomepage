@@ -1,38 +1,7 @@
 import { ethers } from "ethers";
-import contractJSON from "../build/contracts/KetherHomepage.json";
 
-const deployConfig = {
-  homestead: {
-    name: "main",
-    contractAddr: "0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
-    web3Fallback:
-      "https://mainnet.infura.io/v3/fa9f29a052924745babfc1d119465148",
-    etherscanLink:
-      "https://etherscan.io/address/0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
-    prerendered: {
-      image:
-        "https://storage.googleapis.com/storage.thousandetherhomepage.com/mainnet.png",
-      data: "https://storage.thousandetherhomepage.com/mainnet.json",
-      loadRemoteImages: true,
-      loadFromWeb3: true,
-    },
-  },
-  rinkeby: {
-    name: "rinkeby",
-    contractAddr: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
-    web3Fallback:
-      "https://rinkeby.infura.io/v3/fa9f29a052924745babfc1d119465148",
-    etherscanLink:
-      "https://rinkeby.etherscan.io/address/0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
-    prerendered: {
-      image:
-        "https://storage.googleapis.com/storage.thousandetherhomepage.com/rinkeby.png",
-      data: "https://storage.thousandetherhomepage.com/rinkeby.json",
-      loadRemoteImages: true,
-      loadFromWeb3: true,
-    },
-  },
-};
+import { deployConfig, defaultNetwork } from "~/networkConfig";
+import contractJSON from "~/build/contracts/KetherHomepage.json";
 
 export const state = () => ({
   accounts: {},
@@ -176,7 +145,7 @@ export const actions = {
   async nuxtServerInit({ state, dispatch }) {
     // TODO: make this preload both?
     // TODO: refactor this since it shares code with App.vue
-    const web3Fallback = deployConfig["homestead"].web3Fallback || "http://localhost:8545/";
+    const web3Fallback = deployConfig[defaultNetwork].web3Fallback || "http://localhost:8545/";
     const provider = new ethers.providers.JsonRpcProvider(web3Fallback);
     const activeNetwork = (await provider.getNetwork()).name;
     const networkConfig = deployConfig[activeNetwork];
