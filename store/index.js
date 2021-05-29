@@ -72,7 +72,9 @@ export const mutations = {
     state.ads.length = len;
   },
   addAd(state, ad) {
-    ad.owner = normalizeAddr(ad.owner);
+    if (ad.owner !== undefined) {
+      ad.owner = normalizeAddr(ad.owner);
+    }
 
     if (ad.idx > state.ads.length) {
       state.ads.length = ad.idx;

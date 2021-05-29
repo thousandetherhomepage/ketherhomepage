@@ -131,7 +131,7 @@ export default {
       });
       const signer = await this.provider.getSigner();
       const signerAddr = await signer.getAddress();
-      if (signerAddr != this.ad.owner) {
+      if (signerAddr.toLowerCase() != this.ad.owner) {
         this.error = 'Incorrect active wallet. Must publish with: ' + this.ad.owner;
         return;
       }
