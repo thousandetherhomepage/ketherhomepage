@@ -118,36 +118,6 @@ export default {
             window.location.reload();
           }
         });
-
-        // Setup event monitoring:
-
-        // XXX: Validate that this works
-        this.contract.on(this.contract.filters.Buy(), function(idx, owner, x, y, width, height) {
-        if (err) {
-          // TODO: Surface this in UI?
-          console.log("Buy event monitoring disabled, will need to refresh to see changes.")
-          return;
-        }
-
-        this.$store.commit('addAd', {idx, owner, x, y, width, height});
-
-        const previewAd = this.$store.state.previewAd;
-        if (this.previewLocked && Number(x*10) == previewAd.x && Number(y*10) == previewAd.y) {
-          // Colliding ad purchased
-          this.previewLocked = false;
-          this.$store.commit('clearPreview');
-        }
-      }.bind(this))
-
-      this.contract.on(this.contract.filters.Publish(), function(idx, link, image, title, NSFW, height) {
-        if (err) {
-          // TODO: Surface this in UI?
-          console.log("Publish event monitoring disabled, will need to refresh to see changes.")
-          return;
-        }
-
-        this.$store.commit('addAd', {idx, link, image, title, NSFW});
-      }.bind(this))
       } else {
         // Use an HTTP proxy
         await this.setReadOnlyNetwork(defaultNetwork);
