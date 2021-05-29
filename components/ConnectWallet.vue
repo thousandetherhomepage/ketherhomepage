@@ -16,7 +16,7 @@
 export default {
   methods: {
     async requestAccounts() {
-      if (window.ethereum === undefined) return [];
+      if (process.server || window.ethereum === undefined) return [];
 
       if (window.ethereum.request === undefined) {
         return await window.ethereum.enable();

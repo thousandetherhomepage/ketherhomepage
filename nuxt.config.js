@@ -49,6 +49,5 @@ export default {
   build: {
   },
 
-  // Disable SSR while developing
-  ssr: false
+  ssr: true
 }
