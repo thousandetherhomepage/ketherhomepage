@@ -3,6 +3,7 @@ node_modules/
 dist/
 npm-debug.log
 yarn-error.log
+.nuxt/
 
 # Editor directories and files
 .idea
@@ -10,3 +11,4 @@ yarn-error.log
 *.ntvs*
 *.njsproj
 *.sln
+

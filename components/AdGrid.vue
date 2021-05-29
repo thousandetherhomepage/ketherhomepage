@@ -30,11 +30,16 @@
 
 <template>
   <div :class="{ adGrid: true, active: !!$store.state.previewAd }" :style="gridStyle(prerendered)">
-    <template v-for="ad in $store.state.ads" v-if="ad">
-      <Ad :showNSFW="showNSFW" :ad="ad" :skipImage="!loadRemoteImages"></Ad>
+    <template v-for="ad in $store.state.ads">
+      <Ad :showNSFW="showNSFW" :ad="ad" :skipImage="!loadRemoteImages" v-if="ad" :key="ad.idx"></Ad>
+
     </template>
-    <vue-draggable-resizable ref="draggable" :active="true" :minw="10" :minh="10" :x="$store.state.previewAd.x" :y="$store.state.previewAd.y" :w="80" :h="40" :grid="[10,10]" :parent="true" @dragstop="updatePreview" @resizestop="updatePreview" :draggable="!previewLocked" :resizable="!previewLocked" v-if="$store.state.previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
-      <Buy :web3="web3" :contract="contract" :isReadOnly="isReadOnly" @buy="onBuy"></Buy>
+    <vue-draggable-resizable ref="draggable" :active="true" :minWidth="10" :minHeight="10"
+      :x="$store.state.previewAd.x" :y="$store.state.previewAd.y"
+      :w="80" :h="40" :grid="[10,10]" :parent="true"
+      @dragstop="updatePreview" @resizestop="updatePreview"
+      :draggable="!previewLocked" :resizable="!previewLocked" v-if="$store.state.previewAd" v-bind:class="{previewAd: true, locked: previewLocked}">
+      <Buy :provider="provider" :contract="contract" :isReadOnly="isReadOnly" @buy="onBuy"></Buy>
     </vue-draggable-resizable>
   </div>
 </template>
@@ -43,9 +48,11 @@
 import Ad from './Ad.vue'
 import Buy from './Buy.vue'
 import VueDraggableResizable from 'vue-draggable-resizable'
+import 'vue-draggable-resizable/dist/VueDraggableResizable.css'
+
 
 export default {
-  props: ["web3", "contract", "isReadOnly", "showNSFW", "prerendered"],
+  props: ["provider", "contract", "isReadOnly", "showNSFW", "prerendered"],
   data() {
     return {
       previewLocked: false,
