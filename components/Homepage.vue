@@ -42,17 +42,6 @@ export default {
       showPublish: false,
     }
   },
-  watch: {
-    contract() {
-      // Changing networks (and thus contract instances) will reload the ads
-      this.$store.dispatch('loadAds', this.contract);
-    }
-  },
-  created() {
-    if (process.client) {
-      this.$store.dispatch('loadAds', this.contract);
-    }
-  },
   components: {
     Publish,
     Offline,

@@ -201,6 +201,8 @@ export default {
       }
       this.contract = contract;
 
+      this.$store.dispatch('loadAds', contract);
+
       // Setup event monitoring:
       this.contract.on('error', function(err) {
         console.error("Contract subscription error:", err);

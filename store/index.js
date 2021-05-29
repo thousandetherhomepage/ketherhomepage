@@ -46,6 +46,7 @@ export const state = () => ({
   grid: null, // lazy load
   previewAd: null,
   gridVis: true,
+  loadedNetwork: null,
 })
 
 export const strict = false; // 😭 Publish preview mutates ads, and it's too annoying to fix rn.
@@ -155,6 +156,10 @@ export const mutations = {
       state.grid.setBox(ad.x, ad.y, x2, y2);
     }
   },
+
+  setLoadedNetwork(state, network) {
+    state.loadedNetwork = network;
+  }
 }
 
 export const getters = {
@@ -179,12 +184,13 @@ export const actions = {
     await dispatch('loadAds', contract);
   },
 
-  async loadAds({ commit }, contract) {
-    // TODO:
-    // if we clear on every load we will refresh all the ads when client side rendering
-    // we need to clear only when we change networks
-    commit('clearAds', contract);
-    commit('initGrid', contract);
+  async loadAds({ commit, state }, contract) {
+    // TODO: we can optimize this by only loading from a blockNumber
+    const activeNetwork = (await contract.provider.getNetwork()).name;
+    if (state.loadedNetwork != activeNetwork) {
+      commit('clearAds', contract);
+      commit('initGrid', contract);
+    }
 
     // TODO: error handling?
     const numAds = await contract.getAdsLength();
@@ -193,6 +199,7 @@ export const actions = {
     for await (const [i, ad] of ads.entries()) {
       commit('addAd', toAd(i, await ad));
     }
+    commit('setLoadedNetwork', activeNetwork);
   }
 }
 
