@@ -12,7 +12,7 @@ deploy-dapp: build ../thousandetherhomepage.github.io
 	echo "Push it."
 
 deploy-contract:
-	# TODO: $(TRUFFLEBIN) migrate -f 2 --network rinkeby --reset
+	npx hardhat run scripts/deployKetherNFT.js --network rinkeby
 
 withdraw:
 	npx hardhat run scripts/withdraw.js --network mainnet

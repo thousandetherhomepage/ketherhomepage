@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
+require("@nomiclabs/hardhat-etherscan");
 
 const INFURA_API_KEY = process.env['INFURA_API_KEY'];
 
@@ -23,6 +24,9 @@ module.exports = {
       url: 'https://mainnet.infura.io/v3/' + INFURA_API_KEY,
       accounts: ACCOUNTS,
     }
+  },
+  etherscan: {
+    apiKey: process.env['ETHERSCAN_API_KEY']
   },
   solidity: {
     compilers: [
