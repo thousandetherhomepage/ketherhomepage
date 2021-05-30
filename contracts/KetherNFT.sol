@@ -9,10 +9,10 @@ import "./KetherNFTRender.sol";
 
 
 // TODO: Name this something really cool
-contract Wrapper {
+contract FlashEscrow {
   constructor(address target, bytes memory payload) {
     (bool success,) = target.call(payload);
-    require(success, "Wrapper: target call failed");
+    require(success, "FlashEscrow: target call failed");
 
     selfdestruct(payable(target));
   }
@@ -33,20 +33,20 @@ contract KetherNFT is ERC721, Ownable {
     renderer = ITokenRenderer(_renderer);
   }
 
-  function _encodeWrapper(uint _idx) internal view returns (bytes memory) {
+  function _encodeFlashEscrow(uint _idx) internal view returns (bytes memory) {
     return abi.encodePacked(
-      type(Wrapper).creationCode,
-      abi.encode(address(instance), _encodeWrapperPayload(_idx)));
+      type(FlashEscrow).creationCode,
+      abi.encode(address(instance), _encodeFlashEscrowPayload(_idx)));
   }
 
-  function _encodeWrapperPayload(uint _idx) internal view returns (bytes memory) {
+  function _encodeFlashEscrowPayload(uint _idx) internal view returns (bytes memory) {
     return abi.encodeWithSignature("setAdOwner(uint256,address)", _idx, address(this));
   }
 
   function precompute(uint _idx, address _owner) public view returns (bytes32 salt, address predictedAddress) {
     salt = sha256(abi.encodePacked(_owner)); // FIXME: This can be more gas-efficient? Also worth salting something random here like block number?
 
-    bytes memory bytecode = _encodeWrapper(_idx);
+    bytes memory bytecode = _encodeFlashEscrow(_idx);
 
     bytes32 hash = keccak256(
       abi.encodePacked(
@@ -69,12 +69,12 @@ contract KetherNFT is ERC721, Ownable {
   /// wrap mints an NFT if the ad unit's ownership has been transferred to the
   /// precomputed escrow address.
   function wrap(uint _idx, address _owner) external {
-    (bytes32 salt, address precomputedWrapper) = precompute(_idx, _owner);
+    (bytes32 salt, address precomputedFlashEscrow) = precompute(_idx, _owner);
 
-    require(_getAdOwner(_idx) == precomputedWrapper, "KetherNFT: owner needs to be the correct precommitted address");
+    require(_getAdOwner(_idx) == precomputedFlashEscrow, "KetherNFT: owner needs to be the correct precommitted address");
 
-    // Wrapper completes the transfer escrow atomically and self-destructs.
-    new Wrapper{salt: salt}(address(instance), _encodeWrapperPayload(_idx));
+    // FlashEscrow completes the transfer escrow atomically and self-destructs.
+    new FlashEscrow{salt: salt}(address(instance), _encodeFlashEscrowPayload(_idx));
 
     require(_getAdOwner(_idx) == address(this), "KetherNFT: owner needs to be KetherNFT after wrap");
     _safeMint(_owner, _idx);

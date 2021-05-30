@@ -7,7 +7,7 @@ const pixelsPerCell = ethers.BigNumber.from(100);
 const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
 
 describe('KetherNFT', function() {
-  let KetherHomepage, KetherNFT, KetherNFTRender, Wrapper;
+  let KetherHomepage, KetherNFT, KetherNFTRender, FlashEscrow;
   let accounts, KH, KNFT, KNFTrender;
 
   beforeEach(async() => {
@@ -15,8 +15,7 @@ describe('KetherNFT', function() {
     KetherHomepage = await ethers.getContractFactory("KetherHomepageV2");
     KetherNFT = await ethers.getContractFactory("KetherNFT");
     KetherNFTRender = await ethers.getContractFactory("KetherNFTRender");
-    Wrapper = await ethers.getContractFactory("Wrapper");
-
+    FlashEscrow = await ethers.getContractFactory("FlashEscrow");
 
     const [owner, withdrawWallet, metadataSigner, account1, account2, account3] = await ethers.getSigners();
     accounts = {owner, withdrawWallet, metadataSigner, account1, account2, account3};
@@ -219,8 +218,8 @@ describe('KetherNFT', function() {
 
     const bytecode = ethers.utils.hexlify(
       ethers.utils.concat([
-        Wrapper.bytecode,
-        Wrapper.interface.encodeDeploy([KH.address, wrappedPayload]),
+        FlashEscrow.bytecode,
+        FlashEscrow.interface.encodeDeploy([KH.address, wrappedPayload]),
         // Same as: ethers.utils.defaultAbiCoder.encode(['address', 'bytes'], [KH.address, wrappedPayload]),
       ]));
 
