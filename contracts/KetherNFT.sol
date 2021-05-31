@@ -89,6 +89,8 @@ contract KetherNFT is ERC721, Ownable {
     _burn(_idx);
   }
 
+  function baseURI() public pure returns (string memory) {}
+
   function tokenURI(uint256 tokenId) public view override(ERC721) returns (string memory) {
     require(_exists(tokenId), "KetherNFT: tokenId does not exist");
     return renderer.tokenURI(instance, tokenId);
