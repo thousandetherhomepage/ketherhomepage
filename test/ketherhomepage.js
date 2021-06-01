@@ -1,12 +1,12 @@
 const { expect } = require('chai');
 
-describe('KetherHomepage', function(accounts) {
-  let KetherHomagepage;
+// TODO: should we query the contract to make sure the above values are right?
+const weiPixelPrice = ethers.utils.parseUnits("0.001", "ether");
+const pixelsPerCell = ethers.BigNumber.from(100);
+const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
 
-  // TODO: should we query the contract to make sure the above values are right?
-  const weiPixelPrice = ethers.utils.parseUnits("0.001", "ether");
-  const pixelsPerCell = ethers.BigNumber.from(100);
-  const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
+describe('KetherHomepage', function() {
+  let KetherHomagepage;
 
   let owner, withdrawWallet, account1, account2;
   before(async () => {
