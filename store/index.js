@@ -122,9 +122,11 @@ export const mutations = {
 
       // Ad properties might be BigNumbers maybe which don't play well with +'s...
       // TODO: Fix this in a more general way?
-      const x2 = Number(ad.x) + Number(ad.width) - 1;
-      const y2 = Number(ad.y) + Number(ad.height) - 1;
-      state.grid.setBox(ad.x, ad.y, x2, y2);
+      const x1 = Number(ad.x);
+      const x2 = x1 + Number(ad.width) - 1;
+      const y1 = Number(ad.y);
+      const y2 = y1 + Number(ad.height) - 1;
+      setBox(state.grid, x1, y1, x2, y2);
     }
   },
 
@@ -134,11 +136,19 @@ export const mutations = {
 }
 
 export const getters = {
-  isColliding: (state, getters) => (x1, y1, x2, y2) => {
+  isColliding: (state) => (x1, y1, x2, y2) => {
     if (state.grid === null) {
       throw "state.grid not initialized"
     }
-    return state.grid.checkBox(x1, y1, x2, y2);
+    // Returns true if has collision, inclusive.
+    if (x1 < 0 || y1 < 0 || x2 >= 100 || y2 >= 100) return true;
+
+    for (let x = Number(x1); x <= x2; x++) {
+      for (let y = Number(y1); y <= y2; y++) {
+        if (state.grid[x][y]) return true;
+      }
+    }
+    return false;
   }
 
 }
@@ -185,33 +195,7 @@ function grid_array2d(w, h) {
     for (let y = 0; y < h; y++) row[y] = 0;
     grid[x] = row;
   }
-
-  return {
-    set(x, y, value) {
-      grid[x][y] = value;
-    },
-    get(x, y) {
-      return grid[x][y];
-    },
-    checkBox(x1, y1, x2, y2) {
-      // Returns true if has collision, inclusive.
-      if (x1 < 0 || y1 < 0 || x2 >= w || y2 >= h) return true;
-
-      for (let x = Number(x1); x <= x2; x++) {
-        for (let y = Number(y1); y <= y2; y++) {
-          if (grid[x][y]) return true;
-        }
-      }
-      return false;
-    },
-    setBox(x1, y1, x2, y2) {
-      for (let x = Number(x1); x <= x2; x++) {
-        for (let y = Number(y1); y <= y2; y++) {
-          grid[x][y] = true;
-        }
-      }
-    },
-  }
+  return grid;
 }
 
 function filledGrid(grid, ads) {
@@ -220,9 +204,17 @@ function filledGrid(grid, ads) {
     // TODO: Fix this in a more general way?
     const x2 = Number(ad.x) + Number(ad.width) - 1;
     const y2 = Number(ad.y) + Number(ad.height) - 1;
-    grid.setBox(ad.x, ad.y, x2, y2);
+    setBox(grid, ad.x, ad.y, x2, y2);
   }
   return grid;
+}
+
+function setBox(grid, x1, y1, x2, y2) {
+  for (let x = Number(x1); x <= x2; x++) {
+    for (let y = Number(y1); y <= y2; y++) {
+      grid[x][y] = true;
+    }
+  }
 }
 
 function addAdOwned(state, ad) {
