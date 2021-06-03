@@ -1,26 +1,16 @@
 <template>
   <div id="app" class="container">
     <Header>
-      <BuyButton v-if="ready" :x="20" :y="20" />
+      <BuyButton :x="20" :y="20" />
     </Header>
-    <template v-if="ready">
-      <Homepage
-        v-if="ready"
-        :provider="provider"
-        :contract="contract"
-        :isReadOnly="isReadOnly"
-        :showNSFW="showNSFW"
-        :prerendered="prerendered"
-      ></Homepage>
-    </template>
-    <template v-else>
-      <div class="adGrid">
-        <p style="text-align: center; padding: 2em; color: #666">
-          Waiting for Web3... (Must be on MainNet or Rinkeby)
-        </p>
-      </div>
-    </template>
-    <BuyButton v-if="ready" :x="20" :y="940" />
+    <Homepage
+      :provider="provider"
+      :contract="contract"
+      :isReadOnly="isReadOnly"
+      :showNSFW="showNSFW"
+      :prerendered="prerendered"
+    ></Homepage>
+    <BuyButton :x="20" :y="940" />
     <ConnectWallet />
     <div class="info">
       <p>
@@ -81,45 +71,11 @@
 <script>
 import { ethers } from "ethers";
 
-import contractJSON from "../build/contracts/KetherHomepage.json";
-
-const deployConfig = {
-  homestead: {
-    name: "main",
-    contractAddr: "0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
-    web3Fallback:
-      "https://mainnet.infura.io/v3/fa9f29a052924745babfc1d119465148",
-    etherscanLink:
-      "https://etherscan.io/address/0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
-    prerendered: {
-      image:
-        "https://storage.googleapis.com/storage.thousandetherhomepage.com/mainnet.png",
-      data: "https://storage.thousandetherhomepage.com/mainnet.json",
-      loadRemoteImages: true,
-      loadFromWeb3: true,
-    },
-  },
-  rinkeby: {
-    name: "rinkeby",
-    contractAddr: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
-    web3Fallback:
-      "https://rinkeby.infura.io/v3/fa9f29a052924745babfc1d119465148",
-    etherscanLink:
-      "https://rinkeby.etherscan.io/address/0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
-    prerendered: {
-      image:
-        "https://storage.googleapis.com/storage.thousandetherhomepage.com/rinkeby.png",
-      data: "https://storage.thousandetherhomepage.com/rinkeby.json",
-      loadRemoteImages: true,
-      loadFromWeb3: true,
-    },
-  },
-};
-const defaultNetwork = "homestead";
+import { defaultNetwork, deployConfig } from '~/networkConfig';
+import contractJSON from "~/build/contracts/KetherHomepage.json";
 
 import Dropdown from "./Dropdown.vue";
 import Homepage from "./Homepage.vue";
-
 
 export default {
   name: "app",
@@ -131,7 +87,6 @@ export default {
       selecting: false,
       provider: null,
       contract: null,
-      ready: false, // TODO: do we need this still or does ethers let us await when making calls
       isReadOnly: false,
       showNSFW: false,
       prerendered: null,
@@ -139,6 +94,8 @@ export default {
   },
   methods: {
     async connectEthereum() {
+      // We load the ads in nuxtServerInit on the server
+      if (process.server) return;
       if (window.ethereum) {
         // Using MetaMask or equivalent
         this.provider = new ethers.providers.Web3Provider(window.ethereum, "any");
@@ -149,7 +106,6 @@ export default {
           this.setContract(contract);
 
           this.isReadOnly = false;
-          this.ready = true;
         }
 
         // When the network changes, refresh the page.
@@ -165,7 +121,6 @@ export default {
       } else {
         // Use an HTTP proxy
         await this.setReadOnlyNetwork(defaultNetwork);
-        this.ready = true;
       }
     },
     async setReadOnlyNetwork(network) {
@@ -182,6 +137,8 @@ export default {
         this.contract.removeAllListeners();
       }
       this.contract = contract;
+
+      this.$store.dispatch('loadAds', contract);
 
       // Setup event monitoring:
       this.contract.on('error', function(err) {
@@ -207,6 +164,7 @@ export default {
   async created() {
     await this.connectEthereum();
   },
+
   components: {
     Homepage: Homepage,
     Dropdown: Dropdown,

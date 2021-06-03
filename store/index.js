@@ -1,3 +1,8 @@
+import { ethers } from "ethers";
+
+import { deployConfig, defaultNetwork } from "~/networkConfig";
+import contractJSON from "~/build/contracts/KetherHomepage.json";
+
 export const state = () => ({
   accounts: {},
   activeAccount: '',
@@ -10,6 +15,7 @@ export const state = () => ({
   grid: null, // lazy load
   previewAd: null,
   gridVis: true,
+  loadedNetwork: null,
 })
 
 export const strict = false; // 😭 Publish preview mutates ads, and it's too annoying to fix rn.
@@ -66,7 +72,9 @@ export const mutations = {
     state.ads.length = len;
   },
   addAd(state, ad) {
-    ad.owner = normalizeAddr(ad.owner);
+    if (ad.owner !== undefined) {
+      ad.owner = normalizeAddr(ad.owner);
+    }
 
     if (ad.idx > state.ads.length) {
       state.ads.length = ad.idx;
@@ -119,6 +127,10 @@ export const mutations = {
       state.grid.setBox(ad.x, ad.y, x2, y2);
     }
   },
+
+  setLoadedNetwork(state, network) {
+    state.loadedNetwork = network;
+  }
 }
 
 export const getters = {
@@ -127,6 +139,38 @@ export const getters = {
       throw "state.grid not initialized"
     }
     return state.grid.checkBox(x1, y1, x2, y2);
+  }
+
+}
+
+export const actions = {
+  async nuxtServerInit({ state, dispatch }) {
+    // TODO: make this preload both?
+    // TODO: refactor this since it shares code with App.vue
+    const web3Fallback = deployConfig[defaultNetwork].web3Fallback || "http://localhost:8545/";
+    const provider = new ethers.providers.JsonRpcProvider(web3Fallback);
+    const activeNetwork = (await provider.getNetwork()).name;
+    const networkConfig = deployConfig[activeNetwork];
+    const contract = new ethers.Contract(networkConfig.contractAddr, contractJSON.abi, provider);
+    await dispatch('loadAds', contract);
+  },
+
+  async loadAds({ commit, state }, contract) {
+    // TODO: we can optimize this by only loading from a blockNumber
+    const activeNetwork = (await contract.provider.getNetwork()).name;
+    if (state.loadedNetwork != activeNetwork) {
+      commit('clearAds', contract);
+      commit('initGrid', contract);
+    }
+
+    // TODO: error handling?
+    const numAds = await contract.getAdsLength();
+    commit('setAdsLength', numAds);
+    const ads = [...Array(numAds.toNumber()).keys()].map(i => contract.ads(i));
+    for await (const [i, ad] of ads.entries()) {
+      commit('addAd', toAd(i, await ad));
+    }
+    commit('setLoadedNetwork', activeNetwork);
   }
 }
 
@@ -186,4 +230,20 @@ function addAdOwned(state, ad) {
     state.pixelsOwned += ad.width * ad.height * 100;
   }
   state.ownedAds[ad.idx] = ad;
+}
+
+function toAd(i, r) {
+  return {
+    idx: i,
+    owner: r[0].toLowerCase(),
+    x: r[1],
+    y: r[2],
+    width: r[3],
+    height: r[4],
+    link: r[5] || "",
+    image: r[6] || "",
+    title: r[7],
+    NSFW: r[8] || r[9],
+    forcedNSFW: r[9],
+  }
 }

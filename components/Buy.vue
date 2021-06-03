@@ -73,7 +73,7 @@ export default {
       return Math.ceil(height * width * ethPerPixel * 100) / 100;
     },
     async checkAccounts() {
-      if (window.ethereum === undefined) return;
+      if (process.server || window.ethereum === undefined) return;
       // This is instead of window.ethereum.enable which causes a big warning
       //const accounts = (await window.ethereum.send('eth_requestAccounts')).result;
 
