@@ -20,10 +20,9 @@ withdraw:
 
 deps: node_modules/
 
-contracts: artifacts/*
+contracts: artifacts/contracts/*
 
-# TODO: make sure this bit works
-artifacts/%: contracts/%.sol
+artifacts/contracts/%: contracts/%.sol
 	npx hardhat compile
 
 node_modules/: package.json package-lock.json
