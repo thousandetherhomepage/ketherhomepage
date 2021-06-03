@@ -9,9 +9,7 @@
       <li><h3>Project</h3></li>
       <li><NuxtLink to="faq">FAQ</NuxtLink></li>
       <li><NuxtLink to="press">Press</NuxtLink></li>
-      <li>
-        <a href="https://github.com/thousandetherhomepage">Source code</a>
-      </li>
+      <li><a href="https://github.com/thousandetherhomepage">Source code</a></li>
     </ul>
     <slot></slot>
   </footer>

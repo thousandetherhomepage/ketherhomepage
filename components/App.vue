@@ -63,6 +63,7 @@
           >
           <a v-else v-on:click="showNSFW = false">Hide NSFW</a>
         </li>
+	<li><a href="/v1">Switch to v1 (2017)</a></li>
       </ul>
     </Footer>
   </div>
