@@ -1,9 +1,13 @@
+/.*
+
 .DS_Store
 node_modules/
 dist/
 npm-debug.log
 yarn-error.log
 .nuxt/
+/cache
+/artifacts
 
 # Editor directories and files
 .idea
