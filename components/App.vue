@@ -63,7 +63,7 @@
           >
           <a v-else v-on:click="showNSFW = false">Hide NSFW</a>
         </li>
-	<li><a href="/v1">Switch to v1 (2017)</a></li>
+	<li><a href="https://thousandetherhomepage.com/v1">Switch to v1 (2017)</a></li>
       </ul>
     </Footer>
   </div>
@@ -73,7 +73,7 @@
 import { ethers } from "ethers";
 
 import { defaultNetwork, deployConfig } from '~/networkConfig';
-import contractJSON from "~/build/contracts/KetherHomepage.json";
+import contractJSON from "~/artifacts/contracts/KetherHomepage.sol/KetherHomepage.json";
 
 import Dropdown from "./Dropdown.vue";
 import Homepage from "./Homepage.vue";

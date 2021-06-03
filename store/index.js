@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 
 import { deployConfig, defaultNetwork } from "~/networkConfig";
-import contractJSON from "~/build/contracts/KetherHomepage.json";
+import contractJSON from "~/artifacts/contracts/KetherHomepage.sol/KetherHomepage.json";
 
 export const state = () => ({
   accounts: {},
@@ -187,13 +187,13 @@ function grid_array2d(w, h) {
   }
 
   return {
-    set: function(x, y, value) {
+    set(x, y, value) {
       grid[x][y] = value;
     },
-    get: function(x, y) {
+    get(x, y) {
       return grid[x][y];
     },
-    checkBox: function(x1, y1, x2, y2) {
+    checkBox(x1, y1, x2, y2) {
       // Returns true if has collision, inclusive.
       if (x1 < 0 || y1 < 0 || x2 >= w || y2 >= h) return true;
 
@@ -204,7 +204,7 @@ function grid_array2d(w, h) {
       }
       return false;
     },
-    setBox: function(x1, y1, x2, y2) {
+    setBox(x1, y1, x2, y2) {
       for (let x = Number(x1); x <= x2; x++) {
         for (let y = Number(y1); y <= y2; y++) {
           grid[x][y] = true;

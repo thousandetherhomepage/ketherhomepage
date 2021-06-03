@@ -1,4 +1,5 @@
 build: deps contracts
+	npx nuxt generate
 
 test: deps contracts
 	npx hardhat test
@@ -7,7 +8,7 @@ run: deps contracts
 	npm run dev
 
 deploy-dapp: build ../thousandetherhomepage.github.io
-	tar -C build -c js css img press faq index.html | tar -C ../thousandetherhomepage.github.io/ -xv
+	rsync -rv dist/* ../thousandetherhomepage.github.io/
 	cd ../thousandetherhomepage.github.io; git add -v -A; git commit -v -a
 	echo "Push it."
 
@@ -19,9 +20,9 @@ withdraw:
 
 deps: node_modules/
 
-contracts: build/contracts/*
+contracts: artifacts/*
 
-build/contracts/%.json: contracts/%.sol
+build/%: contracts/%.sol
 	npx hardhat compile
 
 node_modules/: package.json package-lock.json
