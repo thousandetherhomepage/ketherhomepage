@@ -22,7 +22,8 @@ deps: node_modules/
 
 contracts: artifacts/*
 
-build/%: contracts/%.sol
+# TODO: make sure this bit works
+artifacts/%: contracts/%.sol
 	npx hardhat compile
 
 node_modules/: package.json package-lock.json
