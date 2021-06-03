@@ -174,6 +174,7 @@ export const actions = {
   }
 }
 
+// TODO: Rewrite this into a proper class thing or something, so that there's fewer warnings
 function grid_array2d(w, h) {
   const grid = [];
   grid.length = h;
