@@ -34,7 +34,7 @@
       <strong>Slot is available.</strong>
       <button v-on:click="buy" v-bind:disabled="isReadOnly" v-if="this.$store.state.activeAccount">Buy Pixels</button>
       <button v-on:click="checkAccounts" v-else-if="isReadOnly" disabled="disabled">Buy disabled (read-only mode)</button>
-      <button v-on:click="checkAccounts" v-else>Unlock Account to Buy</button>
+      <button v-on:click="checkAccounts" v-else>Connect Wallet to Buy</button>
     </p>
     <p v-else>
       Slot is not available.
@@ -43,17 +43,18 @@
 </template>
 
 <script>
+import { ethers } from "ethers";
+
 const ethPerPixel = 1000 / 1000000;
 
 export default {
-  props: ["web3", "contract", "isReadOnly"],
+  props: ["provider", "contract", "isReadOnly"],
   data() {
     ga('send', {
       hitType: 'event',
       eventCategory: this.contract._network,
       eventAction: 'buy-open',
     });
-
     return {
       error: null,
       success: null,
@@ -71,12 +72,16 @@ export default {
       // TODO: BigNumber?
       return Math.ceil(height * width * ethPerPixel * 100) / 100;
     },
-    checkAccounts() {
-      this.web3.eth.getAccounts(function(err, res) {
-        for (const acct of res) {
-          this.$store.commit('addAccount', acct)
-        }
-      }.bind(this));
+    async checkAccounts() {
+      if (window.ethereum === undefined) return;
+      // This is instead of window.ethereum.enable which causes a big warning
+      //const accounts = (await window.ethereum.send('eth_requestAccounts')).result;
+
+      const accounts = await window.ethereum.enable();
+
+      for (const account of accounts) {
+        this.$store.commit('addAccount', account);
+      }
     },
     checkAvailable(x, y, width, height) {
       const x1 = Math.floor(x/10);
@@ -85,16 +90,15 @@ export default {
       const y2 = y1 + Math.floor(height/10) - 1;
       return !this.$store.getters.isColliding(x1, y1, x2, y2);
     },
-    buy() {
+    async buy() {
       const ad = {x: this.$parent.left, y: this.$parent.top, width: this.$parent.width, height: this.$parent.height}
       if (!this.checkAvailable(ad.x, ad.y, ad.width, ad.height)) {
 
         this.error = `Slot is not available: ${ad}`
         return;
       }
-      const weiPrice = this.web3.utils.toWei(this.price(ad.width, ad.height).toString(), "ether");
+      const weiPrice = ethers.utils.parseUnits(this.price(ad.width, ad.height).toString(), "ether");
       const x = Math.floor(ad.x/10), y = Math.floor(ad.y/10), width = Math.floor(ad.width/10), height = Math.floor(ad.height/10);
-      const account = this.$store.state.activeAccount;
       ga('send', {
         hitType: 'event',
         eventCategory: this.contract._network,
@@ -103,35 +107,36 @@ export default {
         eventLabel: ad.width + "x" + ad.height,
       });
 
-      this.contract.methods.buy(x, y, width, height).send({ value: weiPrice, from: account }, function(err, res) {
-        if (err) {
-          ga('send', {
-            hitType: 'event',
-            eventCategory: this.contract._network,
-            eventAction: 'buy-error',
-            eventLabel: JSON.stringify(err),
-          });
-
-          if ((err.stack || err.message || "").indexOf('User denied transaction signature.') !== -1)  {
-            // Aborted, revert to original state.
-            return;
-          }
-          this.error = err.toString();
-          return;
-        }
-
-        this.success = 'Transaction sent successfully.'
-        this.$emit("buy", {x, y, width, height})
+      const signer = await this.provider.getSigner();
+      try {
+        const tx = await this.contract.connect(signer).buy(x, y, width, height, { value: weiPrice });
+      } catch (err) {
         ga('send', {
           hitType: 'event',
           eventCategory: this.contract._network,
-          eventAction: 'buy-success',
-          eventValue: weiPrice,
-          eventLabel: ad.width + "x" + ad.height,
+          eventAction: 'buy-error',
+          eventLabel: JSON.stringify(err),
         });
-        // TODO: Transition to Publish route?
-      }.bind(this));
-    }
+
+        if ((err.stack || err.message || "").indexOf('User denied transaction signature.') !== -1)  {
+          // Aborted, revert to original state.
+          return;
+        }
+        this.error = err.toString();
+        return;
+      }
+
+      this.success = 'Transaction sent successfully.'
+      this.$emit("buy", {x, y, width, height})
+      ga('send', {
+        hitType: 'event',
+        eventCategory: this.contract._network,
+        eventAction: 'buy-success',
+        eventValue: weiPrice,
+        eventLabel: ad.width + "x" + ad.height,
+      });
+      // TODO: Transition to Publish route?
+    },
   },
 }
 </script>
