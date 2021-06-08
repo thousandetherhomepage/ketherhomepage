@@ -157,6 +157,9 @@ export const actions = {
   async nuxtServerInit({ state, dispatch }) {
     // TODO: make this preload both?
     // TODO: refactor this since it shares code with App.vue
+
+    // Don't preload ads in dev mode so we don't spam Infura 😥
+    if (process.dev) return;
     const web3Fallback = deployConfig[defaultNetwork].web3Fallback || "http://localhost:8545/";
     const provider = new ethers.providers.JsonRpcProvider(web3Fallback);
     const activeNetwork = (await provider.getNetwork()).name;
