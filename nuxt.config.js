@@ -2,6 +2,23 @@ export default {
   // Target: https://go.nuxtjs.dev/config-target
   target: 'static',
 
+  /// XXXX this only sets the headers
+  // We copy and paste the generated header (with correct hashes) into a meta
+  // tag below
+  render: {
+    csp: {
+      addMeta: false,
+      reportOnly: false,
+      policies: {
+        'default-src': ["'self'"],
+        'script-src': ["'self'", '*.infura.io'],
+        'connect-src': ["'self'", '*.infura.io'],
+        'style-src': ["'self'", "'unsafe-inline'"], // Would be nice to have the hashes built here - see https://github.com/nuxt/nuxt.js/pull/8022/files
+        'img-src': ['*', 'data:']
+      }
+    }
+  },
+
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: 'The Thousand Ether Homepage',
@@ -13,7 +30,9 @@ export default {
       { charset: 'utf-8' },
       //{ name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: "The Million Dollar Homepage as an Ethereum Smart Contract and DApp: A glimpse into what the future of web integrated with modern blockchain technology could be like." },
-      { 'http-equiv': "Content-Security-Policy", content: "default-src 'self'; script-src 'self' *.infura.io 'sha256-+sCl9Qql+R8YqZtXTlyGMX9tUQ4mv7hOO5/UAaZ5g9Y='; connect-src *.infura.io storage.thousandetherhomepage.com http://127.0.0.1:8545/rpc/; style-src 'self' 'unsafe-inline'; img-src * data:;"},
+      // XXX this is copypasta from the network tab -- the csp is generated as a header when you have mode: server, but it's not put in the HTML by nuxt correctly ¯\_(🤷)_/¯ 😥😥😥😥
+      // XXX Neeed to regenerate this on code changes!!!
+      { 'http-equiv': "Content-Security-Policy", content: "default-src 'self'; script-src 'sha256-Flgc7Su9BMlylshrysCne4ZwVZkBgo95lmd7PB7zdwg=' 'self' 'self' *.infura.io; connect-src 'self' *.infura.io; style-src 'self' 'unsafe-inline'; img-src * data:"},
       { name: "twitter:card", content: "summary"},
       { property: "og:url", content: "https://thousandetherhomepage.com"},
       { property: "og:title", content: "The Thousand Ether Homepage" },
