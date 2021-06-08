@@ -8,6 +8,7 @@ yarn-error.log
 .nuxt/
 /cache
 /artifacts
+/build
 
 # Editor directories and files
 .idea
