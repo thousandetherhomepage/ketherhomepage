@@ -1,6 +1,10 @@
 with (import <nixpkgs> { });
 let
-  packages = [ nodejs-14_x nodePackages.npm ];
+  packages = [
+    nodejs-14_x
+    nodePackages.npm
+    nodePackages.vls # vue languag server
+  ];
 
   # define shell startup command with special handling for OSX
   baseHooks = ''
