@@ -63,7 +63,7 @@
           >
           <a v-else v-on:click="showNSFW = false">Hide NSFW</a>
         </li>
-	<li><a href="https://thousandetherhomepage.com/v1">Switch to v1 (2017)</a></li>
+        <li><a href="https://thousandetherhomepage.com/v1">Switch to v1 (2017)</a></li>
       </ul>
     </Footer>
   </div>
@@ -105,7 +105,7 @@ export default {
         if (this.networkConfig) {
           const contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
           this.setContract(contract);
-
+          this.listenContractEvents(contract);
           this.isReadOnly = false;
         }
 
@@ -138,15 +138,18 @@ export default {
         this.contract.removeAllListeners();
       }
       this.contract = contract;
-
-      this.$store.dispatch('loadAds', contract);
-
-      // Setup event monitoring:
       this.contract.on('error', function(err) {
         console.error("Contract subscription error:", err);
       });
 
-      this.contract.on('Buy', function(idx, owner, x, y, width, height) {
+      this.$store.dispatch('loadAds', contract);
+    },
+    listenContractEvents(contract) {
+      // These listeners will long-poll the provider every block, so probably
+      // only makes sense to set them up if a wallet is connected.
+      console.log("Subscribing to Buy and Publish events");
+
+      contract.on('Buy', function(idx, owner, x, y, width, height) {
         this.$store.commit('addAd', {idx: idx.toNumber(), owner, x, y, width, height});
 
         const previewAd = this.$store.state.previewAd;
@@ -155,11 +158,11 @@ export default {
           this.previewLocked = false;
           this.$store.commit('clearPreview');
         }
-      }.bind(this))
+      }.bind(this));
 
-      this.contract.on('Publish', function(idx, link, image, title, NSFW, height) {
+      contract.on('Publish', function(idx, link, image, title, NSFW) {
         this.$store.commit('addAd', {idx: idx.toNumber(), link, image, title, NSFW});
-      }.bind(this))
+      }.bind(this));
     },
   },
   async created() {

@@ -16,6 +16,7 @@ export const state = () => ({
   previewAd: null,
   gridVis: true,
   loadedNetwork: null,
+  loadedBlockNumber: 0,
 })
 
 export const strict = false; // 😭 Publish preview mutates ads, and it's too annoying to fix rn.
@@ -63,6 +64,7 @@ export const mutations = {
     state.ownedAds = {};
     state.numOwned = 0;
     state.pixelsOwned = 0;
+    state.loadedBlockNumber = 0;
   },
   setVis(state, vis) {
     // Valid values: 'grid' and 'list', default to 'grid'
@@ -130,8 +132,9 @@ export const mutations = {
     }
   },
 
-  setLoadedNetwork(state, network) {
+  setLoadedNetwork(state, network, blockNumber) {
     state.loadedNetwork = network;
+    state.loadedBlockNumber = blockNumber;
   }
 }
 
@@ -158,8 +161,7 @@ export const actions = {
     // TODO: make this preload both?
     // TODO: refactor this since it shares code with App.vue
 
-    // Don't preload ads in dev mode so we don't spam Infura 😥
-    if (process.dev) return;
+    if (process.dev) return; // Don't preload ads in dev mode so we don't spam Infura 😥
     if (route.name !== 'index') return; // We only want to preload ads for the index route
 
     const web3Fallback = deployConfig[defaultNetwork].web3Fallback || "http://localhost:8545/";
@@ -174,10 +176,18 @@ export const actions = {
   async loadAds({ commit, state }, contract) {
     // TODO: we can optimize this by only loading from a blockNumber
     const activeNetwork = (await contract.provider.getNetwork()).name;
-    if (state.loadedNetwork != activeNetwork) {
+    if (state.loadedNetwork !== activeNetwork) {
+      console.info("loadAds: Active network mismatch, resetting:", state.loadedNetwork, "!=", activeNetwork);
       commit('clearAds', contract);
       commit('initGrid', contract);
+    } else if (state.loadedBlockNumber > 0) {
+      console.info("loadAds: Ads already loaded from block number:", state.loadedBlockNumber);
+      // TODO: Skip loading and use event filter instead?
+      // const eventFilter = [ contract.filters.Buy(), contract.filters.Publish() ];
+      // const events = await contract.queryFilter(eventFilter, state.loadedblockNumber + 1);
+      // ... loop over events (ideally reuse code from App.vue:setContact)
     }
+    const blockNumber = await contract.provider.getBlockNumber();
 
     // TODO: error handling?
     const numAds = await contract.getAdsLength();
@@ -186,7 +196,9 @@ export const actions = {
     for await (const [i, ad] of ads.entries()) {
       commit('addAd', toAd(i, await ad));
     }
-    commit('setLoadedNetwork', activeNetwork);
+    commit('setLoadedNetwork', activeNetwork, blockNumber);
+
+    console.info("Loaded", numAds.toNumber(), "ads until block number", blockNumber);
   }
 }
 
