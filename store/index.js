@@ -2,22 +2,32 @@ import { ethers } from "ethers";
 
 import { deployConfig, defaultNetwork } from "~/networkConfig";
 import contractJSON from "~/artifacts/contracts/KetherHomepage.sol/KetherHomepage.json";
+import initState from "~/static/initState.json";
 
-export const state = () => ({
-  accounts: {},
-  activeAccount: '',
-  ads: [],
-  adsPixels: 0,
-  ownedAds: {},
-  numOwned: 0,
-  numNSFW: 0,
-  pixelsOwned: 0,
-  grid: null, // lazy load
-  previewAd: null,
-  gridVis: true,
-  loadedNetwork: null,
-  loadedBlockNumber: 0,
-})
+export const state = () => {
+  // TODO: Use fetch instead of compile-time include
+  if (initState !== undefined) {
+    initState.offlineMode = true;
+    return initState;
+  }
+
+  return {
+    accounts: {},
+    activeAccount: '',
+    ads: [],
+    adsPixels: 0,
+    ownedAds: {},
+    numOwned: 0,
+    numNSFW: 0,
+    pixelsOwned: 0,
+    grid: null, // lazy load
+    previewAd: null,
+    gridVis: true,
+    loadedNetwork: null,
+    loadedBlockNumber: 0,
+    offlineMode: false,
+  }
+};
 
 export const strict = false; // 😭 Publish preview mutates ads, and it's too annoying to fix rn.
 
@@ -157,10 +167,9 @@ export const getters = {
 }
 
 export const actions = {
-  async nuxtServerInit({ state, dispatch }, { route }) {
+  async nuxtServerInit({ state, dispatch }, { app, route }) {
     // TODO: make this preload both?
     // TODO: refactor this since it shares code with App.vue
-
     if (process.dev) return; // Don't preload ads in dev mode so we don't spam Infura 😥
     if (route.name !== 'index') return; // We only want to preload ads for the index route
 
@@ -171,11 +180,21 @@ export const actions = {
     const contract = new ethers.Contract(networkConfig.contractAddr, contractJSON.abi, provider);
 
     await dispatch('loadAds', contract);
+
+    // Serialize state to file, and load it if it exists
+    // TODO: Get proper path using buildDir (not sure how to get access to it here)
+    fs.writeFileSync('static/initState.json', JSON.stringify(state));
   },
 
   async loadAds({ commit, state }, contract) {
     // TODO: we can optimize this by only loading from a blockNumber
-    const activeNetwork = (await contract.provider.getNetwork()).name;
+    let activeNetwork;
+    try {
+      activeNetwork = (await contract.provider.getNetwork()).name;
+    } catch (e) { // TODO: More specific exception
+      console.error("Failed to get provider network, switching to offline mode:", e);
+      activeNetwork = state.loadedNetwork;
+    }
     if (state.loadedNetwork !== activeNetwork) {
       console.info("loadAds: Active network mismatch, resetting:", state.loadedNetwork, "!=", activeNetwork);
       commit('clearAds', contract);
@@ -198,7 +217,7 @@ export const actions = {
     }
     commit('setLoadedNetwork', activeNetwork, blockNumber);
 
-    console.info("Loaded", numAds.toNumber(), "ads until block number", blockNumber);
+    console.info("Loaded", numAds.toNumber(), "ads until block number", blockNumber, "from", activeNetwork);
   }
 }
 
@@ -247,10 +266,10 @@ function toAd(i, r) {
   return {
     idx: i,
     owner: r[0].toLowerCase(),
-    x: r[1],
-    y: r[2],
-    width: r[3],
-    height: r[4],
+    x: Number(r[1]),
+    y: Number(r[2]),
+    width: Number(r[3]),
+    height: Number(r[4]),
     link: r[5] || "",
     image: r[6] || "",
     title: r[7],
