@@ -17,7 +17,8 @@ export const state = () => {
     ads: [],
     adsPixels: 0,
     ownedAds: {},
-    numOwned: 0,
+    nftAds: {},
+    numOwned: 0, // TODO: Make computed based on ownedAds to include NFTs
     numNSFW: 0,
     pixelsOwned: 0,
     grid: null, // lazy load
@@ -25,9 +26,11 @@ export const state = () => {
     gridVis: true,
     loadedNetwork: null,
     loadedBlockNumber: 0,
+    networkConfig: {}, // deployConfig of active network, set during clearAds
     offlineMode: false,
   }
 };
+
 
 export const strict = false; // 😭 Publish preview mutates ads, and it's too annoying to fix rn.
 
@@ -66,15 +69,17 @@ export const mutations = {
   clearPreview(state) {
     state.previewAd = null;
   },
-  clearAds(state) {
+  clearAds(state, networkConfig) {
     state.grid = null;
     state.ads = [];
     state.adsPixels = 0;
-    state.numNSFW = 0;
     state.ownedAds = {};
+    state.nftAds = {};
     state.numOwned = 0;
+    state.numNSFW = 0;
     state.pixelsOwned = 0;
     state.loadedBlockNumber = 0;
+    state.networkConfig = networkConfig;
   },
   setVis(state, vis) {
     // Valid values: 'grid' and 'list', default to 'grid'
@@ -120,7 +125,11 @@ export const mutations = {
 
     // Need to use splice rather than this.ads[i] to make it reactive
     state.ads.splice(ad.idx, 1, ad)
-    if (state.accounts[ad.owner]) addAdOwned(state, ad);
+    if (state.accounts[ad.owner]) {
+      addAdOwned(state, ad);
+    } else if (ad.owner === state.networkConfig.ketherNFTAddr) {
+      addNFTAd(state, ad);
+    }
 
     if (ad.width === undefined) {
       // This is just a publish event, will fill this out when it comes
@@ -167,7 +176,7 @@ export const getters = {
 }
 
 export const actions = {
-  async nuxtServerInit({ state, dispatch }, { app, route }) {
+  async nuxtServerInit({ dispatch }, { route }) {
     // TODO: make this preload both?
     // TODO: refactor this since it shares code with App.vue
     if (process.dev) return; // Don't preload ads in dev mode so we don't spam Infura 😥
@@ -197,8 +206,8 @@ export const actions = {
     }
     if (state.loadedNetwork !== activeNetwork) {
       console.info("loadAds: Active network mismatch, resetting:", state.loadedNetwork, "!=", activeNetwork);
-      commit('clearAds', contract);
-      commit('initGrid', contract);
+      commit('clearAds', deployconfig[contract._network]);
+      commit('initGrid');
     } else if (state.loadedBlockNumber > 0) {
       console.info("loadAds: Ads already loaded from block number:", state.loadedBlockNumber);
       // TODO: Skip loading and use event filter instead?
@@ -260,6 +269,13 @@ function addAdOwned(state, ad) {
     state.pixelsOwned += ad.width * ad.height * 100;
   }
   state.ownedAds[ad.idx] = ad;
+}
+
+function addNFTAd(state, ad) {
+  ad.isNFT = true;
+  state.nftAds[ad.idx] = ad;
+
+  // TODO: Check if NFT is owned, addAdOwned if it is.
 }
 
 function toAd(i, r) {
