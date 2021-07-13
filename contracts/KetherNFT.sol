@@ -8,7 +8,6 @@ import "./IKetherHomepage.sol";
 import "./KetherNFTRender.sol";
 
 
-// TODO: Name this something really cool
 contract FlashEscrow {
   constructor(address target, bytes memory payload) {
     (bool success,) = target.call(payload);
@@ -112,6 +111,18 @@ contract KetherNFT is ERC721, Ownable {
     require(_isApprovedOrOwner(_msgSender(), _idx), "KetherNFT: publish for sender that is not approved");
 
     instance.publish(_idx, _link, _image, _title, _NSFW);
+  }
+
+  /// buy is a delegated proxy for KetherHomepage's buy function. Calling it allows
+  /// an ad to be purchased directly as an NFT without needing to wrap it later.
+  ///
+  /// Ads must be purchased in 10x10 pixel blocks.
+  /// Each coordinate represents 10 pixels. That is,
+  ///   _x=5, _y=10, _width=3, _height=3
+  /// Represents a 30x30 pixel ad at coordinates (50, 100)
+  function buy(uint _x, uint _y, uint _width, uint _height) external payable returns (uint idx) {
+    idx = instance.buy(_x, _y, _width, _height);
+    _safeMint(_msgSender(), idx);
   }
 
 

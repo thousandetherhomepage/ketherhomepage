@@ -241,6 +241,31 @@ describe('KetherNFT', function() {
     ).to.be.reverted;
   });
 
+  it('should be buyable as NFT', async function() {
+    const {account1} = accounts;
+
+    const txn = await KNFT.connect(account1).buy(42, 69, 10, 10, {value: oneHundredCellPrice });
+    const receipt = await txn.wait();
+    const event = receipt.events.pop();
+    const [idx] = event.args;
+    await KNFT.connect(account).publish(idx, "link", "image", "title", false);
+
+    {
+      const [addr,,,,,link,image,title] = await KH.ads(idx);
+      expect(addr).to.equal(KNFT.address);
+      expect(link).to.equal("link");
+      expect(image).to.equal("image");
+      expect(title).to.equal("title");
+    }
+
+    // Unwrap
+    await KNFT.connect(account1).unwrap(idx, await account1.getAddress());
+    {
+      const [addr] = await KH.ads(idx);
+      expect(addr).to.equal(await account1.getAddress());
+    }
+  });
+
   xit("should be recoverable if ownership is transferred without minting", async function() {
     // TODO: ...
   });
