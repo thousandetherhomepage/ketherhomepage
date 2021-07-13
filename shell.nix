@@ -4,6 +4,7 @@ let
     nodejs-14_x
     nodePackages.npm
     nodePackages.vls # vue languag server
+    nodePackages.typescript-language-server # typescript/javascript language server
   ];
 
   # define shell startup command with special handling for OSX
