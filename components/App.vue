@@ -29,6 +29,10 @@
         <a href="https://gfycat.com/BleakSimilarGermanspaniel">Here's a GIF!</a>
       </p>
     </div>
+    <a v-if="$store.state.offlineMode"
+      href="javascript:window.location.reload()"
+      id="offline-mode"
+      title="Reload page to reconnect.">Offline</a>
     <Footer>
       <ul>
         <li><h3>Blockchain</h3></li>
@@ -177,6 +181,17 @@ export default {
 </script>
 
 <style lang="scss">
+#offline-mode {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: block;
+  background: rgba(200, 50, 50, 0.8);
+  color: rgba(255, 255, 255, 1.0);
+  font-weight: bold;
+  padding: 0.5em 1em;
+  border-bottom-left-radius: 1em;
+}
 header {
   h2 {
     display: inline-block;
