@@ -170,6 +170,7 @@ export default {
     },
   },
   async created() {
+    this.$store.dispatch('initState');
     await this.connectEthereum();
   },
 

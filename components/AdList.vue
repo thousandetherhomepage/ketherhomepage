@@ -48,7 +48,7 @@ export default {
     listAds() {
       let omitted = 0, num = 0;
       const ads = [];
-      for (let ad of this.$store.state.ads) {
+      for (const ad of this.$store.state.ads) {
         if (!ad || !ad.image) {
           omitted += 1;
         }

@@ -2,15 +2,8 @@ import { ethers } from "ethers";
 
 import { deployConfig, defaultNetwork } from "~/networkConfig";
 import contractJSON from "~/artifacts/contracts/KetherHomepage.sol/KetherHomepage.json";
-import initState from "~/static/initState.json";
 
 export const state = () => {
-  // TODO: Use fetch instead of compile-time include
-  if (initState !== undefined) {
-    initState.offlineMode = true;
-    return initState;
-  }
-
   return {
     accounts: {},
     activeAccount: '',
@@ -40,6 +33,11 @@ function normalizeAddr(addr) {
 }
 
 export const mutations = {
+  loadState(state, loadState) {
+    for (const [k, v] of Object.entries(loadState)) {
+      state[k] = v;
+    }
+  },
   initGrid(state) {
     if (state.grid === null) {
       // Compute grid and cache it
@@ -152,6 +150,7 @@ export const mutations = {
   },
 
   setLoadedNetwork(state, network, blockNumber) {
+    state.offlineMode = blockNumber === state.loadedBlockNumber;
     state.loadedNetwork = network;
     state.loadedBlockNumber = blockNumber;
   }
@@ -188,11 +187,21 @@ export const actions = {
     const networkConfig = deployConfig[activeNetwork];
     const contract = new ethers.Contract(networkConfig.contractAddr, contractJSON.abi, provider);
 
+    //await dispatch('loadState');
     await dispatch('loadAds', contract);
+  },
 
-    // Serialize state to file, and load it if it exists
-    // TODO: Get proper path using buildDir (not sure how to get access to it here)
-    fs.writeFileSync('static/initState.json', JSON.stringify(state));
+  async initState({ commit }) {
+    let s;
+    if (process.server) {
+      // TODO: Server-side version of fetch
+      return;
+    } else {
+      s = await window.fetch('/initState.json').then(res => res.json())
+      console.log('Loaded cached initial state');
+    }
+    s.offlineMode = true;
+    commit('loadState', s);
   },
 
   async loadAds({ commit, state }, contract) {
@@ -205,11 +214,12 @@ export const actions = {
       activeNetwork = state.loadedNetwork;
     }
     if (state.loadedNetwork !== activeNetwork) {
-      console.info("loadAds: Active network mismatch, resetting:", state.loadedNetwork, "!=", activeNetwork);
-      commit('clearAds', deployconfig[contract._network]);
+      console.info("Active network mismatch, resetting:", state.loadedNetwork, "!=", activeNetwork);
+      commit('clearAds', deployConfig[activeNetwork]);
       commit('initGrid');
     } else if (state.loadedBlockNumber > 0) {
       console.info("loadAds: Ads already loaded from block number:", state.loadedBlockNumber);
+      // XXX: This needs to be finished for cached loadState to not get stale.
       // TODO: Skip loading and use event filter instead?
       // const eventFilter = [ contract.filters.Buy(), contract.filters.Publish() ];
       // const events = await contract.queryFilter(eventFilter, state.loadedblockNumber + 1);
