@@ -5,7 +5,9 @@ export default {
   target: 'static',
 
   render: {
-    // These csp values are only set in headers when served by nuxt
+    // These csp values are only set in headers when served by nuxt. We need
+    // these because nuxt serves an extra <script>window.__NUXT__... element
+    // which is non-deterministic.
     csp: {
       addMeta: false, // This does not do what you'd think 🙃
       reportOnly: false,
@@ -32,7 +34,7 @@ export default {
       { hid: 'description', name: 'description', content: "The Million Dollar Homepage as an Ethereum Smart Contract and DApp: A glimpse into what the future of web integrated with modern blockchain technology could be like." },
       // FIXME: is copypasta from the network tab -- the csp is generated as a header when you have mode: server, but it's not put in the HTML by nuxt correctly ¯\_(🤷)_/¯ 😥😥😥😥
       // script-src hash represents the window.__NUXT__ <script> element. It should not change thanks to vue-renderer:ssr:context hook below.
-      { 'http-equiv': "Content-Security-Policy", content: "default-src 'self'; script-src 'sha256-UZWx7PcANLfxqg+tuiEQiu6bijg7tUWbRmoVtInX1K4=' 'self' 'self' *.infura.io; connect-src 'self' *.infura.io; style-src 'self' 'unsafe-inline'; img-src * data:"},
+      process.env.NODE_ENV === 'production' ? { 'http-equiv': "Content-Security-Policy", content: "default-src 'self'; script-src 'self' 'self' *.infura.io; connect-src 'self' *.infura.io; style-src 'self' 'unsafe-inline'; img-src * data:"} : {},
       { name: "twitter:card", content: "summary"},
       { property: "og:url", content: "https://thousandetherhomepage.com"},
       { property: "og:title", content: "The Thousand Ether Homepage" },
@@ -69,10 +71,10 @@ export default {
   },
 
   hooks: {
-    // TODO: Switch this to 'vue-renderer:ssr:context' when it's actually called during generate
+    // TODO: Switch this to 'vue-renderer:ssr:context' when it's actually called during generate (right now it's not)
     'render:routeContext'(context) {
       // Serialize state after rendering index (only during generate)
-      if (!context.serverRendered) return;
+      if (process.env.NODE_ENV !== 'production') return;
       if (context.routePath !== '/') return;
       fs.writeFileSync('static/initState.json', JSON.stringify(context.state));
       console.info("Saved initial state: static/initState.json");
