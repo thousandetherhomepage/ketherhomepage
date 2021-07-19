@@ -21,6 +21,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^4.2.0",
     "base64-sol": "^1.0.1",
+    "chai": "^4.3.4",
     "hardhat": "^2.4.3",
     "hardhat-gas-reporter": "^1.0.4",
     "sass": "^1.35.2",
