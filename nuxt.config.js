@@ -32,8 +32,6 @@ export default {
       { charset: 'utf-8' },
       //{ name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: "The Million Dollar Homepage as an Ethereum Smart Contract and DApp: A glimpse into what the future of web integrated with modern blockchain technology could be like." },
-      // FIXME: is copypasta from the network tab -- the csp is generated as a header when you have mode: server, but it's not put in the HTML by nuxt correctly ¯\_(🤷)_/¯ 😥😥😥😥
-      // script-src hash represents the window.__NUXT__ <script> element. It should not change thanks to vue-renderer:ssr:context hook below.
       process.env.NODE_ENV === 'production' ? { 'http-equiv': "Content-Security-Policy", content: "default-src 'self'; script-src 'self' 'self' *.infura.io; connect-src 'self' *.infura.io; style-src 'self' 'unsafe-inline'; img-src * data:"} : {},
       { name: "twitter:card", content: "summary"},
       { property: "og:url", content: "https://thousandetherhomepage.com"},
@@ -71,12 +69,11 @@ export default {
   },
 
   hooks: {
-    // TODO: Switch this to 'vue-renderer:ssr:context' when it's actually called during generate (right now it's not)
-    'render:routeContext'(context) {
+    'vue-renderer:ssr:context'({ nuxt }) {
       // Serialize state after rendering index (only during generate)
       if (process.env.NODE_ENV !== 'production') return;
-      if (context.routePath !== '/') return;
-      fs.writeFileSync('static/initState.json', JSON.stringify(context.state));
+      if (nuxt.routePath !== '/') return;
+      fs.writeFileSync('static/initState.json', JSON.stringify(nuxt.state));
       console.info("Saved initial state: static/initState.json");
     }
   },
