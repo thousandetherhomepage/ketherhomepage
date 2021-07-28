@@ -13,6 +13,8 @@
     <BuyButton :x="20" :y="940" />
     <ConnectWallet />
     <div class="info">
+      <p>✅ Loaded {{$store.state.ads.length}} ads as of block {{$store.state.loadedBlockNumber}} ({{timeSinceLoaded}})</p>
+
       <p>
         Ads displayed above are loaded directly from the Ethereum Blockchain.
         This Decentralized Application (<a
@@ -96,6 +98,16 @@ export default {
       showNSFW: false,
       prerendered: null,
     };
+  },
+  computed: {
+    timeSinceLoaded() {
+      const ts = this.$store.state.loadedBlockTimestamp;
+      if (ts === undefined) {
+        return 'cached';
+      }
+      const now = Math.floor(Date.now()/1000);
+      return `${now - ts} seconds ago`;
+    }
   },
   methods: {
     async connectEthereum() {

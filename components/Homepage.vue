@@ -24,8 +24,6 @@
       {{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button>
     </div>
     <Publish v-if="showPublish" :provider="provider" :contract="contract" :showNSFW="showNSFW"></Publish>
-
-
   </div>
 </template>
 

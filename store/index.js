@@ -19,6 +19,7 @@ export const state = () => {
     gridVis: true,
     loadedNetwork: null,
     loadedBlockNumber: 0,
+    loadedBlockTimestamp: 0,
     networkConfig: {}, // deployConfig of active network, set during clearAds
     offlineMode: false,
   }
@@ -149,10 +150,13 @@ export const mutations = {
     }
   },
 
-  setLoadedNetwork(state, network, blockNumber) {
-    state.offlineMode = blockNumber === state.loadedBlockNumber;
+  setLoadedNetwork(state, network, blockNumber, timestamp) {
+    state.offlineMode = blockNumber === 0;
     state.loadedNetwork = network;
-    state.loadedBlockNumber = blockNumber;
+    if (blockNumber !== 0) {
+      state.loadedBlockNumber = blockNumber;
+      state.loadedBlockTimestamp = timestamp;
+    }
   }
 }
 
@@ -207,36 +211,47 @@ export const actions = {
   async loadAds({ commit, state }, contract) {
     // TODO: we can optimize this by only loading from a blockNumber
     let activeNetwork;
+    let latestBlock = {number: 0, timestamp: 0};
     try {
       activeNetwork = (await contract.provider.getNetwork()).name;
+      latestBlock = await contract.provider.getBlock('latest');
     } catch (e) { // TODO: More specific exception
       console.error("Failed to get provider network, switching to offline mode:", e);
       activeNetwork = state.loadedNetwork;
     }
+    const blockNumber = latestBlock.number;
+    const blockTimestamp = latestBlock.timestamp;
+
     if (state.loadedNetwork !== activeNetwork) {
       console.info("Active network mismatch, resetting:", state.loadedNetwork, "!=", activeNetwork);
       commit('clearAds', deployConfig[activeNetwork]);
       commit('initGrid');
-    } else if (state.loadedBlockNumber > 0) {
+    }
+
+    if (state.loadedBlockNumber > 0) {
       console.info("loadAds: Ads already loaded from block number:", state.loadedBlockNumber);
-      // XXX: This needs to be finished for cached loadState to not get stale.
-      // TODO: Skip loading and use event filter instead?
-      // const eventFilter = [ contract.filters.Buy(), contract.filters.Publish() ];
-      // const events = await contract.queryFilter(eventFilter, state.loadedblockNumber + 1);
-      // ... loop over events (ideally reuse code from App.vue:setContact)
-    }
-    const blockNumber = await contract.provider.getBlockNumber();
+      // Skip loading and use event filter instead
+      // TODO: Check if loadedBlockNumber is outside of the provider's log
+      // range. If so, we need to fall back to full load or use TheGraph or
+      // something.
+      const eventFilter= [ contract.filters.Buy(), contract.filters.Publish()];
+      const events = await contract.queryFilter(eventFilter, state.loadedblockNumber + 10000);
+      console.log("XXX", events);
+      return;
 
-    // TODO: error handling?
-    const numAds = await contract.getAdsLength();
-    commit('setAdsLength', numAds);
-    const ads = [...Array(numAds.toNumber()).keys()].map(i => contract.ads(i));
-    for await (const [i, ad] of ads.entries()) {
-      commit('addAd', toAd(i, await ad));
-    }
-    commit('setLoadedNetwork', activeNetwork, blockNumber);
+    } else {
+      // Load fresh from the contract
+      const numAds = await contract.getAdsLength();
+      commit('setAdsLength', numAds);
+      const ads = [...Array(numAds.toNumber()).keys()].map(i => contract.ads(i));
+      for await (const [i, ad] of ads.entries()) {
+        commit('addAd', toAd(i, await ad));
+      }
 
-    console.info("Loaded", numAds.toNumber(), "ads until block number", blockNumber, "from", activeNetwork);
+      console.info("Contract loaded", state.ads.length, "ads until block number", state.blockNumber, "from", state.activeNetwork);
+    }
+
+    commit('setLoadedNetwork', activeNetwork, blockNumber, blockTimestamp);
   }
 }
 
