@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "core-js": "^3.15.2",
-    "ethers": "^5.4.1",
+    "ethers": "^5.4.2",
     "nuxt": "^2.15.7",
     "vue-draggable-resizable": "^2.3.0"
   },
@@ -22,9 +22,9 @@
     "@openzeppelin/contracts": "^4.2.0",
     "base64-sol": "^1.0.1",
     "chai": "^4.3.4",
-    "hardhat": "^2.4.3",
+    "hardhat": "^2.5.0",
     "hardhat-gas-reporter": "^1.0.4",
-    "sass": "^1.35.2",
+    "sass": "^1.36.0",
     "sass-loader": "^10.2.0"
   }
 }
