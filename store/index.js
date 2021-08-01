@@ -321,6 +321,8 @@ function eventToAd(state, adEvent) {
 }
 
 function appendAd(state, ad) {
+  if (state.ads[ad.idx] !== undefined) return; // Already exists
+
   // Need to use splice rather than this.ads[i] to make it reactive
   state.ads.splice(ad.idx, 1, ad)
   if (state.accounts[ad.owner]) {
