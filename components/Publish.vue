@@ -85,7 +85,7 @@ input {
         <label>
           <span>NSFW</span>
           <input type="checkbox" v-model="ad.NSFW" />
-          <strong v-if="ad.forcedNSFW">Forced NSFW by moderator</strong>
+          <strong v-if="ad.forceNSFW">Forced NSFW by moderator</strong>
         </label>
         <div>
           <h3>Preview <small>(not published yet)</small></h3>

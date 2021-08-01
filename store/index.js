@@ -11,8 +11,6 @@ export const state = () => {
     adsPixels: 0,
     ownedAds: {},
     nftAds: {},
-    numOwned: 0, // TODO: Make computed based on ownedAds to include NFTs
-    numNSFW: 0,
     pixelsOwned: 0,
     grid: null, // lazy load
     previewAd: null,
@@ -31,6 +29,18 @@ export const strict = false; // 😭 Publish preview mutates ads, and it's too a
 function normalizeAddr(addr) {
   if (!addr) return addr;
   return addr.toLowerCase();
+}
+
+export const computed = {
+  numAds() {
+    return this.$store.state.ads.length;
+  },
+  numOwned() {
+    return Object.keys(this.$store.state.ownedAds).length;
+  },
+  numNSFW() {
+    return this.$store.state.ads.filter(ad => ad.NSFW).length;
+  },
 }
 
 export const mutations = {
@@ -75,7 +85,6 @@ export const mutations = {
     state.ownedAds = {};
     state.nftAds = {};
     state.numOwned = 0;
-    state.numNSFW = 0;
     state.pixelsOwned = 0;
     state.loadedBlockNumber = 0;
     state.networkConfig = networkConfig;
@@ -87,76 +96,26 @@ export const mutations = {
   setAdsLength(state, len) {
     state.ads.length = len;
   },
-  addAd(state, ad) {
-    if (ad.owner !== undefined) {
-      ad.owner = normalizeAddr(ad.owner);
-    }
-
-    if (ad.idx > state.ads.length) {
-      state.ads.length = ad.idx;
-    }
-    const existingAd = state.ads[ad.idx];
-    if (existingAd !== undefined && existingAd.width !== undefined) {
-      // Already counted, update values
-      if (existingAd.NSFW && !ad.NSFW) {
-        // Toggled from nsfw to not-nsfw
-        state.numNSFW -= 1;
-      }
-      state.ads[ad.idx] = Object.assign(existingAd, ad);
-      return;
-    }
-
-    // Is it a buy-only ad? Prefill default values
-    if (ad.link === undefined) {
-      ad = Object.assign({
-        link: "",
-        image: "",
-        title: "",
-        NSFW: false,
-        forcedNSFW: false
-      }, ad);
-    }
-
-    // Not counted yet
-    if (ad.NSFW) {
-      state.numNSFW += 1;
-    }
-
-    // Need to use splice rather than this.ads[i] to make it reactive
-    state.ads.splice(ad.idx, 1, ad)
-    if (state.accounts[ad.owner]) {
-      addAdOwned(state, ad);
-    } else if (ad.owner === state.networkConfig.ketherNFTAddr) {
-      addNFTAd(state, ad);
-    }
-
-    if (ad.width === undefined) {
-      // This is just a publish event, will fill this out when it comes
-      // back with the buy event (race condition)
-      return;
-    }
-
-    state.adsPixels += ad.width * ad.height * 100;
-    if (state.grid !== null) {
-      // If the grid is already cached, update to include new ad.
-
-      // Ad properties might be BigNumbers maybe which don't play well with +'s...
-      // TODO: Fix this in a more general way?
-      const x1 = Number(ad.x);
-      const x2 = x1 + Number(ad.width) - 1;
-      const y1 = Number(ad.y);
-      const y2 = y1 + Number(ad.height) - 1;
-      setBox(state.grid, x1, y1, x2, y2);
+  importAds(state, ads) {
+    // Bulk version of addAd
+    for (const adOrEvent of ads) {
+      const ad = eventToAd(state, adOrEvent)
+      appendAd(state, ad);
     }
   },
+  addAd(state, {idx, owner, x, y, width, height, link="", image="", title="", NSFW=false, forceNSFW=false}) {
+    const ad = eventToAd(state, {idx, owner, x, y, width, height, link, image, title, NSFW, forceNSFW})
+    appendAd(state, ad);
+  },
 
-  setLoadedNetwork(state, network, blockNumber, timestamp) {
+  setLoadedNetwork(state, {network, blockNumber, timestamp}) {
     state.offlineMode = blockNumber === 0;
     state.loadedNetwork = network;
     if (blockNumber !== 0) {
       state.loadedBlockNumber = blockNumber;
       state.loadedBlockTimestamp = timestamp;
     }
+    console.info("Contract loaded", state.ads.length, "ads until block number", blockNumber, "from", network);
   }
 }
 
@@ -196,15 +155,14 @@ export const actions = {
   },
 
   async initState({ commit }) {
-    let s;
     if (process.server) {
       // TODO: Server-side version of fetch
       return;
-    } else {
-      s = await window.fetch('/initState.json').then(res => res.json())
-      console.log('Loaded cached initial state');
     }
+
+    let s = await window.fetch('/initState.json').then(res => res.json())
     s.offlineMode = true;
+    console.log('Loaded cached initial state');
     commit('loadState', s);
   },
 
@@ -228,32 +186,34 @@ export const actions = {
       commit('initGrid');
     }
 
-    if (state.loadedBlockNumber > 0) {
-      console.info("loadAds: Ads already loaded from block number:", state.loadedBlockNumber);
-      // Skip loading and use event filter instead
+    const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
+
+    if (loadFromEvents) {
+      // Skip loading and use event filter instead (does 1 query to eth_logs)
       // TODO: Check if loadedBlockNumber is outside of the provider's log
       // range. If so, we need to fall back to full load or use TheGraph or
       // something.
-      const eventFilter= [ contract.filters.Buy(), contract.filters.Publish()];
-      const events = await contract.queryFilter(eventFilter, state.loadedblockNumber + 10000);
-      console.log("XXX", events);
-      return;
+      const eventFilter= [ contract.filters.Buy(), contract.filters.Publish(), contract.filters.SetAdOwner() ];
+      const events = await contract.queryFilter(eventFilter, state.loadedBlockNumber);
+      commit('importAds', events.map(evt => Object.assign({}, evt.args))); // Clone args and import them
+
+      console.info("Loaded additional", events.length, "events since cached state from block number:", state.loadedBlockNumber);
 
     } else {
-      // Load fresh from the contract
+      // Load fresh from the contract (does N queries to eth_call)
       const numAds = await contract.getAdsLength();
       commit('setAdsLength', numAds);
       const ads = [...Array(numAds.toNumber()).keys()].map(i => contract.ads(i));
       for await (const [i, ad] of ads.entries()) {
         commit('addAd', toAd(i, await ad));
       }
-
-      console.info("Contract loaded", state.ads.length, "ads until block number", state.blockNumber, "from", state.activeNetwork);
     }
 
-    commit('setLoadedNetwork', activeNetwork, blockNumber, blockTimestamp);
+    commit('setLoadedNetwork', {network: activeNetwork, blockNumber: blockNumber, timestamp: blockTimestamp});
   }
 }
+
+//// Helpers
 
 // TODO: Rewrite this into a proper class thing or something, so that there's fewer warnings
 function grid_array2d(w, h) {
@@ -315,6 +275,82 @@ function toAd(i, r) {
     image: r[6] || "",
     title: r[7],
     NSFW: r[8] || r[9],
-    forcedNSFW: r[9],
+    forceNSFW: r[9],
   }
+}
+
+function eventToAd(state, adEvent) {
+  let ad = {
+    idx: adEvent.idx.toNumber !== undefined ? adEvent.idx.toNumber() : adEvent.idx
+  }
+
+  if (adEvent.owner !== undefined) {
+    ad.owner = normalizeAddr(adEvent.owner);
+  }
+  if (adEvent.to !== undefined) { // Convert SetAdOwner event
+    ad.owner = normalizeAddr(adEvent.to);
+  }
+  if (adEvent.x !== undefined) { // Normalize ints for Buy event
+    ad.x = Number(adEvent.x);
+    ad.y = Number(adEvent.y);
+    ad.width = Number(adEvent.width);
+    ad.height = Number(adEvent.height);
+  }
+  if (adEvent.link !== undefined) {
+    ad.link = adEvent.link;
+    ad.image = adEvent.image;
+    ad.title = adEvent.title;
+  }
+  if (adEvent.forceNSFW === true) { // Force NSFW
+    ad.NSFW = true;
+  } else if (adEvent.NSFW !== undefined) {
+    ad.NSFW = adEvent.NSFW;
+  }
+
+  let existingAd = state.ads[ad.idx];
+  if (existingAd !== undefined && existingAd.width !== undefined) {
+    // Already counted, update values
+    return Object.assign(existingAd, ad);
+  }
+
+  // Add defaults to non-existing ad
+  return Object.assign({
+    link: "",
+    image: "",
+    title: "",
+    NSFW: false,
+    forceNSFW: false,
+  }, ad);
+}
+
+function appendAd(state, ad) {
+  // Need to use splice rather than this.ads[i] to make it reactive
+  state.ads.splice(ad.idx, 1, ad)
+  if (state.accounts[ad.owner]) {
+    addAdOwned(state, ad);
+  } else if (ad.owner === state.networkConfig.ketherNFTAddr) {
+    addNFTAd(state, ad);
+  }
+
+  if (ad.width === undefined) {
+    // This is just a publish event, will fill this out when it comes
+    // back with the buy event (race condition)
+    return;
+  }
+
+  // Count pixels
+  state.adsPixels += ad.width * ad.height * 100;
+  if (state.grid !== null) {
+    // If the grid is already cached, update to include new ad.
+
+    // Ad properties might be BigNumbers maybe which don't play well with +'s...
+    // TODO: Fix this in a more general way?
+    const x1 = Number(ad.x);
+    const x2 = x1 + Number(ad.width) - 1;
+    const y1 = Number(ad.y);
+    const y2 = y1 + Number(ad.height) - 1;
+    setBox(state.grid, x1, y1, x2, y2);
+  }
+
+  return state;
 }
