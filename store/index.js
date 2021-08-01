@@ -190,9 +190,6 @@ export const actions = {
 
     if (loadFromEvents) {
       // Skip loading and use event filter instead (does 1 query to eth_logs)
-      // TODO: Check if loadedBlockNumber is outside of the provider's log
-      // range. If so, we need to fall back to full load or use TheGraph or
-      // something.
       const eventFilter= [ contract.filters.Buy(), contract.filters.Publish(), contract.filters.SetAdOwner() ];
       const events = await contract.queryFilter(eventFilter, state.loadedBlockNumber);
       commit('importAds', events.map(evt => Object.assign({}, evt.args))); // Clone args and import them
