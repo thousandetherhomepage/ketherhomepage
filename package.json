@@ -10,9 +10,9 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "core-js": "^3.15.2",
-    "ethers": "^5.4.2",
+    "core-js": "^3.16.0",
     "nuxt": "^2.15.7",
+    "ethers": "^5.4.3",
     "vue-draggable-resizable": "^2.3.0"
   },
   "devDependencies": {
@@ -22,9 +22,10 @@
     "@openzeppelin/contracts": "^4.2.0",
     "base64-sol": "^1.0.1",
     "chai": "^4.3.4",
+    "ethereum-waffle": "^3.4.0",
     "hardhat": "^2.5.0",
     "hardhat-gas-reporter": "^1.0.4",
-    "sass": "^1.36.0",
+    "sass": "^1.37.0",
     "sass-loader": "^10.2.0"
   }
 }

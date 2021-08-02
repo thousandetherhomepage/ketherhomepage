@@ -6,7 +6,7 @@ const pixelsPerCell = ethers.BigNumber.from(100);
 const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
 
 describe('KetherHomepage', function() {
-  let KetherHomagepage;
+  let KetherHomepage;
 
   let owner, withdrawWallet, account1, account2;
   before(async () => {

@@ -1,7 +1,5 @@
 const { expect } = require('chai');
 
-const BN = ethers.BigNumber.from;
-
 const weiPixelPrice = ethers.utils.parseUnits("0.001", "ether");
 const pixelsPerCell = ethers.BigNumber.from(100);
 const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
