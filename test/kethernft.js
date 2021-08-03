@@ -265,8 +265,36 @@ describe('KetherNFT', function() {
     }
   });
 
-  xit("should be recoverable if ownership is transferred without minting", async function() {
-    // TODO: ...
+  it("should be recoverable if ownership is transferred without minting", async function() {
+    const {owner, account1} = accounts;
+
+    // Buy an ad
+    const idx = await buyAd(account1);
+    expect(idx).to.equal(0);
+
+    // One more
+    const idx2 = await buyAd(account1, x=20, y=20);
+    expect(idx2).to.equal(1);
+
+    // Oopsie, transferred the ad to the KetherNFT contract rather than the commitment address (don't do this!)
+    await KH.connect(account1).setAdOwner(idx, KNFT.address);
+    {
+      const [addr,..._] = await KH.ads(idx);
+      expect(addr).to.equal(KNFT.address);
+    }
+
+    // Admin can't transfer non-stuck ads
+    expect(
+      KNFT.connect(owner).adminRecoverTrapped(idx2, await owner.getAddress())
+    ).to.be.revertedWith("KetherNFT: ad not held by contract");
+
+    // Benevolent admin steps in and transfers trapped ad back
+    await KNFT.connect(owner).adminRecoverTrapped(idx, await account1.getAddress());
+
+    {
+      const [addr,..._] = await KH.ads(idx);
+      expect(addr).to.equal(await account1.getAddress());
+    }
   });
 });
 
