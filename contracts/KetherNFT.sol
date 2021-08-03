@@ -61,8 +61,12 @@ contract KetherNFT is ERC721, Ownable {
   }
 
   function _getAdOwner(uint _idx) internal view returns (address) {
-      (address owner,,,,,,,,,) = instance.ads(_idx);
-      return owner;
+    (address owner,,,,,,,,,) = instance.ads(_idx);
+    return owner;
+  }
+
+  function _existsAd(uint _idx) internal view returns (bool) {
+    return _exists(_idx) || _getAdOwner(_idx) != address(0);
   }
 
   /// wrap mints an NFT if the ad unit's ownership has been transferred to the
@@ -91,8 +95,19 @@ contract KetherNFT is ERC721, Ownable {
   function baseURI() public pure returns (string memory) {}
 
   function tokenURI(uint256 tokenId) public view override(ERC721) returns (string memory) {
-    require(_exists(tokenId), "KetherNFT: tokenId does not exist");
+    require(_existsAd(tokenId) , "KetherNFT: tokenId does not exist");
     return renderer.tokenURI(instance, tokenId);
+  }
+
+  function ownerOf(uint256 tokenId) public view virtual override(ERC721) returns (address) {
+    if (_exists(tokenId)) {
+      return ERC721.ownerOf(tokenId);
+    }
+
+    // Fallback to the KetherHomepage contract
+    address owner = _getAdOwner(tokenId);
+    require(owner != address(0), "ERC721: owner query for nonexistent token");
+    return owner;
   }
 
   /// publish is a delegated proxy for KetherHomapage's publish function.
@@ -125,13 +140,12 @@ contract KetherNFT is ERC721, Ownable {
     _safeMint(_msgSender(), idx);
   }
 
-
   /// adminRecoverTrapped allows us to transfer ownership of ads that were
   /// incorrectly transferred to this contract without an NFT being minted.
   /// This should never happen, but we include this recovery function in case
   /// there is a bug in the DApp that somehow falls into this condition.
   /// Note that this function does *not* give admin any control over properly
-  /// minted ads/NFTs.
+  /// minted ads/NFTs. Only "stuck" ones.
   function adminRecoverTrapped(uint _idx, address _to) external onlyOwner {
     require(!_exists(_idx), "KetherNFT: recovery can only be done on unminted ads");
     require(_getAdOwner(_idx) == address(this), "KetherNFT: ad not held by contract");

@@ -164,6 +164,9 @@ describe('KetherNFT', function() {
 
       expect(await KNFT.connect(account2).balanceOf(await account1.getAddress())).to.equal(1);
       expect(await KNFT.connect(account2).tokenURI(idx)).to.not.equal("");
+      expect(
+        KNFT.connect(account2).getApproved(idx)
+      ).to.not.reverted;
     }
 
     await expect(
@@ -180,8 +183,8 @@ describe('KetherNFT', function() {
     // Confirm that the NFT is gone
     expect(await KNFT.connect(account2).balanceOf(await account2.getAddress())).to.equal(0);
     await expect(
-      KNFT.connect(account2).tokenURI(idx)
-    ).to.be.revertedWith("KetherNFT: tokenId does not exist");
+      KNFT.connect(account2).getApproved(idx)
+    ).to.be.revertedWith("ERC721: approved query for nonexistent token");
 
     {
       // Wrap again, from account2 to account2
