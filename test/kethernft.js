@@ -288,6 +288,11 @@ describe('KetherNFT', function() {
       KNFT.connect(owner).adminRecoverTrapped(idx2, await owner.getAddress())
     ).to.be.revertedWith("KetherNFT: ad not held by contract");
 
+    // Rando can't call admin recover
+    expect(
+      KNFT.connect(account1).adminRecoverTrapped(idx, await account1.getAddress())
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
     // Benevolent admin steps in and transfers trapped ad back
     await KNFT.connect(owner).adminRecoverTrapped(idx, await account1.getAddress());
 
