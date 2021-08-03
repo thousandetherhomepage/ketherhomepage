@@ -58,7 +58,7 @@ contract KetherHomepageV2 is IKetherHomepage {
     function buy(uint _x, uint _y, uint _width, uint _height) payable public override returns (uint idx) {
         uint cost = _width * _height * pixelsPerCell * weiPixelPrice;
         require(cost > 0);
-        require(msg.value >= cost);
+        require(msg.value >= cost, "KetherHomepage: insufficient buy value");
 
         // Loop over relevant grid entries
         for(uint i=0; i<_width; i++) {

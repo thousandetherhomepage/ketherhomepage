@@ -121,7 +121,7 @@ contract KetherNFT is ERC721, Ownable {
   ///   _x=5, _y=10, _width=3, _height=3
   /// Represents a 30x30 pixel ad at coordinates (50, 100)
   function buy(uint _x, uint _y, uint _width, uint _height) external payable returns (uint idx) {
-    idx = instance.buy(_x, _y, _width, _height);
+    idx = instance.buy{value: msg.value}(_x, _y, _width, _height);
     _safeMint(_msgSender(), idx);
   }
 

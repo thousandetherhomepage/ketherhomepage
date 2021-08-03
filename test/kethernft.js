@@ -246,7 +246,8 @@ describe('KetherNFT', function() {
     const receipt = await txn.wait();
     const event = receipt.events.pop();
     const [idx] = event.args;
-    await KNFT.connect(account).publish(idx, "link", "image", "title", false);
+
+    await KNFT.connect(account1).publish(idx, "link", "image", "title", false);
 
     {
       const [addr,,,,,link,image,title] = await KH.ads(idx);
