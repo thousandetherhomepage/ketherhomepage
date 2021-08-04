@@ -39,7 +39,7 @@ export default {
         return;
       }
       for (const account of accounts) {
-        this.$store.commit('addAccount', account);
+        this.$store.dispatch('addAccount', account);
       }
       console.log("Loaded accounts:", accounts);
     },

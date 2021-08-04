@@ -31,18 +31,6 @@ function normalizeAddr(addr) {
   return addr.toLowerCase();
 }
 
-export const computed = {
-  numAds() {
-    return this.$store.state.ads.length;
-  },
-  numOwned() {
-    return Object.keys(this.$store.state.ownedAds).length;
-  },
-  numNSFW() {
-    return this.$store.state.ads.filter(ad => ad.NSFW).length;
-  },
-}
-
 export const mutations = {
   loadState(state, loadState) {
     for (const [k, v] of Object.entries(loadState)) {
@@ -62,14 +50,10 @@ export const mutations = {
   },
   addAccount(state, account) {
     account = normalizeAddr(account);
-
-    if (state.activeAccount === '') state.activeAccount = account;
-    if (state.accounts[account]) return;
-    state.accounts[account] = true;
-
     for (let ad of state.ads) {
       if (normalizeAddr(ad.owner) === normalizeAddr(account)) addAdOwned(state, ad);
     }
+    state.ownedAds = Object.assign({}, state.ownedAds);
   },
   updatePreview(state, ad) {
     state.gridVis = true; // Buy button forces grid view
@@ -133,8 +117,16 @@ export const getters = {
       }
     }
     return false;
-  }
-
+  },
+  numAds: state => {
+    return state.ads.length;
+  },
+  numOwned: state => {
+    return Object.keys(state.ownedAds).length;
+  },
+  numNSFW: state => {
+    return state.ads.filter(ad => ad.NSFW).length;
+  },
 }
 
 export const actions = {
@@ -207,6 +199,14 @@ export const actions = {
     }
 
     commit('setLoadedNetwork', {network: activeNetwork, blockNumber: blockNumber, timestamp: blockTimestamp});
+  },
+
+  async addAccount({ commit, state }, account) {
+    account = normalizeAddr(account);
+    if (state.activeAccount === '') commit('setAccount', account);
+    if (state.accounts[account] === true) return; // Already added
+    state.accounts[account] = true;
+    commit('addAccount', account);
   }
 }
 
@@ -247,7 +247,6 @@ function setBox(grid, x1, y1, x2, y2) {
 
 function addAdOwned(state, ad) {
   if (state.ownedAds[ad.idx] === undefined) {
-    state.numOwned += 1
     state.pixelsOwned += ad.width * ad.height * 100;
   }
   state.ownedAds[ad.idx] = ad;

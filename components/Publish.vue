@@ -51,7 +51,7 @@ input {
 
 <template>
   <div id="adPublish">
-    <form v-if="$store.state.numOwned > 0" v-on:submit='publish' v-on:submit.prevent>
+    <form v-if="$store.getters.numOwned > 0" v-on:submit='publish' v-on:submit.prevent>
       <select v-model="ad">
         <option disabled value="">Select ad to edit</option>
         <option v-for="ad of $store.state.ownedAds" :key="ad.idx" v-bind:value="ad">>

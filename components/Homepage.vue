@@ -20,8 +20,8 @@
     <AdGrid v-if="$store.state.gridVis" :provider="provider" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered"></AdGrid>
     <AdList v-else></AdList>
 
-    <div class="edit" v-if="$store.state.numOwned > 0">
-      {{$store.state.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button>
+    <div class="edit" v-if="$store.getters.numOwned > 0">
+      {{$store.getters.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button>
     </div>
     <Publish v-if="showPublish" :provider="provider" :contract="contract" :showNSFW="showNSFW"></Publish>
   </div>
