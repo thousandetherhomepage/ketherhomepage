@@ -39,7 +39,7 @@ function adStyle(ad, blank) {
   return s;
 }
 
-function blacklist(link) {
+function disallow(link) {
   // For now we are blacklisting for XSS. This is wrong, but we're in the process of building a whitelist that includes the interesting usecases we'd like to support (i.e. magnet links)
   // See https://github.com/thousandetherhomepage/ketherhomepage/issues/7 for more
   let sanitized = link.trim().toLowerCase();
@@ -49,6 +49,8 @@ function blacklist(link) {
     return false;
   }
 }
+
+const REPLACE_BROKEN_IMAGES = true;
 
 export default {
   props: ["ad", "showNSFW", "skipImage"],
@@ -63,7 +65,7 @@ export default {
     },
     link() {
       if (!this.shown) return "";
-      if (this.ad.link && blacklist(this.ad.link)) return "";
+      if (this.ad.link && disallow(this.ad.link)) return "";
       return this.ad.link;
     },
     title() {
@@ -87,6 +89,9 @@ export default {
   methods: {
     placeholder(el) {
       this.blank = true;
+      if (REPLACE_BROKEN_IMAGES) {
+        el.target.src = '/static/placeholder.svg';
+      }
     },
   },
 }
