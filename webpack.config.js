@@ -6,7 +6,7 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   entry: './src/main.js',
   output: {
-    path: path.resolve(__dirname, './build'),
+    path: path.resolve(__dirname, './dist'),
     publicPath: '/',
     filename: 'js/build.js'
   },
@@ -57,7 +57,7 @@ module.exports = {
   devServer: {
     historyApiFallback: true,
     noInfo: true,
-    contentBase: 'build/'
+    contentBase: 'dist/'
   },
   performance: {
     hints: false

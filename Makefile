@@ -10,7 +10,7 @@ run: deps contracts
 	npm run dev
 
 deploy-dapp: build ../thousandetherhomepage.github.io
-	tar -C build -c js css img press faq index.html | tar -C ../thousandetherhomepage.github.io/ -xv
+	tar -C dist -c js css img press faq index.html | tar -C ../thousandetherhomepage.github.io/ -xv
 	cd ../thousandetherhomepage.github.io; git add -v -A; git commit -v -a
 	echo "Push it."
 
@@ -22,9 +22,9 @@ withdraw:
 
 deps: node_modules/
 
-contracts: build/contracts/*
+contracts: dist/contracts/*
 
-build/contracts/%.json: contracts/%.sol
+dist/contracts/%.json: contracts/%.sol
 	npm run truffle-compile
 
 node_modules/: package.json
