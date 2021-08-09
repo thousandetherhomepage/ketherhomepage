@@ -80,7 +80,7 @@ input {
         <label>
           <span>Image</span>
           <input type="text" v-model="ad.image" placeholder="https://...." />
-          <small>URL to PNG image. Can be <code>https://</code>, <code>ipfs://</code>, <code>bzz://</code>, or <code>data:image/png,base64,...</code> encoded.<br />Must be less than 100KB.</small>
+          <small>URL to PNG image. Can be <code>https://</code>, <code>ipfs://</code>, or <code>data:image/png,base64,...</code> encoded.<br />Must be less than 100KB.</small>
         </label>
         <label>
           <span>NSFW</span>
