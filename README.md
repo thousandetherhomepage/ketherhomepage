@@ -2,6 +2,8 @@
 
 > Thousand Ether Homepage
 
+This is Version 1, the 2017 Edition.
+
 ## Build Setup
 
 ``` bash
