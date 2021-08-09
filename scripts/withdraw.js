@@ -1,4 +1,5 @@
-var KetherHomepage = artifacts.require("./KetherHomepage.sol");
+const hre = require("hardhat");
+const ethers = hre.ethers;
 
 const deployed = {
   'rinkeby': {
@@ -11,13 +12,37 @@ const deployed = {
   },
 };
 
-module.exports = function(callback) {
-  const cfg = deployed.mainnet;
-  KetherHomepage
-    .at(cfg.contractAddress)
-    .then(function(contract) {
-      return contract.withdraw({from: cfg.ownerAddress, gas: 84968 })
-    })
-    .then((err, res) => { console.log("success: ", err, res) })
-    .catch(callback)
-};
+deployed['homestead'] = deployed['mainnet']; // Alias for ethers
+
+async function main() {
+  const network = await ethers.provider.getNetwork();
+  const cfg = deployed[network.name];
+
+  if (cfg === undefined) {
+    throw "Unsupported network: "+ network.name;
+  }
+
+  const KH = await ethers.getContractAt("KetherHomepage", cfg.contractAddress);
+  const ketherBalance = await ethers.provider.getBalance(KH.address)
+  console.log("Withdrawing balance from KetherHomepage on network", network.name, "=", ethers.utils.formatUnits(ketherBalance), "ether");
+
+  const [account] = await ethers.getSigners();
+  if (account === undefined) {
+    throw "Signer account not provided, specify ACCOUNT_PRIVATE_KEY";
+  } else if (account.address === cfg.ownerAddress) {
+    throw "Did not acquire signer for owner address: " + cfg.ownerAddress;
+  }
+
+  const txn = await KH.connect(account).withdraw();
+  console.log("Sent withdraw transaction. Waiting for receipt:", tx.hash);
+
+  const receipt = await txn.wait();
+  console.log("Receipt:", receipt);
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });

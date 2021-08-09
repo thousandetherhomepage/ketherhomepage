@@ -1,32 +1,30 @@
-TRUFFLEBIN := ./node_modules/.bin/truffle
-
 build: deps contracts
-	npm run build
+	npx nuxt generate
 
 test: deps contracts
-	npm run truffle-test
+	npx hardhat test
 
 run: deps contracts
 	npm run dev
 
 deploy-dapp: build ../thousandetherhomepage.github.io
-	tar -C build -c js css img press faq index.html | tar -C ../thousandetherhomepage.github.io/ -xv
+	rsync -rv dist/* ../thousandetherhomepage.github.io/
 	cd ../thousandetherhomepage.github.io; git add -v -A; git commit -v -a
 	echo "Push it."
 
 deploy-contract:
-	$(TRUFFLEBIN) migrate -f 2 --network rinkeby --reset
+	npx hardhat run scripts/deployKetherNFT.js --network rinkeby
 
 withdraw:
-	$(TRUFFLEBIN) exec scripts/withdraw.js --network live
+	npx hardhat run scripts/withdraw.js --network mainnet
 
 deps: node_modules/
 
-contracts: build/contracts/*
+contracts: artifacts/contracts/*
 
-build/contracts/%.json: contracts/%.sol
-	npm run truffle-compile
+artifacts/contracts/%: contracts/%.sol
+	npx hardhat compile
 
-node_modules/: package.json
+node_modules/: package.json package-lock.json
 	npm install
 	touch node_modules/
