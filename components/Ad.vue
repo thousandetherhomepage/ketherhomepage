@@ -90,7 +90,8 @@ export default {
     placeholder(el) {
       this.blank = true;
       if (REPLACE_BROKEN_IMAGES) {
-        el.target.src = '/static/placeholder.svg';
+        el.target.setAttribute("x-original-src", this.ad.image);
+        el.target.src = '/static/broken-image.svg';
       }
     },
   },
