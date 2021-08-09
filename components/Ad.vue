@@ -50,7 +50,7 @@ function disallow(link) {
   }
 }
 
-const REPLACE_BROKEN_IMAGES = true;
+const REPLACE_BROKEN_IMAGES = "/broken-image.png"; // Alternative: "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
 
 export default {
   props: ["ad", "showNSFW", "skipImage"],
@@ -88,10 +88,12 @@ export default {
   },
   methods: {
     placeholder(el) {
+      // Replace broken images unless they have titles which render inline.
+      if (this.blank === true) return;
       this.blank = true;
       if (REPLACE_BROKEN_IMAGES) {
         el.target.setAttribute("x-original-src", this.ad.image);
-        el.target.src = '/static/broken-image.svg';
+        el.target.src = REPLACE_BROKEN_IMAGES
       }
     },
   },
