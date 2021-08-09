@@ -32,4 +32,5 @@ export const deployConfig = {
         },
     },
 };
+deployConfig.mainnet = deployConfig.homestead;
 export const defaultNetwork = "homestead";
