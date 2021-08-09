@@ -55,7 +55,7 @@ input {
       <select v-model="ad">
         <option disabled value="">Select ad to edit</option>
         <option v-for="ad of $store.state.ownedAds" :key="ad.idx" v-bind:value="ad">>
-          {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ ad.link || "(no link)" }}
+          {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
         </option>
       </select>
       <div v-if="ad" class="editAd">
