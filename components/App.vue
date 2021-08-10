@@ -11,7 +11,11 @@
       :prerendered="prerendered"
     ></Homepage>
     <BuyButton :x="20" :y="940" />
-    <ConnectWallet :networkConfig="networkConfig" @wallet-connect="connectEthereum" />
+    
+    <LazyConnectWallet v-if="walletConnect" :networkConfig="networkConfig" @wallet-connect="connectEthereum" @wallet-disconnect="walletConnect = false"/>
+    <button @click="walletConnect = true" v-if="!$store.state.activeAccount">Connect Wallet</button>
+    <div v-else>Active Account: <strong>{{$store.state.activeAccount}}</strong></div>
+
     <div class="info">
       <p>✅ Loaded {{$store.state.ads.length}} ads as of block {{$store.state.loadedBlockNumber}} ({{timeSinceLoaded}})</p>
 
@@ -93,6 +97,7 @@ export default {
       isReadOnly: false,
       showNSFW: false,
       prerendered: null,
+      walletConnect: false,
     };
   },
   computed: {

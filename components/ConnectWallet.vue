@@ -1,8 +1,4 @@
 <template>
-  <div class="connect-wallet">
-    <button @click="connect" v-if="!$store.state.activeAccount">Connect Wallet</button>
-    <span v-else>Active Account: <strong>{{$store.state.activeAccount}}</strong></span>
-  </div>
 </template>
 
 <style lang="scss">
@@ -16,7 +12,7 @@
 import { ethers } from "ethers";
 
 import Web3Modal from "web3modal";
-import WalletConnectProvider from "@walletconnect/web3-provider"
+import WalletConnectProvider from "@walletconnect/web3-provider";
 
 export default {
   props: ["networkConfig"],
@@ -49,7 +45,13 @@ export default {
           }
         },
       });
-      let web3Provider = await web3Modal.connect();
+      try {
+        let web3Provider = await web3Modal.connect();
+      } catch(err) {
+        console.error("web3Modal failed", err);
+        this.$emit('wallet-disconnect');
+        return;
+      }
 
       const provider = new ethers.providers.Web3Provider(web3Provider);
       const accounts = await provider.listAccounts();
@@ -61,6 +63,9 @@ export default {
 
       this.$emit('wallet-connect', web3Provider);
     },
+  },
+  async fetch() {
+    await this.connect();
   }
 }
 </script>
