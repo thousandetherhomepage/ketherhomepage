@@ -13,7 +13,13 @@
 </style>
 
 <script>
+import { ethers } from "ethers";
+
+import Web3Modal from "web3modal";
+import WalletConnectProvider from "@walletconnect/web3-provider"
+
 export default {
+  props: ["networkConfig"],
   methods: {
     async requestAccounts() {
       if (process.server || window.ethereum === undefined) return [];
@@ -33,15 +39,27 @@ export default {
       }
     },
     async connect() {
-      const accounts = await this.requestAccounts();
-      if (!accounts) {
-        console.log("Failed to connect wallet");
-        return;
-      }
+      const web3Modal = new Web3Modal({
+        providerOptions: {
+          walletconnect: {
+            package: WalletConnectProvider,
+            options: {
+              infuraId: this.networkConfig.web3Fallback.split('/').pop()
+            }
+          }
+        },
+      });
+      let web3Provider = await web3Modal.connect();
+
+      const provider = new ethers.providers.Web3Provider(web3Provider);
+      const accounts = await provider.listAccounts();
+
       for (const account of accounts) {
         this.$store.dispatch('addAccount', account);
       }
       console.log("Loaded accounts:", accounts);
+
+      this.$emit('wallet-connect', web3Provider);
     },
   }
 }

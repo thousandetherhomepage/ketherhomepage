@@ -10,10 +10,12 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
+    "@walletconnect/web3-provider": "^1.5.4",
     "core-js": "^3.16.0",
-    "nuxt": "^2.15.7",
     "ethers": "^5.4.3",
-    "vue-draggable-resizable": "^2.3.0"
+    "nuxt": "^2.15.7",
+    "vue-draggable-resizable": "^2.3.0",
+    "web3modal": "^1.9.4"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
