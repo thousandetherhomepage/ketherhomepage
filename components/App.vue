@@ -11,7 +11,13 @@
       :prerendered="prerendered"
     ></Homepage>
     <BuyButton :x="20" :y="940" />
-    <ConnectWallet />
+    
+    <LazyConnectWallet v-if="walletConnect" :networkConfig="networkConfig" @wallet-connect="connectEthereum" @wallet-disconnect="walletConnect = false"/>
+    <button @click="walletConnect = true" v-if="!$store.state.activeAccount">
+      {{walletConnect ? "Loading..." : "Connect Wallet" }}
+    </button>
+    <div v-else>Active Account: <strong>{{$store.state.activeAccount}}</strong></div>
+
     <div class="info">
       <p>✅ Loaded {{$store.state.ads.length}} ads as of block {{$store.state.loadedBlockNumber}} ({{timeSinceLoaded}})</p>
 
@@ -56,11 +62,7 @@
           </a>
         </li>
         <li>
-          <a
-            v-if="$store.state.gridVis"
-            v-on:click="$store.commit('setVis', 'list')"
-            >List View</a
-          >
+          <a v-if="$store.state.gridVis" v-on:click="$store.commit('setVis', 'list')">List View</a>
           <a v-else v-on:click="$store.commit('setVis', 'grid')">Grid View</a>
         </li>
         <li v-if="$store.state.numNSFW > 0">
@@ -97,6 +99,7 @@ export default {
       isReadOnly: false,
       showNSFW: false,
       prerendered: null,
+      walletConnect: false,
     };
   },
   computed: {
@@ -110,35 +113,40 @@ export default {
     }
   },
   methods: {
-    async connectEthereum() {
+    async connectEthereum(web3Provider) {
       // We load the ads in nuxtServerInit on the server
       if (process.server) return;
-      if (window.ethereum) {
-        // Using MetaMask or equivalent
-        this.provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-        this.activeNetwork = (await this.provider.getNetwork()).name;
-        this.networkConfig = deployConfig[this.activeNetwork];
-        if (this.networkConfig) {
-          const contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
-          this.setContract(contract);
-          this.listenContractEvents(contract);
-          this.isReadOnly = false;
-        }
 
-        // When the network changes, refresh the page.
-        // see https://docs.ethers.io/v5/concepts/best-practices/#best-practices
-        this.provider.on("network", (newNetwork, oldNetwork) => {
-          // When a Provider makes its initial connection, it emits a "network"
-          // event with a null oldNetwork along with the newNetwork. So, if the
-          // oldNetwork exists, it represents a changing network
-          if (oldNetwork) {
-            window.location.reload();
-          }
-        });
-      } else {
+      if (!web3Provider) {
+        // Using MetaMask or equivalent
+        web3Provider = window.ethereum;
+      }
+      if (!web3Provider) {
         // Use an HTTP proxy
         await this.setReadOnlyNetwork(defaultNetwork);
+        return;
       }
+
+      this.provider = new ethers.providers.Web3Provider(web3Provider, "any");
+      this.activeNetwork = (await this.provider.getNetwork()).name;
+      this.networkConfig = deployConfig[this.activeNetwork];
+      if (this.networkConfig) {
+        const contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
+        this.setContract(contract);
+        this.listenContractEvents(contract);
+        this.isReadOnly = false;
+      }
+
+      // When the network changes, refresh the page.
+        // see https://docs.ethers.io/v5/concepts/best-practices/#best-practices
+      this.provider.on("network", (_, oldNetwork) => {
+        // When a Provider makes its initial connection, it emits a "network"
+        // event with a null oldNetwork along with the newNetwork. So, if the
+        // oldNetwork exists, it represents a changing network
+        if (oldNetwork) {
+          window.location.reload();
+        }
+      });
     },
     async setReadOnlyNetwork(network) {
       const web3Fallback = deployConfig[network].web3Fallback || "http://localhost:8545/";
@@ -174,10 +182,13 @@ export default {
           this.previewLocked = false;
           this.$store.commit('clearPreview');
         }
+
+        console.log("Buy event processed.");
       }.bind(this));
 
       contract.on('Publish', function(idx, link, image, title, NSFW) {
         this.$store.commit('addAd', {idx: idx.toNumber(), link, image, title, NSFW});
+        console.log("Publish event processed.");
       }.bind(this));
     },
   },

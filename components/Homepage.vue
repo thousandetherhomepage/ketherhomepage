@@ -17,13 +17,13 @@
 
 <template>
   <div class="container">
-    <AdGrid v-if="$store.state.gridVis" :provider="provider" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered"></AdGrid>
-    <AdList v-else></AdList>
+    <AdGrid v-if="$store.state.gridVis" :provider="provider" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered" />
+    <LazyAdList v-else />
 
     <div class="edit" v-if="$store.getters.numOwned > 0">
       {{$store.getters.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button>
     </div>
-    <Publish v-if="showPublish" :provider="provider" :contract="contract" :showNSFW="showNSFW"></Publish>
+    <LazyPublish v-if="showPublish" :provider="provider" :contract="contract" :showNSFW="showNSFW" />
   </div>
 </template>
 
