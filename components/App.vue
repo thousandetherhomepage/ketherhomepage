@@ -13,7 +13,9 @@
     <BuyButton :x="20" :y="940" />
     
     <LazyConnectWallet v-if="walletConnect" :networkConfig="networkConfig" @wallet-connect="connectEthereum" @wallet-disconnect="walletConnect = false"/>
-    <button @click="walletConnect = true" v-if="!$store.state.activeAccount">Connect Wallet</button>
+    <button @click="walletConnect = true" v-if="!$store.state.activeAccount">
+      {{walletConnect ? "Loading..." : "Connect Wallet" }}
+    </button>
     <div v-else>Active Account: <strong>{{$store.state.activeAccount}}</strong></div>
 
     <div class="info">

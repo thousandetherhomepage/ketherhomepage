@@ -45,8 +45,9 @@ export default {
           }
         },
       });
+      let web3Provider;
       try {
-        let web3Provider = await web3Modal.connect();
+        web3Provider = await web3Modal.connect();
       } catch(err) {
         console.error("web3Modal failed", err);
         this.$emit('wallet-disconnect');
