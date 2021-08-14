@@ -28,6 +28,8 @@ interface IKetherHomepage {
         address to
     );
 
+    function getAdsLength() external view returns (uint);
+
     /// ads are stored in an array, the id of an ad is its index in this array.
     function ads(uint _idx) external view returns (address,uint,uint,uint,uint,string memory,string memory,string memory,bool,bool);
 
