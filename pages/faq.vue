@@ -79,14 +79,6 @@
         cache of the (non-NSFW) images).
       </p>
 
-      <h2>What will you do with the money?</h2>
-      <p>
-        Spend a lot of it and donate the rest. We'd like to fund cool projects
-        if we can. Do you have any ideas? Message us on keybase
-        <a href="https://keybase.io/shazow">@shazow</a> and
-        <a href="https://keybase.io/mveytsman">@mveytsman</a>!
-      </p>
-
       <h2>What if I want to advertise my socially-questionable business?</h2>
       <p>
         It’s the wild west out here so we can’t really stop you, but we do ask
