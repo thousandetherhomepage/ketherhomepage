@@ -36,6 +36,15 @@
         immortalized on the Ethereum blockchain.
       </p>
 
+      <h2 id="nft">Is this an NFT?</h2>
+      <p>Not yet! Unfortunately this project predates the ERC-721 specification.</p>
+      <p>
+        We will be releasing a contract that will allow any ad to be
+        converted into a proper NFT through 2 on-chain transactions. <a
+        href="https://github.com/thousandetherhomepage/ketherhomepage/issues/48">Track
+      issue #48</a> for updates.
+      </p>
+
       <h2>Why a Thousand Ether Homepage and not a Million Ether Homepage?</h2>
       <p>
         The bottom line: We want the ad space to sell out. We’re confident we
