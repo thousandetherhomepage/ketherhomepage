@@ -20,6 +20,19 @@
 
       <h2>Is this an ICO?</h2>
       <p>No.</p>
+      
+      <h2 id="nft">Is this an NFT?</h2>
+      <p>
+        Not yet! Unfortunately this project predates the 
+        <a href="https://eips.ethereum.org/EIPS/eip-721">ERC-721</a>
+        specification by about 5 months.
+      </p>
+      <p>
+        We will be releasing a contract that will allow any ad to be
+        converted into a proper NFT through 2 on-chain transactions. <a
+        href="https://github.com/thousandetherhomepage/ketherhomepage/issues/48">Track
+      issue #48</a> for updates.
+      </p>
 
       <h2>What is your goal?</h2>
       <p>
@@ -34,15 +47,6 @@
         You get to buy a piece of blockchain history! At 0.001 ETH per pixel you
         can get a display ad and advertise anything you want, forever
         immortalized on the Ethereum blockchain.
-      </p>
-
-      <h2 id="nft">Is this an NFT?</h2>
-      <p>Not yet! Unfortunately this project predates the ERC-721 specification.</p>
-      <p>
-        We will be releasing a contract that will allow any ad to be
-        converted into a proper NFT through 2 on-chain transactions. <a
-        href="https://github.com/thousandetherhomepage/ketherhomepage/issues/48">Track
-      issue #48</a> for updates.
       </p>
 
       <h2>Why a Thousand Ether Homepage and not a Million Ether Homepage?</h2>
