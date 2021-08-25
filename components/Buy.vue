@@ -33,8 +33,11 @@
     <p v-else-if="isAvailable">
       <strong>Slot is available.</strong>
       <button v-on:click="buy" v-bind:disabled="isReadOnly" v-if="this.$store.state.activeAccount">Buy Pixels</button>
+      <strong v-else>Click "Connect Wallet" at the bottom</strong>
+      <!--
       <button v-on:click="checkAccounts" v-else-if="isReadOnly" disabled="disabled">Buy disabled (connect wallet)</button>
       <button v-on:click="checkAccounts" v-else>Connect Wallet to Buy</button>
+      -->
     </p>
     <p v-else>
       Slot is not available.

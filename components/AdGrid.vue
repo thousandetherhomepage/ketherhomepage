@@ -36,6 +36,7 @@
     background: rgba(255, 255, 255, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.9);
     z-index: 5;
+    outline: 20px solid rgba(0,0,0,0.4);
   }
   .previewAd.locked {
     background: #ffcc47;
