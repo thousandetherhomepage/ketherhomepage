@@ -323,7 +323,24 @@ describe('KetherNFT', function() {
 
     const ads = await KNFT.connect(account1).allAds();
     expect(ads).to.to.have.lengthOf(2);
-    // TODO: Test actual contents of the array
+  });
+
+  it("should let us upgrade the renderer", async function() {
+    const {owner, account1} = accounts;
+
+    const KNFTrender2 = await KetherNFTRender.deploy();
+
+    expect(
+      KNFT.connect(account1).adminSetRenderer(KNFTrender2.address)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    await KNFT.connect(owner).adminSetRenderer(KNFTrender2.address);
+
+    await KNFT.connect(owner).adminDisableRenderUpgrade();
+
+    expect(
+      KNFT.connect(owner).adminSetRenderer(KNFTrender.address)
+    ).to.be.revertedWith("KetherNFT: upgrading renderer is disabled");
   });
 });
 

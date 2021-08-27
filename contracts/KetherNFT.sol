@@ -23,7 +23,7 @@ contract KetherNFT is ERC721, Ownable {
 
   /// disableRenderUpgrade is whether we can still upgrade the tokenURI renderer.
   /// Once it is set it cannot be unset.
-  // TODO: bool disableRenderUpgrade = false;
+  bool disableRenderUpgrade = false;
 
   ITokenRenderer public renderer;
 
@@ -163,8 +163,11 @@ contract KetherNFT is ERC721, Ownable {
   }
 
   function adminSetRenderer(address _renderer) external onlyOwner {
+    require(disableRenderUpgrade == false, "KetherNFT: upgrading renderer is disabled");
     renderer = ITokenRenderer(_renderer);
   }
 
-  // TODO: adminDisableRenderUpgrade?
+  function adminDisableRenderUpgrade() external onlyOwner {
+    disableRenderUpgrade = true;
+  }
 }
