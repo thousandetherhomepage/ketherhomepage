@@ -126,11 +126,39 @@ describe('KetherNFT', function() {
 
     {
       const expected = {
-        "name": "Thousand Ether Homepage Ad: 30x40 at [10,20]",
+        "name": "ThousandEtherHomepage Ad #0: 30x40 at [10,20]",
         "description": "This NFT represents an ad unit on thousandetherhomepage.com, the owner of the NFT controls the content of this ad unit.",
         "external_url": "https://thousandetherhomepage.com",
         "image": "omitted for testing", // TODO: Test image elsewhere
-        "properties": {"width": 30, "height": 40},
+        "attributes": [
+          {
+            "trait_type": "X",
+            "value": 10
+          },
+          {
+            "trait_type": "Y",
+            "value": 20
+          },
+          {
+            "trait_type": "Width",
+            "value": 30
+          },
+          {
+            "trait_type": "Height",
+            "value": 40
+          },
+          {
+            "trait_type": "Pixels",
+            "value": 1200
+          },
+          {
+            "trait_type": "NSFW",
+            "value": false
+          },
+          {
+            "trait_type": "Forced NSFW",
+            "value": false
+        }]
       };
       const r = await KNFT.connect(account1).tokenURI(idx);
       const prefix = 'data:application/json;base64';
