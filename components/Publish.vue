@@ -55,7 +55,7 @@ input {
       <select v-model="ad">
         <option disabled value="">Select ad to edit</option>
         <option v-for="ad of $store.state.ownedAds" :key="ad.idx" v-bind:value="ad">>
-          {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
+        #{{ad.idx}} - {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
         </option>
       </select>
       <div v-if="ad" class="editAd">
@@ -68,6 +68,10 @@ input {
           <li><strong>Keep your image size small, under 100KB.</strong> PNG is preferred, but JPG or non-animated GIF is acceptable.</li>
           <li>If your ad breaks any rules, it can be forced to NSFW by the moderators of this contract and then only a moderator can change it back to non-NSFW.</li>
         </ul>
+        <label>
+          <span>Idx</span>
+          <input type="text" disabled :value="ad.idx">
+        </label>
         <label>
           <span>Title</span>
           <input type="text" v-model="ad.title" placeholder="Come visit MyCorp" />
