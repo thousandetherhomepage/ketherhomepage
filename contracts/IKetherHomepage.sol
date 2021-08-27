@@ -53,4 +53,6 @@ interface IKetherHomepage {
     function forceNSFW(uint _idx, bool _NSFW) external;
 
     function withdraw() external;
+
+    function getAdsLength() view external returns (uint);
 }

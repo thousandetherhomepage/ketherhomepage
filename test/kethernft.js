@@ -312,8 +312,18 @@ describe('KetherNFT', function() {
     const idx2 = await buyAd(account1, x=20, y=20);
     expect(idx2).to.equal(1);
 
+    // Wrap one of them
+    const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
+
+    // Set owner to precommitted wrap address
+    await KH.connect(account1).setAdOwner(idx, precomputeAddress);
+
+    // Wrap ad
+    await KNFT.connect(account1).wrap(idx, await account1.getAddress());
+
     const ads = await KNFT.connect(account1).allAds();
-    expect(ads).to.equal(true);
+    expect(ads).to.to.have.lengthOf(2);
+    // TODO: Test actual contents of the array
   });
 });
 

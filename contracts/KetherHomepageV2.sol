@@ -34,7 +34,7 @@ contract KetherHomepageV2 is IKetherHomepage {
     }
 
     /// getAdsLength tells you how many ads there are
-    function getAdsLength() view public returns (uint) {
+    function getAdsLength() view public override returns (uint) {
         return ads.length;
     }
 
