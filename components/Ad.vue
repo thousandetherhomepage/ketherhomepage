@@ -1,5 +1,5 @@
 <template>
-  <a :href="link" target="_blank">
+  <a :href="link" target="_blank" :data-idx="ad.idx">
     <div v-if="skipImage" :style="style" :title="title" :class="classMap"></div>
     <img v-else :src="image" :style="style" :title="title" :class="classMap" @error="placeholder"/>
   </a>
@@ -15,6 +15,8 @@ function gatewayURL(url) {
     url = 'http://swarm-gateways.net/bzz:/' + url.slice(6);
   } else if (url.startsWith('ipfs://')) {
     url = 'https://gateway.ipfs.io/ipfs/' + url.slice(7);
+  } else if (url.startsWith('https://gateway.pinata.cloud/ipfs/')) { // People aren't paying for their pinata bandwidth...
+    url = 'https://gateway.ipfs.io/ipfs/' + url.slice(34);
   }
   return url;
 }
@@ -92,7 +94,7 @@ export default {
       if (this.blank === true) return;
       this.blank = true;
       if (REPLACE_BROKEN_IMAGES) {
-        el.target.setAttribute("x-original-src", this.ad.image);
+        el.target.setAttribute("data-original-src", this.ad.image);
         el.target.src = REPLACE_BROKEN_IMAGES
       }
     },
