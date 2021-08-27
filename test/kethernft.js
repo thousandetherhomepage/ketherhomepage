@@ -301,5 +301,19 @@ describe('KetherNFT', function() {
       expect(addr).to.equal(await account1.getAddress());
     }
   });
+
+  it("it should return all of the ads as a helper", async function() {
+    const {owner, account1} = accounts;
+
+    // Buy an ad
+    const idx = await buyAd(account1);
+
+    // One more
+    const idx2 = await buyAd(account1, x=20, y=20);
+    expect(idx2).to.equal(1);
+
+    const ads = await KNFT.connect(account1).allAds();
+    expect(ads).to.equal(true);
+  });
 });
 

@@ -125,6 +125,14 @@ contract KetherNFT is ERC721, Ownable {
     _safeMint(_msgSender(), idx);
   }
 
+  /// Frontend helpers:
+
+  function allAds() external view returns (IKetherHomepage.Ad[] memory ads_) {
+    // XXX: Need to loop over ads and override the owner to be the NFT owner
+    return instance.ads;
+  }
+
+  /// Admin helpers:
 
   /// adminRecoverTrapped allows us to transfer ownership of ads that were
   /// incorrectly transferred to this contract without an NFT being minted.

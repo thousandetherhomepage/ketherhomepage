@@ -2,6 +2,19 @@
 pragma solidity >=0.8.4;
 
 interface IKetherHomepage {
+    struct Ad {
+        address owner;
+        uint x;
+        uint y;
+        uint width;
+        uint height;
+        string link;
+        string image;
+        string title;
+        bool NSFW;
+        bool forceNSFW;
+    }
+
     /// Buy is emitted when an ad unit is reserved.
     event Buy(
         uint indexed idx,
