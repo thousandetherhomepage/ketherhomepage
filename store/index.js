@@ -330,7 +330,7 @@ function eventToAd(state, adEvent) {
 function appendAd(state, ad) {
   if (state.ads[ad.idx] !== undefined) {
     // Already exists, update
-    this._vm.$set(state, ad.idx, ad); // Force reactive
+    this._vm.$set(state.ads, ad.idx, ad); // Force reactive
     return;
   }
 
