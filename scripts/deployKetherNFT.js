@@ -3,10 +3,10 @@ const ethers = hre.ethers;
 
 const deployed = {
   'rinkeby': {
-    ownerAddress: "0x961Aa96FebeE5465149a0787B03bFa14D8e9033F",
+    ownerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
     ketherHomepageAddress: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
-    ketherNFTRendererAddress: "0xA6fE3123bE665C716F71944705ecC8057E35cd90",
-    ketherNFTAddress: "0xd81620fc592c6DC4104FAa9bec1E1e5F5562d8fd",
+    ketherNFTRendererAddress: "0x8EDA32B19325baC1b6B12c78E97B6FF1ed5a9Cc3",
+    ketherNFTAddress: "0xcba5846735a03ac02af69134Df1aB17f122DD2dD",
   },
   'mainnet': {
     ownerAddress: "0xd534d9f6e61780b824afaa68032a7ec11720ca12",
@@ -34,8 +34,8 @@ async function main() {
   const [account] = await ethers.getSigners();
   if (account === undefined) {
     throw "Signer account not provided, specify ACCOUNT_PRIVATE_KEY";
-  } else if (account.address === cfg.ownerAddress) {
-    throw "Did not acquire signer for owner address: " + cfg.ownerAddress;
+  } else if (account.address !== cfg.ownerAddress) {
+    throw "Did not acquire signer for owner address: " + cfg.ownerAddress + "; got: " + account.address;
   }
   console.log("Starting deploys from address:", account.address);
 
@@ -54,6 +54,8 @@ async function main() {
     console.log("KetherNFTRender already deployed");
   }
 
+  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${cfg["ketherNFTRendererAddress"]}`);
+
   if (cfg["ketherNFTAddress"] === undefined) {
     const KNFT = await KetherNFT.deploy(KH.address, ketherNFTRendererAddress);
     console.log("Deploying KetherNFT to:", KNFT.address);
@@ -63,6 +65,8 @@ async function main() {
   } else {
     console.log("KetherNFT already deployed");
   }
+
+  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${cfg["ketherNFTAddress"]} "${KH.address}" "${ketherNFTRendererAddress}"`);
 }
 
 main()

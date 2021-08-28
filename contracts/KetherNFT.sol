@@ -43,7 +43,7 @@ contract KetherNFT is ERC721, Ownable {
   }
 
   function precompute(uint _idx, address _owner) public view returns (bytes32 salt, address predictedAddress) {
-    salt = sha256(abi.encodePacked(_owner)); // FIXME: This can be more gas-efficient? Also worth salting something random here like block number?
+    salt = sha256(abi.encodePacked(_owner));
 
     bytes memory bytecode = _encodeFlashEscrow(_idx);
 
