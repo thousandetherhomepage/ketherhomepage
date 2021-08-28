@@ -115,7 +115,7 @@ describe('KetherNFT', function() {
   });
 
   it("should generate tokenURI based on wrapped ad", async function() {
-    const {account1, account2} = accounts;
+    const {owner, account1, account2} = accounts;
     const idx = await buyAd(account1, 1, 2, 3, 4);
     const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
 
@@ -123,6 +123,8 @@ describe('KetherNFT', function() {
     await KH.connect(account1).setAdOwner(idx, precomputeAddress);
 
     await KNFT.connect(account1).wrap(idx, await account1.getAddress());
+
+    await KH.connect(owner).forceNSFW(idx, true);
 
     {
       const expected = {
@@ -153,11 +155,11 @@ describe('KetherNFT', function() {
           },
           {
             "trait_type": "NSFW",
-            "value": false
+            "value": true
           },
           {
             "trait_type": "Forced NSFW",
-            "value": false
+            "value": true
         }]
       };
       const r = await KNFT.connect(account1).tokenURI(idx);
@@ -174,6 +176,7 @@ describe('KetherNFT', function() {
         throw e;
       }
       expect(parsed['image']).to.have.string('data:image/svg+xml;base64,');
+      //console.log(parsed['image']);
 
       parsed['image'] = expected['image'];
       expect(parsed).to.deep.equal(expected);
