@@ -10,14 +10,15 @@
 
 <script>
 function gatewayURL(url) {
-  if (!url) return "";
-  if (url.startsWith('bzz://')) {
+  const u = url.trim().toLowerCase();
+  if (!u) return "";
+  if (u.startsWith('bzz://')) {
     url = 'http://swarm-gateways.net/bzz:/' + url.slice(6);
-  } else if (url.startsWith('ipfs://')) {
+  } else if (u.startsWith('ipfs://')) {
     url = 'https://gateway.ipfs.io/ipfs/' + url.slice(7);
-  } else if (url.startsWith('https://gateway.pinata.cloud/ipfs/')) { // People aren't paying for their pinata bandwidth...
+  } else if (u.startsWith('https://gateway.pinata.cloud/ipfs/')) { // People aren't paying for their pinata bandwidth...
     url = 'https://gateway.ipfs.io/ipfs/' + url.slice(34);
-  } else if (url.startsWith('file:')) { // Disallowed by our CSP, but block it here too.
+  } else if (u.startsWith('file:')) { // Disallowed by our CSP, but block it here too.
     return "";
   }
   return url;
@@ -79,14 +80,13 @@ export default {
     },
     image() {
       if (!this.shown) return "";
-      if (this.ad.title) {
-        // Always use the given image if there is a title, even if broken
-        return gatewayURL(this.ad.image);
-      }
-      if (this.ad.image == this.brokenImage) {
+      const imageSrc = gatewayURL(this.ad.image);
+      if (imageSrc === "" || imageSrc == this.brokenImage) {
+        this.blank = true;
+        if (this.ad.title) return imageSrc; // Blank image so it's transparent but title renders
         return REPLACE_BROKEN_IMAGES;
       }
-      return gatewayURL(this.ad.image);
+      return imageSrc;
     },
     style() {
       return adStyle(this.ad, this.blank);
