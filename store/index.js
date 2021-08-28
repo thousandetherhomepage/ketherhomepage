@@ -84,12 +84,12 @@ export const mutations = {
     // Bulk version of addAd
     for (const adOrEvent of ads) {
       const ad = eventToAd(state, adOrEvent)
-      appendAd(state, ad);
+      appendAd.call(this, state, ad);
     }
   },
   addAd(state, {idx, owner, x, y, width, height, link="", image="", title="", NSFW=false, forceNSFW=false}) {
     const ad = eventToAd(state, {idx, owner, x, y, width, height, link, image, title, NSFW, forceNSFW})
-    appendAd(state, ad);
+    appendAd.call(this, state, ad);
   },
 
   setLoadedNetwork(state, {network, blockNumber, timestamp}) {
@@ -105,6 +105,7 @@ export const mutations = {
 
 export const getters = {
   isColliding: (state) => (x1, y1, x2, y2) => {
+    if (isSoldOut(state)) return true; // Sold out, always colliding
     if (state.grid === null) {
       throw "state.grid not initialized"
     }
@@ -127,6 +128,9 @@ export const getters = {
   numNSFW: state => {
     return state.ads.filter(ad => ad.NSFW).length;
   },
+  isSoldOut: state => {
+    return isSoldOut(state);
+  }
 }
 
 export const actions = {
@@ -154,11 +158,18 @@ export const actions = {
 
     let s = await window.fetch('/initState.json').then(res => res.json())
     s.offlineMode = true;
-    console.log('Loaded cached initial state');
+    if (isSoldOut(s)) s.grid = null; // Skip grid
     commit('loadState', s);
+    console.log('Loaded cached initial state');
   },
 
-  async loadAds({ commit, state }, contract) {
+  async reset({ commit, state }, activeNetwork) {
+    console.info("Active network mismatch, resetting:", state.loadedNetwork, "!=", activeNetwork);
+    commit('clearAds', deployConfig[activeNetwork]);
+    commit('initGrid');
+  },
+
+  async loadAds({ commit, state, dispatch }, contract) {
     // TODO: we can optimize this by only loading from a blockNumber
     let activeNetwork;
     let latestBlock = {number: 0, timestamp: 0};
@@ -173,9 +184,7 @@ export const actions = {
     const blockTimestamp = latestBlock.timestamp;
 
     if (state.loadedNetwork !== activeNetwork) {
-      console.info("Active network mismatch, resetting:", state.loadedNetwork, "!=", activeNetwork);
-      commit('clearAds', deployConfig[activeNetwork]);
-      commit('initGrid');
+      await dispatch('reset', activeNetwork);
     }
 
     const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
@@ -187,7 +196,6 @@ export const actions = {
       commit('importAds', events.map(evt => Object.assign({}, evt.args))); // Clone args and import them
 
       console.info("Loaded additional", events.length, "events since cached state from block number:", state.loadedBlockNumber);
-
     } else {
       // Load fresh from the contract (does N queries to eth_call)
       const numAds = await contract.getAdsLength();
@@ -320,10 +328,14 @@ function eventToAd(state, adEvent) {
 }
 
 function appendAd(state, ad) {
-  if (state.ads[ad.idx] !== undefined) return; // Already exists
+  if (state.ads[ad.idx] !== undefined) {
+    // Already exists, update
+    this._vm.$set(state, ad.idx, ad); // Force reactive
+    return;
+  }
 
   // Need to use splice rather than this.ads[i] to make it reactive
-  state.ads.splice(ad.idx, 1, ad)
+  state.ads.splice(ad.idx, 1, ad);
   if (state.accounts[ad.owner]) {
     addAdOwned(state, ad);
   } else if (ad.owner === state.networkConfig.ketherNFTAddr) {
@@ -351,4 +363,8 @@ function appendAd(state, ad) {
   }
 
   return state;
+}
+
+function isSoldOut(state) {
+    return state.adsPixels === 1000000;
 }

@@ -1,7 +1,7 @@
 <template>
-  <a :href="link" target="_blank" :data-idx="ad.idx">
+  <a :href="link" target="_blank" :data-idx="ad.idx" :data-image-src="ad.image" :data-broken-img="brokenImage">
     <div v-if="skipImage" :style="style" :title="title" :class="classMap"></div>
-    <img v-else :src="image" :style="style" :title="title" :class="classMap" @error="placeholder"/>
+    <img v-else :src="image" :style="style" :title="title" :class="classMap" @error="setBroken"/>
   </a>
 </template>
 
@@ -17,6 +17,8 @@ function gatewayURL(url) {
     url = 'https://gateway.ipfs.io/ipfs/' + url.slice(7);
   } else if (url.startsWith('https://gateway.pinata.cloud/ipfs/')) { // People aren't paying for their pinata bandwidth...
     url = 'https://gateway.ipfs.io/ipfs/' + url.slice(34);
+  } else if (url.startsWith('file:')) { // Disallowed by our CSP, but block it here too.
+    return "";
   }
   return url;
 }
@@ -45,7 +47,7 @@ function disallow(link) {
   // For now we are blacklisting for XSS. This is wrong, but we're in the process of building a whitelist that includes the interesting usecases we'd like to support (i.e. magnet links)
   // See https://github.com/thousandetherhomepage/ketherhomepage/issues/7 for more
   let sanitized = link.trim().toLowerCase();
-  if (sanitized.startsWith('javascript:') || sanitized.startsWith('data:')) {
+  if (sanitized.startsWith('javascript:') || sanitized.startsWith('data:') || sanitized.startsWith('file:')) {
     return true;
   } else {
     return false;
@@ -59,6 +61,7 @@ export default {
   data: () => {
     return {
       blank: false,
+      brokenImage: "",
     };
   },
   computed: {
@@ -75,7 +78,13 @@ export default {
       return this.ad.title;
     },
     image() {
-      if (!this.shown || this.blank) return "";
+      if (this.ad.title) {
+        // Always use the given image if there is a title, even if broken
+        return gatewayURL(this.ad.image);
+      }
+      if (this.ad.image == this.brokenImage) {
+        return REPLACE_BROKEN_IMAGES;
+      }
       return gatewayURL(this.ad.image);
     },
     style() {
@@ -89,14 +98,8 @@ export default {
     },
   },
   methods: {
-    placeholder(el) {
-      // Replace broken images unless they have titles which render inline.
-      if (this.blank === true) return;
-      this.blank = true;
-      if (REPLACE_BROKEN_IMAGES) {
-        el.target.setAttribute("data-original-src", this.ad.image);
-        el.target.src = REPLACE_BROKEN_IMAGES
-      }
+    setBroken(el) {
+      this.brokenImage = el.target.src;
     },
   },
 }
