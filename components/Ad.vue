@@ -1,5 +1,5 @@
 <template>
-  <a :href="link" target="_blank" :data-idx="ad.idx" :data-image-src="ad.image" :data-broken-img="brokenImage">
+  <a :href="link" target="_blank" :data-idx="ad.idx">
     <div v-if="skipImage" :style="style" :title="title" :class="classMap"></div>
     <img v-else :src="image" :style="style" :title="title" :class="classMap" @error="setBroken"/>
   </a>
@@ -78,6 +78,7 @@ export default {
       return this.ad.title;
     },
     image() {
+      if (!this.shown) return "";
       if (this.ad.title) {
         // Always use the given image if there is a title, even if broken
         return gatewayURL(this.ad.image);
