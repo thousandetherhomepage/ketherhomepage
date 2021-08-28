@@ -86,6 +86,7 @@ export const mutations = {
       const ad = eventToAd(state, adOrEvent)
       appendAd.call(this, state, ad);
     }
+    if (isSoldOut(state)) state.grid = null;
   },
   addAd(state, {idx, owner, x, y, width, height, link="", image="", title="", NSFW=false, forceNSFW=false}) {
     const ad = eventToAd(state, {idx, owner, x, y, width, height, link, image, title, NSFW, forceNSFW})
