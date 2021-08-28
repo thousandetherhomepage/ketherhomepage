@@ -1,7 +1,7 @@
 <template>
   <a :href="link" target="_blank" :data-idx="ad.idx">
     <div v-if="skipImage" :style="style" :title="title" :class="classMap"></div>
-    <img v-else :src="image" :style="style" :title="title" :class="classMap" @error="placeholder"/>
+    <img v-else :src="image" :style="style" :title="title" :class="classMap" @error="setBroken"/>
   </a>
 </template>
 
@@ -10,13 +10,16 @@
 
 <script>
 function gatewayURL(url) {
-  if (!url) return "";
-  if (url.startsWith('bzz://')) {
+  const u = url.trim().toLowerCase();
+  if (!u) return "";
+  if (u.startsWith('bzz://')) {
     url = 'http://swarm-gateways.net/bzz:/' + url.slice(6);
-  } else if (url.startsWith('ipfs://')) {
+  } else if (u.startsWith('ipfs://')) {
     url = 'https://gateway.ipfs.io/ipfs/' + url.slice(7);
-  } else if (url.startsWith('https://gateway.pinata.cloud/ipfs/')) { // People aren't paying for their pinata bandwidth...
+  } else if (u.startsWith('https://gateway.pinata.cloud/ipfs/')) { // People aren't paying for their pinata bandwidth...
     url = 'https://gateway.ipfs.io/ipfs/' + url.slice(34);
+  } else if (u.startsWith('file:')) { // Disallowed by our CSP, but block it here too.
+    return "";
   }
   return url;
 }
@@ -45,7 +48,7 @@ function disallow(link) {
   // For now we are blacklisting for XSS. This is wrong, but we're in the process of building a whitelist that includes the interesting usecases we'd like to support (i.e. magnet links)
   // See https://github.com/thousandetherhomepage/ketherhomepage/issues/7 for more
   let sanitized = link.trim().toLowerCase();
-  if (sanitized.startsWith('javascript:') || sanitized.startsWith('data:')) {
+  if (sanitized.startsWith('javascript:') || sanitized.startsWith('data:') || sanitized.startsWith('file:')) {
     return true;
   } else {
     return false;
@@ -59,6 +62,7 @@ export default {
   data: () => {
     return {
       blank: false,
+      brokenImage: "",
     };
   },
   computed: {
@@ -75,8 +79,14 @@ export default {
       return this.ad.title;
     },
     image() {
-      if (!this.shown || this.blank) return "";
-      return gatewayURL(this.ad.image);
+      if (!this.shown) return "";
+      const imageSrc = gatewayURL(this.ad.image);
+      if (imageSrc === "" || imageSrc == this.brokenImage) {
+        this.blank = true;
+        if (this.ad.title) return imageSrc; // Blank image so it's transparent but title renders
+        return REPLACE_BROKEN_IMAGES;
+      }
+      return imageSrc;
     },
     style() {
       return adStyle(this.ad, this.blank);
@@ -89,14 +99,8 @@ export default {
     },
   },
   methods: {
-    placeholder(el) {
-      // Replace broken images unless they have titles which render inline.
-      if (this.blank === true) return;
-      this.blank = true;
-      if (REPLACE_BROKEN_IMAGES) {
-        el.target.setAttribute("data-original-src", this.ad.image);
-        el.target.src = REPLACE_BROKEN_IMAGES
-      }
+    setBroken(el) {
+      this.brokenImage = el.target.src;
     },
   },
 }

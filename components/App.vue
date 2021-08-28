@@ -157,7 +157,10 @@ export default {
       this.setContract(contract);
       this.isReadOnly = true;
     },
-    setContract(contract) {
+    async setContract(contract) {
+      if (this.activeNetwork == 'homestead') {
+        await this.$store.dispatch('initState');
+      }
       if (this.contract) {
         this.contract.removeAllListeners();
       }
@@ -166,7 +169,7 @@ export default {
         console.error("Contract subscription error:", err);
       });
 
-      this.$store.dispatch('loadAds', contract);
+      await this.$store.dispatch('loadAds', contract);
     },
     listenContractEvents(contract) {
       // These listeners will long-poll the provider every block, so probably
@@ -193,7 +196,6 @@ export default {
     },
   },
   async created() {
-    this.$store.dispatch('initState');
     await this.connectEthereum();
   },
 
