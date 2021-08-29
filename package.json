@@ -12,7 +12,7 @@
   "dependencies": {
     "@walletconnect/web3-provider": "^1.5.4",
     "core-js": "^3.16.0",
-    "ethers": "^5.4.3",
+    "ethers": "^5.4.6",
     "nuxt": "^2.15.8",
     "vue-draggable-resizable": "^2.3.0",
     "web3modal": "^1.9.4"
@@ -27,7 +27,7 @@
     "ethereum-waffle": "^3.4.0",
     "hardhat": "^2.5.0",
     "hardhat-gas-reporter": "^1.0.4",
-    "sass": "^1.37.0",
+    "sass": "^1.38.2",
     "sass-loader": "^10.2.0"
   }
 }
