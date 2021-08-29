@@ -28,7 +28,7 @@ contract KetherNFTRender is ITokenRenderer {
     return Base64.encode(bytes(abi.encodePacked(
       '<svg width="1000" height="1050" viewBox="0 0 1000 1050" xmlns="http://www.w3.org/2000/svg" style="background:#4a90e2">',
         '<text x="5" y="34" style="font:30px sans-serif;fill:rgba(255,255,255,0.8);">The Thousand Ether Homepage</text>',
-        '<svg width="1000" height="1000" viewBox="0 -50 1000 1000" fill="white">',
+        '<svg width="1000" height="1000" viewBox="0 -50 1050 1050" fill="white">',
           '<rect width="100%" height="100%" fill="white"></rect>',
           '<rect x="',x.toString(),'" y="',y.toString(),'" width="',width.toString(),'" height="',height.toString(),'" fill="rgb(66,185,131)"></rect>',
         '</svg>',
