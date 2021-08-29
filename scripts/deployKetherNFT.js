@@ -54,11 +54,13 @@ async function main() {
     console.log("KetherNFTRender already deployed");
   }
 
-  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${cfg["ketherNFTRendererAddress"]}`);
+  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${ketherNFTRendererAddress}`);
 
-  if (cfg["ketherNFTAddress"] === undefined) {
+  let ketherNFTAddress = cfg["ketherNFTAddress"];
+  if (ketherNFTAddress === undefined) {
     const KNFT = await KetherNFT.deploy(KH.address, ketherNFTRendererAddress);
     console.log("Deploying KetherNFT to:", KNFT.address);
+    ketherNFTAddress = KNFT.address;
 
     const tx = await KNFT.deployTransaction.wait();
     console.log(" -> Mined with", tx.gasUsed.toString(), "gas");
@@ -66,7 +68,7 @@ async function main() {
     console.log("KetherNFT already deployed");
   }
 
-  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${cfg["ketherNFTAddress"]} "${KH.address}" "${ketherNFTRendererAddress}"`);
+  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${ketherNFTAddress} "${KH.address}" "${ketherNFTRendererAddress}"`);
 }
 
 main()
