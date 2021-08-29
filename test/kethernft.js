@@ -388,15 +388,9 @@ describe('KetherNFT', function() {
     expect(idx).to.equal(0);
 
     // Precommit to the *wrong address*: the KNFT address (don't do this!)
-    const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, KNFT.address);
-
-    // Oopsie, transferred to the naughty precomputed address
-    await KH.connect(account1).setAdOwner(idx, precomputeAddress);
-
-    // Welp, nothing left to do but mint it
-    await KNFT.connect(account1).wrap(idx, KNFT.address);
-
-    expect(await KNFT.connect(account1).ownerOf(idx)).to.equal(await account1.getAddress()); // What kind of wizardry is this!? Phew.
+    expect(
+      KNFT.connect(account1).precompute(idx, KNFT.address)
+    ).to.be.revertedWith("KetherNFT: invalid _owner");
   });
 
   xit("it should return all of the ads as a helper", async function() {

@@ -46,6 +46,8 @@ contract KetherNFT is ERC721Enumerable, Ownable {
   /// of the ad, or a different address. After the ad is transfered to the precomputed address, `wrap` has
   /// to be called with the same `_owner` to complete minting the NFT.
   function precompute(uint _idx, address _owner) public view returns (bytes32 salt, address predictedAddress) {
+    require(_owner != address(this) && _owner != address(0), "KetherNFT: invalid _owner");
+
     salt = sha256(abi.encodePacked(_owner));
 
     bytes memory bytecode = _encodeFlashEscrow(_idx);
@@ -78,11 +80,6 @@ contract KetherNFT is ERC721Enumerable, Ownable {
     // FlashEscrow completes the transfer escrow atomically and self-destructs.
     new FlashEscrow{salt: salt}(address(instance), _encodeFlashEscrowPayload(_idx));
     require(_getAdOwner(_idx) == address(this), "KetherNFT: owner needs to be KetherNFT after wrap");
-
-    if (_owner == address(this)) {
-      // Someone tried wrapping to KetherNFT (by accident?), redirect it back to them
-      _owner = _msgSender();
-    }
 
     _mint(_owner, _idx);
   }
