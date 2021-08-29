@@ -50,8 +50,10 @@ export const mutations = {
   },
   addAccount(state, account) {
     account = normalizeAddr(account);
-    for (let ad of state.ads) {
-      if (normalizeAddr(ad.owner) === normalizeAddr(account)) addAdOwned(state, ad);
+    for (const ad of state.ads) {
+      if (normalizeAddr(ad.owner) === account) {
+        addAdOwned(state, ad);
+      }
     }
     state.ownedAds = Object.assign({}, state.ownedAds);
   },
@@ -68,7 +70,6 @@ export const mutations = {
     state.adsPixels = 0;
     state.ownedAds = {};
     state.nftAds = {};
-    state.numOwned = 0;
     state.pixelsOwned = 0;
     state.loadedBlockNumber = 0;
     state.networkConfig = networkConfig;
@@ -157,6 +158,8 @@ export const actions = {
       return;
     }
 
+    return; // FIXME: Disabled for now. Need to fix activeAccount issue.
+
     let s = await window.fetch('/initState.json').then(res => res.json())
     s.offlineMode = true;
     if (isSoldOut(s)) s.grid = null; // Skip grid
@@ -212,7 +215,7 @@ export const actions = {
 
   async addAccount({ commit, state }, account) {
     account = normalizeAddr(account);
-    if (state.activeAccount === '') commit('setAccount', account);
+    if (!state.activeAccount) commit('setAccount', account);
     if (state.accounts[account] === true) return; // Already added
     state.accounts[account] = true;
     commit('addAccount', account);
