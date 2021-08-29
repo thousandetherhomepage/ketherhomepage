@@ -42,6 +42,9 @@ contract KetherNFT is ERC721, Ownable {
     return abi.encodeWithSignature("setAdOwner(uint256,address)", _idx, address(this));
   }
 
+  /// `precompute` generates a commitment address for minting the NFT to `_owner`. This can be the original owner
+  /// of the ad, or a different address. After the ad is transfered to the precomputed address, `wrap` has
+  /// to be called with the same `_owner` to complete minting the NFT.
   function precompute(uint _idx, address _owner) public view returns (bytes32 salt, address predictedAddress) {
     salt = sha256(abi.encodePacked(_owner));
 
@@ -95,7 +98,7 @@ contract KetherNFT is ERC721, Ownable {
     return renderer.tokenURI(instance, tokenId);
   }
 
-  /// publish is a delegated proxy for KetherHomapage's publish function.
+  /// publish is a proxy for KetherHomapage's publish function.
   ///
   /// Publish allows for setting the link, image, and NSFW status for the ad
   /// unit that is identified by the idx which was returned during the buy step.
@@ -113,7 +116,7 @@ contract KetherNFT is ERC721, Ownable {
     instance.publish(_idx, _link, _image, _title, _NSFW);
   }
 
-  /// buy is a delegated proxy for KetherHomepage's buy function. Calling it allows
+  /// buy is a proxy for KetherHomepage's buy function. Calling it allows
   /// an ad to be purchased directly as an NFT without needing to wrap it later.
   ///
   /// Ads must be purchased in 10x10 pixel blocks.
@@ -123,6 +126,8 @@ contract KetherNFT is ERC721, Ownable {
   function buy(uint _x, uint _y, uint _width, uint _height) external payable returns (uint idx) {
     idx = instance.buy{value: msg.value}(_x, _y, _width, _height);
     _safeMint(_msgSender(), idx);
+
+    return idx;
   }
 
   /// Admin helpers:
