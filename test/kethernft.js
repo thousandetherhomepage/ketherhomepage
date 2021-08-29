@@ -154,12 +154,12 @@ describe('KetherNFT', function() {
             "value": 1200
           },
           {
-            "trait_type": "NSFW",
-            "value": true
+            "trait_type": "Filter",
+            "value": "NSFW"
           },
           {
-            "trait_type": "Forced NSFW",
-            "value": true
+            "trait_type": "Admin Override",
+            "value": "Forced NSFW"
         }]
       };
       const r = await KNFT.connect(account1).tokenURI(idx);

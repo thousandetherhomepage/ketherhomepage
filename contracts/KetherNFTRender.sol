@@ -38,6 +38,18 @@ contract KetherNFTRender is ITokenRenderer {
   // Thanks to @townsendsam for giving us this reference https://gist.github.com/townsendsam/df2c420accb5ae786e856c97d13a2de6
 
   function _generateAttributes(uint x, uint y, uint width, uint height, bool NSFW, bool forceNSFW) internal pure returns (string memory) {
+    string memory filter = '';
+
+    if (NSFW || forceNSFW) {
+      filter = ',{"trait_type": "Filter", "value": "NSFW"}';
+    }
+
+    string memory adminOverride = '';
+
+    if (forceNSFW) {
+      adminOverride = ',{"trait_type": "Admin Override", "value": "Forced NSFW"}';
+    }
+
     return string(abi.encodePacked(
       '[',
          '{',
@@ -59,15 +71,9 @@ contract KetherNFTRender is ITokenRenderer {
           '{',
               '"trait_type": "Pixels",',
               '"value": ', (height * width).toString(),
-          '},',
-          '{',
-              '"trait_type": "NSFW",',
-              '"value": ', _boolToString(NSFW || forceNSFW),
-          '},',
-          '{',
-              '"trait_type": "Forced NSFW",',
-              '"value": ', _boolToString(forceNSFW),
           '}',
+          filter,
+          adminOverride,
       ']'
     ));
   }
