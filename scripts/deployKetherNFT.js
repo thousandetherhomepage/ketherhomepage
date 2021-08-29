@@ -5,7 +5,7 @@ const deployed = {
   'rinkeby': {
     ownerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
     ketherHomepageAddress: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
-    ketherNFTRendererAddress: "0x8EDA32B19325baC1b6B12c78E97B6FF1ed5a9Cc3",
+    ketherNFTRendererAddress: "0x7cdA37F0d0c0a3e85747c7270721B472171cF39E",
     ketherNFTAddress: "0xcba5846735a03ac02af69134Df1aB17f122DD2dD",
   },
   'mainnet': {
