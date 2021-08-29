@@ -333,7 +333,7 @@ describe('KetherNFT', function() {
     }
   });
 
-  it("it should return all of the ads as a helper", async function() {
+  xit("it should return all of the ads as a helper", async function() {
     const {owner, account1} = accounts;
 
     // Buy an ad

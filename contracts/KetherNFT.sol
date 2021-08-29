@@ -125,29 +125,6 @@ contract KetherNFT is ERC721, Ownable {
     _safeMint(_msgSender(), idx);
   }
 
-  /// Frontend helpers:
-
-  /// allAds is a helper view designed to be called from frontends that want to
-  /// display all of the ads with their correct NFT owners.
-  function allAds() external view returns (IKetherHomepage.Ad[] memory) {
-    // Note: This could live in a separate helper contract.
-    uint len = instance.getAdsLength();
-    IKetherHomepage.Ad[] memory ads_ = new IKetherHomepage.Ad[](len);
-
-    for (uint idx=0; idx<len; idx++) {
-      (address owner, uint x, uint y, uint width, uint height, string memory link, string memory image, string memory title, bool NSFW, bool forceNSFW) = instance.ads(idx);
-
-      // Is it an NFT already?
-      if (_exists(idx)) {
-        // Override owner to be the NFT owner
-        owner = ownerOf(idx);
-      }
-
-      ads_[idx] = IKetherHomepage.Ad(owner, x, y, width, height, link, image, title, NSFW, forceNSFW);
-    }
-    return ads_;
-  }
-
   /// Admin helpers:
 
   /// adminRecoverTrapped allows us to transfer ownership of ads that were
