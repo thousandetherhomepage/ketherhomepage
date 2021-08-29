@@ -123,6 +123,53 @@ describe('KetherNFT', function() {
     await KH.connect(account1).setAdOwner(idx, precomputeAddress);
 
     await KNFT.connect(account1).wrap(idx, await account1.getAddress());
+    {
+      const expected = {
+        "name": "ThousandEtherHomepage Ad #0: 30x40 at [10,20]",
+        "description": "This NFT represents an ad unit on thousandetherhomepage.com, the owner of the NFT controls the content of this ad unit.",
+        "external_url": "https://thousandetherhomepage.com",
+        "image": "omitted for testing", // TODO: Test image elsewhere
+        "attributes": [
+          {
+            "trait_type": "X",
+            "value": 10
+          },
+          {
+            "trait_type": "Y",
+            "value": 20
+          },
+          {
+            "trait_type": "Width",
+            "value": 30
+          },
+          {
+            "trait_type": "Height",
+            "value": 40
+          },
+          {
+            "trait_type": "Pixels",
+            "value": 1200
+          }]
+      };
+      const r = await KNFT.connect(account1).tokenURI(idx);
+      const prefix = 'data:application/json;base64';
+      expect(r).to.to.have.string(prefix);
+
+      const got = Buffer.from(r.slice(prefix.length), 'base64').toString();
+
+      let parsed;
+      try {
+        parsed = JSON.parse(got);
+      } catch (e) {
+        console.log("Failed to parse:", got);
+        throw e;
+      }
+      expect(parsed['image']).to.have.string('data:image/svg+xml;base64,');
+      //console.log(parsed['image']);
+
+      parsed['image'] = expected['image'];
+      expect(parsed).to.deep.equal(expected);
+    }
 
     await KH.connect(owner).forceNSFW(idx, true);
 
