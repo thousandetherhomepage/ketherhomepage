@@ -380,6 +380,25 @@ describe('KetherNFT', function() {
     }
   });
 
+  it("should be recoverable if minted to KetherNFT itself", async function() {
+    const {owner, account1} = accounts;
+
+    // Buy an ad
+    const idx = await buyAd(account1);
+    expect(idx).to.equal(0);
+
+    // Precommit to the *wrong address*: the KNFT address (don't do this!)
+    const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, KNFT.address);
+
+    // Oopsie, transferred to the naughty precomputed address
+    await KH.connect(account1).setAdOwner(idx, precomputeAddress);
+
+    // Welp, nothing left to do but mint it
+    await KNFT.connect(account1).wrap(idx, KNFT.address);
+
+    expect(await KNFT.connect(account1).ownerOf(idx)).to.equal(await account1.getAddress()); // What kind of wizardry is this!? Phew.
+  });
+
   xit("it should return all of the ads as a helper", async function() {
     const {owner, account1} = accounts;
 

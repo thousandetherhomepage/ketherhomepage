@@ -77,9 +77,14 @@ contract KetherNFT is ERC721Enumerable, Ownable {
 
     // FlashEscrow completes the transfer escrow atomically and self-destructs.
     new FlashEscrow{salt: salt}(address(instance), _encodeFlashEscrowPayload(_idx));
-
     require(_getAdOwner(_idx) == address(this), "KetherNFT: owner needs to be KetherNFT after wrap");
-    _safeMint(_owner, _idx);
+
+    if (_owner == address(this)) {
+      // Someone tried wrapping to KetherNFT (by accident?), redirect it back to them
+      _owner = _msgSender();
+    }
+
+    _mint(_owner, _idx);
   }
 
   function unwrap(uint _idx, address _newOwner) external {
