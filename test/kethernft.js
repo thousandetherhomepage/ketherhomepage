@@ -125,7 +125,7 @@ describe('KetherNFT', function() {
     await KNFT.connect(account1).wrap(idx, await account1.getAddress());
     {
       const expected = {
-        "name": "ThousandEtherHomepage Ad #0: 30x40 at [10,20]",
+        "name": "ThousandEtherHomepage #0: 30x40 at [10,20]",
         "description": "This NFT represents an ad unit on thousandetherhomepage.com, the owner of the NFT controls the content of this ad unit.",
         "external_url": "https://thousandetherhomepage.com",
         "image": "omitted for testing", // TODO: Test image elsewhere
