@@ -117,6 +117,14 @@ describe('KetherNFT', function() {
   it("should generate tokenURI based on wrapped ad", async function() {
     const {owner, account1, account2} = accounts;
     const idx = await buyAd(account1, 1, 2, 3, 4);
+
+    await buyAd(account1, x=20, y=20);
+    await buyAd(account1, x=30, y=40);
+    await buyAd(account1, x=1, y=50);
+    await buyAd(account1, x=15, y=50);
+    await buyAd(account1, x=50, y=1);
+    await buyAd(account1, x=30, y=20);
+
     const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
 
     await KH.connect(account1).publish(idx, "link", "image", "title", false);
@@ -175,7 +183,7 @@ describe('KetherNFT', function() {
 
     {
       const expected = {
-        "name": "ThousandEtherHomepage Ad #0: 30x40 at [10,20]",
+        "name": "ThousandEtherHomepage #0: 30x40 at [10,20]",
         "description": "This NFT represents an ad unit on thousandetherhomepage.com, the owner of the NFT controls the content of this ad unit.",
         "external_url": "https://thousandetherhomepage.com",
         "image": "omitted for testing", // TODO: Test image elsewhere
