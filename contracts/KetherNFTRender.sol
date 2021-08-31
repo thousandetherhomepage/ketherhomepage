@@ -20,7 +20,7 @@ contract KetherNFTRender is ITokenRenderer {
 
     bytes memory buf;
     uint idx = tokenId + 1;
-    uint opacity = 4200;
+    uint opacity = 3400;
 
     uint x; uint y; uint width; uint height;
 
@@ -37,13 +37,13 @@ contract KetherNFTRender is ITokenRenderer {
       idx += 1;
     }
 
-    (,x, y, width, height,,,,,) = instance.ads(idx);
+    (,x, y, width, height,,,,,) = instance.ads(tokenId);
 
     return Base64.encode(bytes(abi.encodePacked(
-      '<svg width="1000" height="1050" viewBox="0 0 1000 1050" xmlns="http://www.w3.org/2000/svg" style="background:#4a90e2">',
+      '<svg width="1000" height="1050" viewBox="0 0 1000 1060" xmlns="http://www.w3.org/2000/svg" style="background:#4a90e2">',
         '<text x="5" y="34" style="font:30px sans-serif;fill:rgba(255,255,255,0.8);">The Thousand Ether Homepage</text>',
         '<text x="1000" y="34" style="font:30px sans-serif;fill:rgba(255,255,255,0.8);" text-anchor="end">#', tokenId.toString(),'</text>',
-        '<svg width="1000" height="1000" viewBox="0 -5 105 105" fill="white">',
+        '<svg y="50" width="1000" height="1000" viewBox="0 0 100 100">',
           '<rect width="100%" height="100%" fill="white"></rect>',
           '<rect x="',x.toString(),'" y="',y.toString(),'" width="',width.toString(),'" height="',height.toString(),'" fill="rgb(66,185,131)"></rect>',
           buf,
