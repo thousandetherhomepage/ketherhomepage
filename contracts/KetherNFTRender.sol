@@ -30,7 +30,7 @@ contract KetherNFTRender is ITokenRenderer {
       if (idx == tokenId) continue;
 
       (,x, y, width, height,,,,,) = instance.ads(idx);
-      buf = abi.encodePacked(buf, '<rect x="',x.toString(),'" y="',y.toString(),'" width="',width.toString(),'" height="',height.toString(),'" fill="rgba(42,42,42,0.', opacity.toString() ,')"></rect>');
+      buf = abi.encodePacked(buf, '<rect x="',x.toString(),'" y="',y.toString(),'" width="',width.toString(),'" height="',height.toString(),'" fill="rgba(99,99,99,0.', opacity.toString() ,')"></rect>');
 
       opacity = (opacity * 9) / 8;
       if (opacity == 0) break;
