@@ -1,7 +1,6 @@
 import { ethers } from "ethers";
 
-import { deployConfig, defaultNetwork } from "~/networkConfig";
-import contractJSON from "~/artifacts/contracts/KetherHomepage.sol/KetherHomepage.json";
+import { deployConfig, defaultNetwork, loadContracts } from "~/networkConfig";
 
 export const state = () => {
   return {
@@ -146,10 +145,10 @@ export const actions = {
     const provider = new ethers.providers.StaticJsonRpcProvider(web3Fallback);
     const activeNetwork = (await provider.getNetwork()).name;
     const networkConfig = deployConfig[activeNetwork];
-    const contract = new ethers.Contract(networkConfig.contractAddr, contractJSON.abi, provider);
+    const contracts = loadContracts(networkConfig, provider)
 
     //await dispatch('loadState');
-    await dispatch('loadAds', contract);
+    await dispatch('loadAds', contracts);
   },
 
   async initState({ commit }) {
@@ -173,7 +172,7 @@ export const actions = {
     commit('initGrid');
   },
 
-  async loadAds({ commit, state, dispatch }, contract) {
+  async loadAds({ commit, state, dispatch }, {contract, ketherNFT, ketherView}) {
     // TODO: we can optimize this by only loading from a blockNumber
     let activeNetwork;
     let latestBlock = {number: 0, timestamp: 0};
@@ -191,9 +190,18 @@ export const actions = {
       await dispatch('reset', activeNetwork);
     }
 
+    const loadFromKetherView = activeNetwork == 'rinkeby'; // Only deployed KetherView on rinkeby
     const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
 
-    if (loadFromEvents) {
+    if (loadFromKetherView) {
+      const ads = await ketherView.allAds(contract.address, ketherNFT.address)
+      commit('setAdsLength', ads.length);
+      for (const [i, ad] of ads.entries()) {
+        // TODO: the structure here contains a `wrapped` bool which we can use to power proxying publish to the nft contract and wrapping/unwrapping.
+        commit('addAd', toAd(i, await ad));
+      }
+    }
+    else if (loadFromEvents) {
       // Skip loading and use event filter instead (does 1 query to eth_logs)
       const eventFilter= [ contract.filters.Buy(), contract.filters.Publish(), contract.filters.SetAdOwner() ];
       const events = await contract.queryFilter(eventFilter, state.loadedBlockNumber);

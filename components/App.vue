@@ -11,7 +11,7 @@
       :prerendered="prerendered"
     ></Homepage>
     <BuyButton :x="20" :y="940" />
-    
+
     <LazyConnectWallet v-if="walletConnect" :networkConfig="networkConfig" @wallet-connect="connectEthereum" @wallet-disconnect="walletConnect = false"/>
     <button @click="walletConnect = true" v-if="!$store.state.activeAccount">
       {{walletConnect ? "Loading..." : "Connect Wallet" }}
@@ -80,8 +80,7 @@
 <script>
 import { ethers } from "ethers";
 
-import { defaultNetwork, deployConfig } from '~/networkConfig';
-import contractJSON from "~/artifacts/contracts/KetherHomepage.sol/KetherHomepage.json";
+import { defaultNetwork, deployConfig, loadContracts } from '~/networkConfig';
 
 import Dropdown from "./Dropdown.vue";
 import Homepage from "./Homepage.vue";
@@ -131,8 +130,8 @@ export default {
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
       if (this.networkConfig) {
-        const contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
-        this.setContract(contract);
+        const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
+        this.setContracts(contract, ketherNFT, ketherView);
         this.listenContractEvents(contract);
         this.isReadOnly = false;
       }
@@ -153,14 +152,12 @@ export default {
       this.provider = new ethers.providers.StaticJsonRpcProvider(web3Fallback);
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
-      const contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
-      this.setContract(contract);
+
+      const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
+      this.setContracts(contract, ketherNFT, ketherView);
       this.isReadOnly = true;
     },
-    async setContract(contract) {
-      if (this.activeNetwork == 'homestead') {
-        await this.$store.dispatch('initState');
-      }
+    setContracts(contract, ketherNFT, ketherView) {
       if (this.contract) {
         this.contract.removeAllListeners();
       }
@@ -169,7 +166,7 @@ export default {
         console.error("Contract subscription error:", err);
       });
 
-      await this.$store.dispatch('loadAds', contract);
+      this.$store.dispatch('loadAds', {contract, ketherNFT, ketherView});
     },
     listenContractEvents(contract) {
       // These listeners will long-poll the provider every block, so probably
