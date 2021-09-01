@@ -115,22 +115,49 @@ describe('KetherNFT', function() {
   });
 
   it("should generate tokenURI based on wrapped ad", async function() {
-    const {account1, account2} = accounts;
+    const {owner, account1, account2} = accounts;
     const idx = await buyAd(account1, 1, 2, 3, 4);
+
+    await buyAd(account1, x=20, y=20);
+    await buyAd(account1, x=30, y=40);
+    await buyAd(account1, x=1, y=50);
+    await buyAd(account1, x=15, y=50);
+    await buyAd(account1, x=50, y=1);
+    await buyAd(account1, x=30, y=20);
+
     const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
 
     await KH.connect(account1).publish(idx, "link", "image", "title", false);
     await KH.connect(account1).setAdOwner(idx, precomputeAddress);
 
     await KNFT.connect(account1).wrap(idx, await account1.getAddress());
-
     {
       const expected = {
-        "name": "Thousand Ether Homepage Ad: 30x40 at [10,20]",
+        "name": "ThousandEtherHomepage #0: 30x40 at [10,20]",
         "description": "This NFT represents an ad unit on thousandetherhomepage.com, the owner of the NFT controls the content of this ad unit.",
         "external_url": "https://thousandetherhomepage.com",
         "image": "omitted for testing", // TODO: Test image elsewhere
-        "properties": {"width": 30, "height": 40},
+        "attributes": [
+          {
+            "trait_type": "X",
+            "value": 10
+          },
+          {
+            "trait_type": "Y",
+            "value": 20
+          },
+          {
+            "trait_type": "Width",
+            "value": 30
+          },
+          {
+            "trait_type": "Height",
+            "value": 40
+          },
+          {
+            "trait_type": "Pixels",
+            "value": 1200
+          }]
       };
       const r = await KNFT.connect(account1).tokenURI(idx);
       const prefix = 'data:application/json;base64';
@@ -146,6 +173,65 @@ describe('KetherNFT', function() {
         throw e;
       }
       expect(parsed['image']).to.have.string('data:image/svg+xml;base64,');
+      //console.log(parsed['image']);
+
+      parsed['image'] = expected['image'];
+      expect(parsed).to.deep.equal(expected);
+    }
+
+    await KH.connect(owner).forceNSFW(idx, true);
+
+    {
+      const expected = {
+        "name": "ThousandEtherHomepage #0: 30x40 at [10,20]",
+        "description": "This NFT represents an ad unit on thousandetherhomepage.com, the owner of the NFT controls the content of this ad unit.",
+        "external_url": "https://thousandetherhomepage.com",
+        "image": "omitted for testing", // TODO: Test image elsewhere
+        "attributes": [
+          {
+            "trait_type": "X",
+            "value": 10
+          },
+          {
+            "trait_type": "Y",
+            "value": 20
+          },
+          {
+            "trait_type": "Width",
+            "value": 30
+          },
+          {
+            "trait_type": "Height",
+            "value": 40
+          },
+          {
+            "trait_type": "Pixels",
+            "value": 1200
+          },
+          {
+            "trait_type": "Filter",
+            "value": "NSFW"
+          },
+          {
+            "trait_type": "Admin Override",
+            "value": "Forced NSFW"
+        }]
+      };
+      const r = await KNFT.connect(account1).tokenURI(idx);
+      const prefix = 'data:application/json;base64';
+      expect(r).to.to.have.string(prefix);
+
+      const got = Buffer.from(r.slice(prefix.length), 'base64').toString();
+
+      let parsed;
+      try {
+        parsed = JSON.parse(got);
+      } catch (e) {
+        console.log("Failed to parse:", got);
+        throw e;
+      }
+      expect(parsed['image']).to.have.string('data:image/svg+xml;base64,');
+      //console.log(parsed['image']);
 
       parsed['image'] = expected['image'];
       expect(parsed).to.deep.equal(expected);
@@ -300,6 +386,60 @@ describe('KetherNFT', function() {
       const [addr,..._] = await KH.ads(idx);
       expect(addr).to.equal(await account1.getAddress());
     }
+  });
+
+  it("should be recoverable if minted to KetherNFT itself", async function() {
+    const {owner, account1} = accounts;
+
+    // Buy an ad
+    const idx = await buyAd(account1);
+    expect(idx).to.equal(0);
+
+    // Precommit to the *wrong address*: the KNFT address (don't do this!)
+    expect(
+      KNFT.connect(account1).precompute(idx, KNFT.address)
+    ).to.be.revertedWith("KetherNFT: invalid _owner");
+  });
+
+  xit("it should return all of the ads as a helper", async function() {
+    const {owner, account1} = accounts;
+
+    // Buy an ad
+    const idx = await buyAd(account1);
+
+    // One more
+    const idx2 = await buyAd(account1, x=20, y=20);
+    expect(idx2).to.equal(1);
+
+    // Wrap one of them
+    const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
+
+    // Set owner to precommitted wrap address
+    await KH.connect(account1).setAdOwner(idx, precomputeAddress);
+
+    // Wrap ad
+    await KNFT.connect(account1).wrap(idx, await account1.getAddress());
+
+    const ads = await KNFT.connect(account1).allAds();
+    expect(ads).to.to.have.lengthOf(2);
+  });
+
+  it("should let us upgrade the renderer", async function() {
+    const {owner, account1} = accounts;
+
+    const KNFTrender2 = await KetherNFTRender.deploy();
+
+    expect(
+      KNFT.connect(account1).adminSetRenderer(KNFTrender2.address)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    await KNFT.connect(owner).adminSetRenderer(KNFTrender2.address);
+
+    await KNFT.connect(owner).adminDisableRenderUpgrade();
+
+    expect(
+      KNFT.connect(owner).adminSetRenderer(KNFTrender.address)
+    ).to.be.revertedWith("KetherNFT: upgrading renderer is disabled");
   });
 });
 

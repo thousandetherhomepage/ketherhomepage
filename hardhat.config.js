@@ -32,6 +32,15 @@ module.exports = {
     compilers: [
       {
         version: "0.8.4",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+            details: {
+              yul: false
+            }
+          },
+        }
       },
       {
         // Original KetherHomepage contract
@@ -43,7 +52,7 @@ module.exports = {
     enabled: (process.env.REPORT_GAS) ? true : false,
     currency: 'USD',
     // Note: Prices are hardcoded for now
-    gasPrice: 21,
+    gasPrice: 50,
     ethPrice: 3500,
   },
 };

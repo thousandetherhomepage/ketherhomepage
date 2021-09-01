@@ -22,19 +22,6 @@ contract KetherHomepageV2 is IKetherHomepage {
     // separate from contractOwner to allow for a cold storage destination.
     address payable withdrawWallet;
 
-    struct Ad {
-        address owner;
-        uint x;
-        uint y;
-        uint width;
-        uint height;
-        string link;
-        string image;
-        string title;
-        bool NSFW;
-        bool forceNSFW;
-    }
-
     /// ads are stored in an array, the id of an ad is its index in this array.
     Ad[] public override ads;
 
@@ -47,7 +34,7 @@ contract KetherHomepageV2 is IKetherHomepage {
     }
 
     /// getAdsLength tells you how many ads there are
-    function getAdsLength() view public returns (uint) {
+    function getAdsLength() view public override returns (uint) {
         return ads.length;
     }
 
