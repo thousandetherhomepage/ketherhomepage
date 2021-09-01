@@ -401,29 +401,6 @@ describe('KetherNFT', function() {
     ).to.be.revertedWith("KetherNFT: invalid _owner");
   });
 
-  xit("it should return all of the ads as a helper", async function() {
-    const {owner, account1} = accounts;
-
-    // Buy an ad
-    const idx = await buyAd(account1);
-
-    // One more
-    const idx2 = await buyAd(account1, x=20, y=20);
-    expect(idx2).to.equal(1);
-
-    // Wrap one of them
-    const [salt, precomputeAddress] = await KNFT.connect(account1).precompute(idx, await account1.getAddress());
-
-    // Set owner to precommitted wrap address
-    await KH.connect(account1).setAdOwner(idx, precomputeAddress);
-
-    // Wrap ad
-    await KNFT.connect(account1).wrap(idx, await account1.getAddress());
-
-    const ads = await KNFT.connect(account1).allAds();
-    expect(ads).to.to.have.lengthOf(2);
-  });
-
   it("should let us upgrade the renderer", async function() {
     const {owner, account1} = accounts;
 
