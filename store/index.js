@@ -194,11 +194,14 @@ export const actions = {
     const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
 
     if (loadFromKetherView) {
-      const ads = await ketherView.allAds(contract.address, ketherNFT.address)
-      commit('setAdsLength', ads.length);
-      for (const [i, ad] of ads.entries()) {
+      const limit = 200;
+      const len = await contract.getAdsLength();
+      commit('setAdsLength', len);
+      //TODO test off-by-ones
+      for (let offset = 0; offset < len; offset+=limit) {
+        const ads = await ketherView.allAds(contract.address, ketherNFT.address, offset, limit);
         // TODO: the structure here contains a `wrapped` bool which we can use to power proxying publish to the nft contract and wrapping/unwrapping.
-        commit('addAd', toAd(i, await ad));
+        commit('importAds', ads);
       }
     }
     else if (loadFromEvents) {
