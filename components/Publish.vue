@@ -186,12 +186,13 @@ export default {
       }
       try {
         const { predictedAddress } = (await this.ketherNFT.precompute(this.ad.idx, signerAddr));
-        // TODO this doesn't acutally work
-        // We need to group these somehow but send one after the first transaction is mined?
-        // Also we need to be able to rescue if only the first part worked (e.g. if you have an ad at your predicted address)
+
+        // TODO we need to be able to rescue if only the first part worked (e.g. if you have an ad at your predicted address)
         // Right now it won't show up after a refresh in the UI because it belongs to a precomputed address and hasn't been minted yet..
-        await this.contract.connect(signer).setAdOwner(this.ad.idx, predictedAddress)
-        await this.ketherNFT.connect(signer).wrap(this.ad.idx, signerAddr)
+        await (await this.contract.connect(signer).setAdOwner(this.ad.idx, predictedAddress)).wait();
+        await this.ketherNFT.connect(signer).wrap(this.ad.idx, signerAddr);
+        //TODO trigger reload here?
+        //TODO throbber or message that transaction has been submitted
       } catch(err) {
          this.error = err;
       } finally {
