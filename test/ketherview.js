@@ -56,16 +56,32 @@ describe('KetherView', function() {
 
     // Wrap ad
     await KNFT.connect(account1).wrap(idx2, await account1.getAddress());
+    {
+      // Get just the first ad
+      const ads = await KV.connect(account1).allAds(KH.address, KNFT.address, 0, 1);
+      expect(ads).to.to.have.lengthOf(1);
 
-    const ads = await KV.connect(account1).allAds(KH.address, KNFT.address);
-    expect(ads).to.to.have.lengthOf(2);
+      // ad has us as owner and is not wrapped
+      expect(ads[0].owner).to.equal(account1.address);
+      expect(ads[0].wrapped).to.equal(false);
+      expect(ads[0].idx).to.equal(0);
+    }
 
-    // first ad has us as owner and is not wrapped
-    expect(ads[0].owner).to.equal(account1.address)
-    expect(ads[0].wrapped).to.equal(false)
+    {
+      // Get just the second ad
+      const ads = await KV.connect(account1).allAds(KH.address, KNFT.address, 1, 1);
+      expect(ads).to.to.have.lengthOf(1);
 
-    // second ad has us as owner and is wrapped
-    expect(ads[1].owner).to.equal(account1.address)
-    expect(ads[1].wrapped).to.equal(true)
+      // second ad has us as owner and is wrapped
+      expect(ads[0].owner).to.equal(account1.address);
+      expect(ads[0].wrapped).to.equal(true);
+      expect(ads[0].idx).to.equal(1);
+    }
+
+    {
+      // Get more than all the ads
+      const ads = await KV.connect(account1).allAds(KH.address, KNFT.address, 0, 10000);
+      expect(ads).to.to.have.lengthOf(2);
+    }
  });
 });

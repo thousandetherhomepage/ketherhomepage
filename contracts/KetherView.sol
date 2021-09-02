@@ -22,27 +22,36 @@ library KetherView {
     string title;
     bool NSFW;
     bool forceNSFW;
+    uint idx;
     bool wrapped;
   }
   /// allAds is a helper view designed to be called from frontends that want to
   /// display all of the ads with their correct NFT owners.
-  function allAds(address _instanceAddress, address _nftAddress) external view returns (AdView[] memory) {
-    // FIXME: Does this actually enumerate all of the ads, or do we need to paginate?
-    AdView[] memory ads_ = new AdView[](IKetherHomepage(_instanceAddress).getAdsLength());
+  function allAds(address _instanceAddress, address _nftAddress, uint _offset, uint _limit) external view returns (AdView[] memory) {
+    uint len = IKetherHomepage(_instanceAddress).getAdsLength();
+    if (_limit < len) {
+      len = _limit;
+    }
 
-    for (uint idx=0; idx<ads_.length; idx++) {
-      (address owner, uint x, uint y, uint width, uint height, string memory link, string memory image, string memory title, bool NSFW, bool forceNSFW) = IKetherHomepage(_instanceAddress).ads(idx);
+    AdView[] memory ads_ = new AdView[](len);
+
+    for (uint i=0; i < len; i++) {
+      ads_[i] = getAd(_instanceAddress, _nftAddress, _offset+i);
+    }
+    return ads_;
+  }
+
+  function getAd(address _instanceAddress, address _nftAddress, uint _idx) public view returns (AdView memory) {
+      (address owner, uint x, uint y, uint width, uint height, string memory link, string memory image, string memory title, bool NSFW, bool forceNSFW) = IKetherHomepage(_instanceAddress).ads(_idx);
       bool wrapped = false;
 
       // Is it an NFT already?
       if (owner == _nftAddress) {
         // Override owner to be the NFT owner
-        owner = IERC721(_nftAddress).ownerOf(idx);
+        owner = IERC721(_nftAddress).ownerOf(_idx);
         wrapped = true;
       }
 
-      ads_[idx] = AdView(owner, x, y, width, height, link, image, title, NSFW, forceNSFW, wrapped);
-    }
-    return ads_;
+      return AdView(owner, x, y, width, height, link, image, title, NSFW, forceNSFW, _idx, wrapped);
   }
 }
