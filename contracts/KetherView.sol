@@ -1,5 +1,14 @@
-import "./IKetherHomepage.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+//SPDX-License-Identifier: MIT
+pragma solidity >=0.8.4;
+
+interface IKetherHomepage {
+  function ads(uint _idx) external view returns (address,uint,uint,uint,uint,string memory,string memory,string memory,bool,bool);
+  function getAdsLength() view external returns (uint);
+}
+
+interface IERC721 {
+  function ownerOf(uint256) external view returns (address);
+}
 
 library KetherView {
   struct AdView {
