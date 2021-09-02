@@ -9,7 +9,7 @@ export const deployConfig = {
         name: "main",
         contractAddr: "0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
         ketherNFTAddr: "0x7bb952ab78b28a62b1525aca54a71e7aa6177645",
-        ketherViewAddr: "0xa95b4e81a892A74bB5f1fA5F33d8362212a98C99",
+        ketherViewAddr: "TODO", // "0xa95b4e81a892A74bB5f1fA5F33d8362212a98C99",
         web3Fallback: "https://mainnet.infura.io/v3/fa9f29a052924745babfc1d119465148",
         etherscanLink: "https://etherscan.io/address/0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
         prerendered: {
@@ -23,7 +23,7 @@ export const deployConfig = {
         name: "rinkeby",
         contractAddr: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
         ketherNFTAddr: "0xb7fcb57a5ce2f50c3203ccda27c05aeadaf2c221",
-        ketherViewAddr: "0x126c76281fb6ee945bef9b92aac5d46eb8bda299",
+        ketherViewAddr: "0xd58D4ff574140472F9Ae2a90B6028Df822c10109",
         web3Fallback: "https://rinkeby.infura.io/v3/fa9f29a052924745babfc1d119465148",
         etherscanLink: "https://rinkeby.etherscan.io/address/0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
         prerendered: {

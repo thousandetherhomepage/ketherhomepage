@@ -28,7 +28,9 @@ library KetherView {
   /// allAds is a helper view designed to be called from frontends that want to
   /// display all of the ads with their correct NFT owners.
   function allAds(address _instanceAddress, address _nftAddress, uint _offset, uint _limit) external view returns (AdView[] memory) {
-    uint len = IKetherHomepage(_instanceAddress).getAdsLength();
+    // TODO: this errors out with `Error: Transaction reverted: library was called directly` if _offset is > length.
+    // should we add a better error?
+    uint len = IKetherHomepage(_instanceAddress).getAdsLength() - _offset;
     if (_limit < len) {
       len = _limit;
     }
