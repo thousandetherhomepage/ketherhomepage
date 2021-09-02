@@ -21,9 +21,9 @@
     <LazyAdList v-else />
 
     <div class="edit" v-if="$store.getters.numOwned > 0">
-      {{$store.getters.numOwned}} ads owned by you. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button>
+      {{$store.getters.numOwned}} ads owned by you. ({{$store.getters.numOwnedWrapped}} are wrapped as NFTs)<button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button>
     </div>
-    <LazyPublish v-if="showPublish" :provider="provider" :contract="contract" :showNSFW="showNSFW" />
+    <LazyPublish v-if="showPublish" :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :showNSFW="showNSFW" />
   </div>
 </template>
 
@@ -34,7 +34,7 @@ import Publish from './Publish.vue'
 import Offline from './Offline.vue'
 
 export default {
-  props: ["provider", "contract", "isReadOnly", "showNSFW", "prerendered"],
+  props: ["provider", "contract", "ketherNFT", "isReadOnly", "showNSFW", "prerendered"],
   data() {
     return {
       showPublish: false,

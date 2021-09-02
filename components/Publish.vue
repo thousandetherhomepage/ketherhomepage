@@ -33,12 +33,20 @@ input {
     display: inline-block;
   }
 
-  input[type="submit"] {
+  button {
     font-size: 1em;
     padding: 5px;
     background: #fff8db;
     display: block;
     border-width: 2px;
+  }
+
+  .button-group {
+    display: flex;
+
+    button {
+      margin-right: 0.25em;
+    }
   }
 
   .mini-adGrid {
@@ -55,7 +63,7 @@ input {
       <select v-model="ad">
         <option disabled value="">Select ad to edit</option>
         <option v-for="ad of $store.state.ownedAds" :key="ad.idx" v-bind:value="ad">>
-        #{{ad.idx}} - {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
+        #{{ad.idx}} ({{ad.wrapped ? "NFT" : "Not wrapped"}})- {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
         </option>
       </select>
       <div v-if="ad" class="editAd">
@@ -97,7 +105,11 @@ input {
             <Ad :showNSFW="showNSFW" :ad="ad" class="previewAd"></Ad>
           </div>
         </div>
-        <input type="submit" value="Publish Changes" />
+        <div class="button-group">
+          <button type="submit">Publish Changes</button>
+          <button type="button" v-on:click="wrap" v-if="!ad.wrapped">Wrap</button>
+          <button type="button" v-on:click="unwrap" v-if="ad.wrapped">Unwrap</button>
+        </div>
         <small>
           It can take between 10 seconds to a few minutes for your published ad
           to get mined into the blockchain and show up. The fees are paid to miners
@@ -119,7 +131,7 @@ input {
 import Ad from './Ad.vue'
 
 export default {
-  props: ["provider", "contract", "showNSFW"],
+  props: ["provider", "contract", "ketherNFT", "showNSFW"],
   data() {
     return {
       ad: false,
@@ -140,7 +152,12 @@ export default {
         return;
       }
       try {
-        await this.contract.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
+        if (this.ad.wrapped) {
+          await this.ketherNFT.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
+        } else {
+          await this.contract.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
+        }
+
       } catch(err) {
         ga('send', {
           hitType: 'event',
@@ -160,6 +177,42 @@ export default {
       });
       return false;
     },
+    async wrap() {
+      const signer = await this.provider.getSigner();
+      const signerAddr = await signer.getAddress();
+      if (signerAddr.toLowerCase() != this.ad.owner) {
+        this.error = 'Incorrect active wallet. Must publish with: ' + this.ad.owner;
+        return;
+      }
+      try {
+        const { predictedAddress } = (await this.ketherNFT.precompute(this.ad.idx, signerAddr));
+        // TODO this doesn't acutally work
+        // We need to group these somehow but send one after the first transaction is mined?
+        // Also we need to be able to rescue if only the first part worked (e.g. if you have an ad at your predicted address)
+        // Right now it won't show up after a refresh in the UI because it belongs to a precomputed address and hasn't been minted yet..
+        await this.contract.connect(signer).setAdOwner(this.ad.idx, predictedAddress)
+        await this.ketherNFT.connect(signer).wrap(this.ad.idx, signerAddr)
+      } catch(err) {
+         this.error = err;
+      } finally {
+        this.ad = false;
+      }
+    },
+    async unwrap() {
+      const signer = await this.provider.getSigner();
+      const signerAddr = await signer.getAddress();
+      if (signerAddr.toLowerCase() != this.ad.owner) {
+        this.error = 'Incorrect active wallet. Must publish with: ' + this.ad.owner;
+        return;
+      }
+      try {
+        await this.ketherNFT.connect(signer).unwrap(this.ad.idx, signerAddr)
+      } catch(err) {
+         this.error = err;
+      } finally {
+        this.ad = false;
+      }
+    }
   },
   components: {
     Ad,

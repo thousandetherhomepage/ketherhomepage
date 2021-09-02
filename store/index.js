@@ -123,8 +123,14 @@ export const getters = {
   numAds: state => {
     return state.ads.length;
   },
+  numWrapped: state => {
+    return state.ads.filter(ad => ad.wrapped).length;;
+  },
   numOwned: state => {
     return Object.keys(state.ownedAds).length;
+  },
+  numOwnedWrapped: state => {
+    return Object.values(state.ownedAds).filter(ad => ad.wrapped).length;
   },
   numNSFW: state => {
     return state.ads.filter(ad => ad.NSFW).length;
@@ -325,7 +331,10 @@ function eventToAd(state, adEvent) {
   } else if (adEvent.NSFW !== undefined) {
     ad.NSFW = adEvent.NSFW;
   }
-
+  // TODO will this break if we load stuff from events and not KetherView?
+  if (adEvent.wrapped !== undefined) {
+    ad.wrapped = adEvent.wrapped;
+  }
   let existingAd = state.ads[ad.idx];
   if (existingAd !== undefined && existingAd.width !== undefined) {
     // Already counted, update values
@@ -339,6 +348,7 @@ function eventToAd(state, adEvent) {
     title: "",
     NSFW: false,
     forceNSFW: false,
+    wrapped: false,
   }, ad);
 }
 

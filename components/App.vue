@@ -6,6 +6,7 @@
     <Homepage
       :provider="provider"
       :contract="contract"
+      :ketherNFT="ketherNFT"
       :isReadOnly="isReadOnly"
       :showNSFW="showNSFW"
       :prerendered="prerendered"
@@ -19,7 +20,7 @@
     <div v-else>Active Account: <strong>{{$store.state.activeAccount}}</strong></div>
 
     <div class="info">
-      <p>✅ Loaded {{$store.state.ads.length}} ads as of block {{$store.state.loadedBlockNumber}} ({{timeSinceLoaded}})</p>
+      <p>✅ Loaded {{$store.getters.numAds}} ads ({{$store.getters.numWrapped}} are wrapped as NFTs!) as of block {{$store.state.loadedBlockNumber}} ({{timeSinceLoaded}})</p>
 
       <p>
         Ads displayed above are loaded directly from the Ethereum Blockchain.
@@ -95,6 +96,7 @@ export default {
       selecting: false,
       provider: null,
       contract: null,
+      ketherNFT: null,
       isReadOnly: false,
       showNSFW: false,
       prerendered: null,
@@ -162,6 +164,7 @@ export default {
         this.contract.removeAllListeners();
       }
       this.contract = contract;
+      this.ketherNFT = ketherNFT;
       this.contract.on('error', function(err) {
         console.error("Contract subscription error:", err);
       });
@@ -190,6 +193,8 @@ export default {
         this.$store.commit('addAd', {idx: idx.toNumber(), link, image, title, NSFW});
         console.log("Publish event processed.");
       }.bind(this));
+
+      // TODO we need to subscribe to either SetAdOwner or some NFT events in order to update when wrapping/unwrapping
     },
   },
   async created() {
