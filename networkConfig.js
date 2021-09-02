@@ -8,7 +8,7 @@ export const deployConfig = {
     homestead: {
         name: "main",
         contractAddr: "0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
-        ketherNFTAddr: "0x7bb952ab78b28a62b1525aca54a71e7aa6177645", // Must be normalized per normalizeAddr (lowercase)
+        ketherNFTAddr: "0x7bb952ab78b28a62b1525aca54a71e7aa6177645",
         ketherViewAddr: "0xa95b4e81a892A74bB5f1fA5F33d8362212a98C99",
         web3Fallback: "https://mainnet.infura.io/v3/fa9f29a052924745babfc1d119465148",
         etherscanLink: "https://etherscan.io/address/0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
@@ -35,7 +35,7 @@ export const deployConfig = {
     },
 };
 deployConfig.mainnet = deployConfig.homestead;
-export const defaultNetwork = "rinkeby";
+export const defaultNetwork = "homestead";
 
 export const loadContracts = (networkConfig, provider) => {
     const contract = new ethers.Contract(networkConfig.contractAddr, contractJSON.abi, provider);
