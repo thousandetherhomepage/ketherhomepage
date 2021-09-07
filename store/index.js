@@ -222,6 +222,7 @@ export const actions = {
         promises.push(loadAds(offset, limit));
       }
       await Promise.all(promises);
+
     } else if (loadFromEvents) {
       // Skip loading and use event filter instead (does 1 query to eth_logs)
       const eventFilter= [ contract.filters.Buy(), contract.filters.Publish(), contract.filters.SetAdOwner() ];
@@ -295,6 +296,8 @@ function addAdOwned(state, ad) {
 }
 
 function addNFTAd(state, ad) {
+  // FIXME: This is redundant with wrapped eventToAd, we will need to do stuff
+  // here to make it compatible with event-based loading later.
   ad.isNFT = true;
   state.nftAds[ad.idx] = ad;
 
@@ -347,6 +350,8 @@ function eventToAd(state, adEvent) {
   // TODO will this break if we load stuff from events and not KetherView?
   if (adEvent.wrapped !== undefined) {
     ad.wrapped = adEvent.wrapped;
+  } else {
+    ad.wrapped = adEvent.owner === state.networkConfig.ketherNFTAddr;
   }
   let existingAd = state.ads[ad.idx];
   if (existingAd !== undefined && existingAd.width !== undefined) {
