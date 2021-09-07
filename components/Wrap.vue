@@ -64,8 +64,11 @@ input {
   <div>
     <form v-on:submit.prevent class="wrapAd">
       <h3>NFT</h3>
+      <p v-if="wrapInProgress">
+        ⏳<strong>Wrapping transaction in progress.</strong> Check your wallet for queued transactions, there should be 2 total.
+      </p>
       <p v-if="ad.wrapped">
-      Ad is wrapped to NFT. 
+      Ad is wrapped to NFT.
       <button type="button" v-on:click="unwrap">Unwrap #{{ad.idx}} to Legacy Contract</button>
       </p>
       <p v-else>
@@ -102,6 +105,7 @@ export default {
         const { predictedAddress } = (await this.ketherNFT.precompute(this.ad.idx, signerAddr));
 
         // TODO we need to be able to rescue if only the first part worked (e.g. if you have an ad at your predicted address)
+        this.wrapInProgress = true;
         // Right now it won't show up after a refresh in the UI because it belongs to a precomputed address and hasn't been minted yet..
         await (await this.contract.connect(signer).setAdOwner(this.ad.idx, predictedAddress)).wait();
         await this.ketherNFT.connect(signer).wrap(this.ad.idx, signerAddr);
@@ -109,8 +113,10 @@ export default {
         //TODO throbber or message that transaction has been submitted
       } catch(err) {
          this.error = err;
+        this.wrapInProgress = false;
       } finally {
         this.ad = false;
+        this.wrapInProgress = false;
       }
     },
     async unwrap() {
