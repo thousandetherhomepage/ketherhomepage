@@ -176,6 +176,9 @@ export default {
     listenContractEvents(contract) {
       // These listeners will long-poll the provider every block, so probably
       // only makes sense to set them up if a wallet is connected.
+
+      //FIXME this is called twice if using MetaMask - when the page is loaded and when the wallet is connected.
+      // Do we want to only subscribe you connect the wallet, or just subscribe on page load?
       console.log("Subscribing to Buy and Publish events");
 
       contract.on('Buy', function(idx, owner, x, y, width, height) {
