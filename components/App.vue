@@ -150,7 +150,7 @@ export default {
     },
     async setReadOnlyNetwork(network) {
       const web3Fallback = deployConfig[network].web3Fallback || "http://localhost:8545/";
-      this.provider = new ethers.providers.JsonRpcProvider(web3Fallback);
+      this.provider = new ethers.providers.StaticJsonRpcProvider(web3Fallback);
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
       const contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);

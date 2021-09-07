@@ -143,7 +143,7 @@ export const actions = {
     if (route.name !== 'index') return; // We only want to preload ads for the index route
 
     const web3Fallback = deployConfig[defaultNetwork].web3Fallback || "http://localhost:8545/";
-    const provider = new ethers.providers.JsonRpcProvider(web3Fallback);
+    const provider = new ethers.providers.StaticJsonRpcProvider(web3Fallback);
     const activeNetwork = (await provider.getNetwork()).name;
     const networkConfig = deployConfig[activeNetwork];
     const contract = new ethers.Contract(networkConfig.contractAddr, contractJSON.abi, provider);
