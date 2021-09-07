@@ -1,7 +1,6 @@
 <style lang="scss">
 form {
   margin-bottom: 2em;
-  width: 600px;
 }
 label {
   display: block;
@@ -48,11 +47,13 @@ input {
 }
 
 .wrapAd {
+  width: 700px;
+
   label {
-    display: flex;
     line-height: 2em;
 
     button {
+      display: inline-block;
       margin-right: 0.25em;
     }
   }
@@ -72,10 +73,10 @@ input {
       <button type="button" v-on:click="unwrap" v-bind:disabled="!!wrapInProgress">Unwrap #{{ad.idx}} to Legacy Contract</button>
       </p>
       <p v-else>
-      <label>
-        <button type="button" v-on:click="wrap" v-bind:disabled="!!wrapInProgress">Wrap #{{ad.idx}} to NFT</button> 
-        <span>(Queue up 2 on-chain transactions)</span>
-      </label>
+        <label>
+          <button type="button" v-on:click="wrap" v-bind:disabled="!!wrapInProgress">Wrap #{{ad.idx}} to NFT</button>
+          <small>Queue up 2 on-chain transactions, roughly 31,249 + 231,727 gas = 0.0262 ETH at 100 gwei</small>
+        </label>
       </p>
     </form>
     <p v-if="error" class="error">
