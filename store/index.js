@@ -196,18 +196,19 @@ export const actions = {
       await dispatch('reset', activeNetwork);
     }
 
-    const loadFromKetherView = !!state.networkConfig.ketherViewAddr; // Only use View contract if deployed
+    const loadFromKetherView = !!state.networkConfig.ketherViewAddr && state.loadedNetwork != activeNetwork; // Only use View contract if deployed & we haven't loaded already
     const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
 
     if (loadFromKetherView) {
-      const loadAds = async (offset, limit, retries = 0) => {
+      console.log("Loading from KetherView");
+      const loadKetherView = async (offset, limit, retries = 0) => {
         try {
           const ads = await ketherView.allAds(contract.address, ketherNFT.address, offset, limit);
           commit('importAds', ads);
         } catch (err) { // TODO: catch specific errors here
           if (retries < 1) {
             console.log("retrying loading of ", offset);
-            await loadAds(offset, limit, retries + 1);
+            await loadKetherView(offset, limit, retries + 1);
           }
           else {
             console.error("Exhausted retries for ", offset, err);
@@ -219,7 +220,7 @@ export const actions = {
       commit('setAdsLength', len);
       let promises = [];
       for (let offset = 0; offset < len; offset+=limit) {
-        promises.push(loadAds(offset, limit));
+        promises.push(loadKetherView(offset, limit));
       }
       await Promise.all(promises);
 
