@@ -46,18 +46,6 @@ input {
     margin-bottom: 1em;
   }
 }
-
-.wrapAd {
-  label {
-    display: flex;
-    line-height: 2em;
-
-    button {
-      margin-right: 0.25em;
-    }
-  }
-
-}
 </style>
 
 <template>
@@ -70,19 +58,7 @@ input {
         </option>
       </select>
 
-      <div v-if="ad" class="wrapAd">
-        <h3>NFT</h3>
-        <p v-if="ad.wrapped">
-          Ad is wrapped to NFT. 
-          <button type="button" v-on:click="unwrap">Unwrap</button>
-        </p>
-        <p v-else>
-          <label>
-            <button type="button" v-on:click="wrap">Wrap to NFT</button> 
-            <span>(Queue up 2 on-chain transactions)</span>
-          </label>
-        </p>
-      </div>
+      <Wrap v-if="ad" :ad="ad" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" />
 
       <div v-if="ad" class="editAd">
         <h3>Publish Changes</h3>
@@ -146,6 +122,7 @@ input {
 
 <script>
 import Ad from './Ad.vue'
+import Wrap from './Wrap.vue'
 
 export default {
   props: ["provider", "contract", "ketherNFT", "showNSFW"],
@@ -194,46 +171,10 @@ export default {
       });
       return false;
     },
-    async wrap() {
-      const signer = await this.provider.getSigner();
-      const signerAddr = await signer.getAddress();
-      if (signerAddr.toLowerCase() != this.ad.owner) {
-        this.error = 'Incorrect active wallet. Must publish with: ' + this.ad.owner;
-        return;
-      }
-      try {
-        const { predictedAddress } = (await this.ketherNFT.precompute(this.ad.idx, signerAddr));
-
-        // TODO we need to be able to rescue if only the first part worked (e.g. if you have an ad at your predicted address)
-        // Right now it won't show up after a refresh in the UI because it belongs to a precomputed address and hasn't been minted yet..
-        await (await this.contract.connect(signer).setAdOwner(this.ad.idx, predictedAddress)).wait();
-        await this.ketherNFT.connect(signer).wrap(this.ad.idx, signerAddr);
-        //TODO trigger reload here?
-        //TODO throbber or message that transaction has been submitted
-      } catch(err) {
-         this.error = err;
-      } finally {
-        this.ad = false;
-      }
-    },
-    async unwrap() {
-      const signer = await this.provider.getSigner();
-      const signerAddr = await signer.getAddress();
-      if (signerAddr.toLowerCase() != this.ad.owner) {
-        this.error = 'Incorrect active wallet. Must publish with: ' + this.ad.owner;
-        return;
-      }
-      try {
-        await this.ketherNFT.connect(signer).unwrap(this.ad.idx, signerAddr)
-      } catch(err) {
-         this.error = err;
-      } finally {
-        this.ad = false;
-      }
-    }
   },
   components: {
     Ad,
+    Wrap,
   },
 }
 </script>
