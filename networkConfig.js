@@ -18,6 +18,7 @@ export const deployConfig = {
             loadRemoteImages: true,
             loadFromWeb3: true,
         },
+        nftView: "https://opensea.io/assets/",
     },
     rinkeby: {
         name: "rinkeby",
@@ -32,6 +33,7 @@ export const deployConfig = {
             loadRemoteImages: true,
             loadFromWeb3: true,
         },
+        nftView: "https://testnets.opensea.io/assets/",
     },
 };
 deployConfig.mainnet = deployConfig.homestead;

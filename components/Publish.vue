@@ -15,7 +15,7 @@ input {
   width: 200px;
 }
 
-.editAd {
+.editAd, .wrapAd {
   border-left: 10px solid #eee;
   padding-left: 10px;
 
@@ -40,20 +40,23 @@ input {
     display: block;
     border-width: 2px;
   }
+  .mini-adGrid {
+    padding: 10px;
+    background: #ddd;
+    margin-bottom: 1em;
+  }
+}
 
-  .button-group {
+.wrapAd {
+  label {
     display: flex;
+    line-height: 2em;
 
     button {
       margin-right: 0.25em;
     }
   }
 
-  .mini-adGrid {
-    padding: 10px;
-    background: #ddd;
-    margin-bottom: 1em;
-  }
 }
 </style>
 
@@ -66,7 +69,23 @@ input {
         #{{ad.idx}} ({{ad.wrapped ? "NFT" : "Not wrapped"}})- {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
         </option>
       </select>
+
+      <div v-if="ad" class="wrapAd">
+        <h3>NFT</h3>
+        <p v-if="ad.wrapped">
+          Ad is wrapped to NFT. 
+          <button type="button" v-on:click="unwrap">Unwrap</button>
+        </p>
+        <p v-else>
+          <label>
+            <button type="button" v-on:click="wrap">Wrap to NFT</button> 
+            <span>(Queue up 2 on-chain transactions)</span>
+          </label>
+        </p>
+      </div>
+
       <div v-if="ad" class="editAd">
+        <h3>Publish Changes</h3>
         <p>
           What do you want your ad to look like? Some rules:
         </p>
@@ -105,10 +124,8 @@ input {
             <Ad :showNSFW="showNSFW" :ad="ad" class="previewAd"></Ad>
           </div>
         </div>
-        <div class="button-group">
+        <div>
           <button type="submit">Publish Changes</button>
-          <button type="button" v-on:click="wrap" v-if="!ad.wrapped">Wrap</button>
-          <button type="button" v-on:click="unwrap" v-if="ad.wrapped">Unwrap</button>
         </div>
         <small>
           It can take between 10 seconds to a few minutes for your published ad
