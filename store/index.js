@@ -200,19 +200,28 @@ export const actions = {
     const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
 
     if (loadFromKetherView) {
+      const loadAds = async (offset, limit, retries = 0) => {
+        try {
+          const ads = await ketherView.allAds(contract.address, ketherNFT.address, offset, limit);
+          commit('importAds', ads);
+        } catch (err) { // TODO: catch specific errors here
+          if (retries < 1) {
+            console.log("retrying loading of ", offset);
+            await loadAds(offset, limit, retries + 1);
+          }
+          else {
+            console.error("Exhausted retries for ", offset, err);
+          }
+        }
+      }
       const limit = 165; // 10 queries to load 1621 ads on mainnet. 4 queries works too, but maybe flakey?
       const len = await contract.getAdsLength();
       commit('setAdsLength', len);
-      //TODO: test off-by-ones
+      let promises = [];
       for (let offset = 0; offset < len; offset+=limit) {
-        ketherView.allAds(contract.address, ketherNFT.address, offset, limit).then((ads) => {
-          // Imported concurrently
-          commit('importAds', ads);
-        }).catch((err) => {
-          // TODO: Implement retrying
-          window.location.reload(); // lol
-        });
+        promises.push(loadAds(offset, limit));
       }
+      await Promise.all(promises);
     } else if (loadFromEvents) {
       // Skip loading and use event filter instead (does 1 query to eth_logs)
       const eventFilter= [ contract.filters.Buy(), contract.filters.Publish(), contract.filters.SetAdOwner() ];
