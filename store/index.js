@@ -200,12 +200,13 @@ export const actions = {
     const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
 
     if (loadFromKetherView) {
-      const limit = 420; // 4 queries to load 1621 ads on mainnet
+      const limit = 325; // 5 queries to load 1621 ads on mainnet. 4 queries works too, but maybe flakey?
       const len = await contract.getAdsLength();
       commit('setAdsLength', len);
       //TODO: test off-by-ones
       for (let offset = 0; offset < len; offset+=limit) {
         ketherView.allAds(contract.address, ketherNFT.address, offset, limit).then((ads) => {
+          // Imported concurrently
           commit('importAds', ads);
         });
       }
