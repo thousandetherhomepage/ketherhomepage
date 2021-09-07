@@ -203,9 +203,8 @@ export const actions = {
       const limit = 420; // 4 queries to load 1621 ads on mainnet
       const len = await contract.getAdsLength();
       commit('setAdsLength', len);
-      //TODO test off-by-ones
+      //TODO: test off-by-ones
       for (let offset = 0; offset < len; offset+=limit) {
-        // TODO: the structure here contains a `wrapped` bool which we can use to power proxying publish to the nft contract and wrapping/unwrapping.
         ketherView.allAds(contract.address, ketherNFT.address, offset, limit).then((ads) => {
           commit('importAds', ads);
         });
