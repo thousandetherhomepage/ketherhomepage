@@ -133,7 +133,7 @@ export default {
       this.networkConfig = deployConfig[this.activeNetwork];
       if (this.networkConfig) {
         const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
-        this.setContracts(contract, ketherNFT, ketherView);
+        await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView);
         this.listenContractEvents(contract);
         this.isReadOnly = false;
       }
@@ -156,10 +156,12 @@ export default {
       this.networkConfig = deployConfig[this.activeNetwork];
 
       const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
-      this.setContracts(contract, ketherNFT, ketherView);
+      await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView);
       this.isReadOnly = true;
     },
-    setContracts(contract, ketherNFT, ketherView) {
+    async setContracts(activeNetwork, contract, ketherNFT, ketherView) {
+      // Load the initial state on network change
+      await this.$store.dispatch('initState', activeNetwork);
       if (this.contract) {
         this.contract.removeAllListeners();
       }
@@ -168,7 +170,7 @@ export default {
       this.contract.on('error', function(err) {
         console.error("Contract subscription error:", err);
       });
-
+      // FIXME this will trigger a second reload (using ketherview) when the user connects their wallet
       this.$store.dispatch('loadAds', {contract, ketherNFT, ketherView});
     },
     listenContractEvents(contract) {

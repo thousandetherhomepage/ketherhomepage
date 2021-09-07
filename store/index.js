@@ -50,6 +50,7 @@ export const mutations = {
   addAccount(state, account) {
     account = normalizeAddr(account);
     for (const ad of state.ads) {
+      // TODO get our ads from NFT here as well
       if (normalizeAddr(ad.owner) === account) {
         addAdOwned(state, ad);
       }
@@ -157,14 +158,13 @@ export const actions = {
     await dispatch('loadAds', contracts);
   },
 
-  async initState({ commit }) {
+  async initState({ commit, state }, activeNetwork) {
     if (process.server) {
       // TODO: Server-side version of fetch
       return;
     }
-
-    return; // FIXME: Disabled for now. Need to fix activeAccount issue.
-
+    // Only load state on network change and on mainnet
+    if (activeNetwork == "homestead" && activeNetwork != state.loadedNetwork) return;
     let s = await window.fetch('/initState.json').then(res => res.json())
     s.offlineMode = true;
     if (isSoldOut(s)) s.grid = null; // Skip grid
