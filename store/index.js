@@ -164,7 +164,7 @@ export const actions = {
       return;
     }
     // Only load state on network change and on mainnet
-    if (activeNetwork == "homestead" && activeNetwork != state.loadedNetwork) return;
+    if (activeNetwork != "homestead" || activeNetwork == state.loadedNetwork) return;
     let s = await window.fetch('/initState.json').then(res => res.json())
     s.offlineMode = true;
     if (isSoldOut(s)) s.grid = null; // Skip grid
