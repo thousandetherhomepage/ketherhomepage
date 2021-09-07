@@ -196,27 +196,28 @@ export const actions = {
       await dispatch('reset', activeNetwork);
     }
 
-    const loadFromKetherView = activeNetwork == 'rinkeby'; // Only deployed KetherView on rinkeby
+    const loadFromKetherView = !!state.networkConfig.ketherViewAddr; // Only use View contract if deployed
     const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
 
     if (loadFromKetherView) {
-      const limit = 200;
+      const limit = 420; // 4 queries to load 1621 ads on mainnet
       const len = await contract.getAdsLength();
       commit('setAdsLength', len);
       //TODO test off-by-ones
       for (let offset = 0; offset < len; offset+=limit) {
-        const ads = await ketherView.allAds(contract.address, ketherNFT.address, offset, limit);
         // TODO: the structure here contains a `wrapped` bool which we can use to power proxying publish to the nft contract and wrapping/unwrapping.
-        commit('importAds', ads);
+        ketherView.allAds(contract.address, ketherNFT.address, offset, limit).then((ads) => {
+          commit('importAds', ads);
+        });
       }
-    }
-    else if (loadFromEvents) {
+    } else if (loadFromEvents) {
       // Skip loading and use event filter instead (does 1 query to eth_logs)
       const eventFilter= [ contract.filters.Buy(), contract.filters.Publish(), contract.filters.SetAdOwner() ];
       const events = await contract.queryFilter(eventFilter, state.loadedBlockNumber);
       commit('importAds', events.map(evt => Object.assign({}, evt.args))); // Clone args and import them
 
       console.info("Loaded additional", events.length, "events since cached state from block number:", state.loadedBlockNumber);
+
     } else {
       // Load fresh from the contract (does N queries to eth_call)
       const numAds = await contract.getAdsLength();
