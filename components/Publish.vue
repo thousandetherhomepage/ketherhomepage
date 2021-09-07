@@ -15,7 +15,7 @@ input {
   width: 200px;
 }
 
-.editAd, .wrapAd {
+.editAd {
   border-left: 10px solid #eee;
   padding-left: 10px;
 
