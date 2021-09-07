@@ -21,7 +21,7 @@
     <LazyAdList v-else />
 
     <div class="edit" v-if="$store.getters.numOwned > 0">
-      {{$store.getters.numOwned}} ads owned by you, {{$store.getters.numOwnedWrapped}} are wrapped as NFTs. <button v-on:click="showPublish = true" v-if="!showPublish">Edit Ads</button>
+      {{$store.getters.numOwned}} ads owned by you, {{$store.getters.numOwnedWrapped}} are wrapped as NFTs. <button v-on:click="showPublish = true" v-if="!showPublish">Edit and Wrap Ads</button>
     </div>
     <LazyPublish v-if="showPublish" :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :showNSFW="showNSFW" />
   </div>
