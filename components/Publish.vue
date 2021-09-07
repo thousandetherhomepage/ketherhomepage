@@ -15,7 +15,7 @@ input {
   width: 200px;
 }
 
-.editAd {
+.editAd, .wrapAd {
   border-left: 10px solid #eee;
   padding-left: 10px;
 
@@ -33,14 +33,13 @@ input {
     display: inline-block;
   }
 
-  input[type="submit"] {
+  button {
     font-size: 1em;
     padding: 5px;
     background: #fff8db;
     display: block;
     border-width: 2px;
   }
-
   .mini-adGrid {
     padding: 10px;
     background: #ddd;
@@ -55,10 +54,14 @@ input {
       <select v-model="ad">
         <option disabled value="">Select ad to edit</option>
         <option v-for="ad of $store.state.ownedAds" :key="ad.idx" v-bind:value="ad">>
-        #{{ad.idx}} - {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
+        #{{ad.idx}} ({{ad.wrapped ? "NFT" : "Not wrapped"}})- {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
         </option>
       </select>
+
+      <Wrap v-if="ad" :ad="ad" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" />
+
       <div v-if="ad" class="editAd">
+        <h3>Publish Changes</h3>
         <p>
           What do you want your ad to look like? Some rules:
         </p>
@@ -97,7 +100,9 @@ input {
             <Ad :showNSFW="showNSFW" :ad="ad" class="previewAd"></Ad>
           </div>
         </div>
-        <input type="submit" value="Publish Changes" />
+        <div>
+          <button type="submit">Publish Changes</button>
+        </div>
         <small>
           It can take between 10 seconds to a few minutes for your published ad
           to get mined into the blockchain and show up. The fees are paid to miners
@@ -117,9 +122,10 @@ input {
 
 <script>
 import Ad from './Ad.vue'
+import Wrap from './Wrap.vue'
 
 export default {
-  props: ["provider", "contract", "showNSFW"],
+  props: ["provider", "contract", "ketherNFT", "showNSFW"],
   data() {
     return {
       ad: false,
@@ -140,7 +146,12 @@ export default {
         return;
       }
       try {
-        await this.contract.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
+        if (this.ad.wrapped) {
+          await this.ketherNFT.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
+        } else {
+          await this.contract.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
+        }
+
       } catch(err) {
         ga('send', {
           hitType: 'event',
@@ -163,6 +174,7 @@ export default {
   },
   components: {
     Ad,
+    Wrap,
   },
 }
 </script>

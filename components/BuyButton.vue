@@ -1,6 +1,8 @@
 <template>
   <div class="sold">
-    {{$store.state.adsPixels}} pixels sold <button v-on:click="$store.commit('updatePreview', {x, y})" v-if="!$store.state.previewAd">Buy Pixels</button>
+    {{$store.state.adsPixels}} pixels sold
+    <a target="_blank" href="https://opensea.io/collection/thousand-ether-homepage" v-if="this.$store.getters.isSoldOut" disabled>Available on OpenSea</a>
+    <button v-on:click="$store.commit('updatePreview', {x, y})" v-else-if="!$store.state.previewAd">Buy Pixels</button>
   </div>
 </template>
 
@@ -14,10 +16,17 @@
   color: white;
   font-weight: bold;
 
-    button {
-      margin-left: 5px;
-    }
+  button {
+    margin-left: 5px;
   }
+
+  a {
+    background: rgba(255,255,255,0.9);
+    border: 1px solid rgba(0,0,0,0.5);
+    padding: 2px 0.5em;
+    border-radius: 3px;
+  }
+}
 </style>
 
 <script>

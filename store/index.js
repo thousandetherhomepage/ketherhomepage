@@ -1,7 +1,6 @@
 import { ethers } from "ethers";
 
-import { deployConfig, defaultNetwork } from "~/networkConfig";
-import contractJSON from "~/artifacts/contracts/KetherHomepage.sol/KetherHomepage.json";
+import { deployConfig, defaultNetwork, loadContracts } from "~/networkConfig";
 
 export const state = () => {
   return {
@@ -124,8 +123,14 @@ export const getters = {
   numAds: state => {
     return state.ads.length;
   },
+  numWrapped: state => {
+    return state.ads.filter(ad => ad.wrapped).length;;
+  },
   numOwned: state => {
     return Object.keys(state.ownedAds).length;
+  },
+  numOwnedWrapped: state => {
+    return Object.values(state.ownedAds).filter(ad => ad.wrapped).length;
   },
   numNSFW: state => {
     return state.ads.filter(ad => ad.NSFW).length;
@@ -146,10 +151,10 @@ export const actions = {
     const provider = new ethers.providers.StaticJsonRpcProvider(web3Fallback);
     const activeNetwork = (await provider.getNetwork()).name;
     const networkConfig = deployConfig[activeNetwork];
-    const contract = new ethers.Contract(networkConfig.contractAddr, contractJSON.abi, provider);
+    const contracts = loadContracts(networkConfig, provider)
 
     //await dispatch('loadState');
-    await dispatch('loadAds', contract);
+    await dispatch('loadAds', contracts);
   },
 
   async initState({ commit }) {
@@ -173,7 +178,7 @@ export const actions = {
     commit('initGrid');
   },
 
-  async loadAds({ commit, state, dispatch }, contract) {
+  async loadAds({ commit, state, dispatch }, {contract, ketherNFT, ketherView}) {
     // TODO: we can optimize this by only loading from a blockNumber
     let activeNetwork;
     let latestBlock = {number: 0, timestamp: 0};
@@ -191,15 +196,41 @@ export const actions = {
       await dispatch('reset', activeNetwork);
     }
 
+    const loadFromKetherView = !!state.networkConfig.ketherViewAddr; // Only use View contract if deployed
     const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
 
-    if (loadFromEvents) {
+    if (loadFromKetherView) {
+      const loadAds = async (offset, limit, retries = 0) => {
+        try {
+          const ads = await ketherView.allAds(contract.address, ketherNFT.address, offset, limit);
+          commit('importAds', ads);
+        } catch (err) { // TODO: catch specific errors here
+          if (retries < 1) {
+            console.log("retrying loading of ", offset);
+            await loadAds(offset, limit, retries + 1);
+          }
+          else {
+            console.error("Exhausted retries for ", offset, err);
+          }
+        }
+      }
+      const limit = 165; // 10 queries to load 1621 ads on mainnet. 4 queries works too, but maybe flakey?
+      const len = await contract.getAdsLength();
+      commit('setAdsLength', len);
+      let promises = [];
+      for (let offset = 0; offset < len; offset+=limit) {
+        promises.push(loadAds(offset, limit));
+      }
+      await Promise.all(promises);
+
+    } else if (loadFromEvents) {
       // Skip loading and use event filter instead (does 1 query to eth_logs)
       const eventFilter= [ contract.filters.Buy(), contract.filters.Publish(), contract.filters.SetAdOwner() ];
       const events = await contract.queryFilter(eventFilter, state.loadedBlockNumber);
       commit('importAds', events.map(evt => Object.assign({}, evt.args))); // Clone args and import them
 
       console.info("Loaded additional", events.length, "events since cached state from block number:", state.loadedBlockNumber);
+
     } else {
       // Load fresh from the contract (does N queries to eth_call)
       const numAds = await contract.getAdsLength();
@@ -265,6 +296,8 @@ function addAdOwned(state, ad) {
 }
 
 function addNFTAd(state, ad) {
+  // FIXME: This is redundant with wrapped eventToAd, we will need to do stuff
+  // here to make it compatible with event-based loading later.
   ad.isNFT = true;
   state.nftAds[ad.idx] = ad;
 
@@ -314,7 +347,12 @@ function eventToAd(state, adEvent) {
   } else if (adEvent.NSFW !== undefined) {
     ad.NSFW = adEvent.NSFW;
   }
-
+  // TODO will this break if we load stuff from events and not KetherView?
+  if (adEvent.wrapped !== undefined) {
+    ad.wrapped = adEvent.wrapped;
+  } else {
+    ad.wrapped = adEvent.owner === state.networkConfig.ketherNFTAddr;
+  }
   let existingAd = state.ads[ad.idx];
   if (existingAd !== undefined && existingAd.width !== undefined) {
     // Already counted, update values
@@ -328,6 +366,7 @@ function eventToAd(state, adEvent) {
     title: "",
     NSFW: false,
     forceNSFW: false,
+    wrapped: false,
   }, ad);
 }
 

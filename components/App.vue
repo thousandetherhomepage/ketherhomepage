@@ -6,12 +6,13 @@
     <Homepage
       :provider="provider"
       :contract="contract"
+      :ketherNFT="ketherNFT"
       :isReadOnly="isReadOnly"
       :showNSFW="showNSFW"
       :prerendered="prerendered"
     ></Homepage>
     <BuyButton :x="20" :y="940" />
-    
+
     <LazyConnectWallet v-if="walletConnect" :networkConfig="networkConfig" @wallet-connect="connectEthereum" @wallet-disconnect="walletConnect = false"/>
     <button @click="walletConnect = true" v-if="!$store.state.activeAccount">
       {{walletConnect ? "Loading..." : "Connect Wallet" }}
@@ -19,7 +20,7 @@
     <div v-else>Active Account: <strong>{{$store.state.activeAccount}}</strong></div>
 
     <div class="info">
-      <p>✅ Loaded {{$store.state.ads.length}} ads as of block {{$store.state.loadedBlockNumber}} ({{timeSinceLoaded}})</p>
+      <p>✅ Loaded {{$store.getters.numAds}} ads ({{$store.getters.numWrapped}} are wrapped as NFTs!) as of block {{$store.state.loadedBlockNumber}} ({{timeSinceLoaded}})</p>
 
       <p>
         Ads displayed above are loaded directly from the Ethereum Blockchain.
@@ -80,8 +81,7 @@
 <script>
 import { ethers } from "ethers";
 
-import { defaultNetwork, deployConfig } from '~/networkConfig';
-import contractJSON from "~/artifacts/contracts/KetherHomepage.sol/KetherHomepage.json";
+import { defaultNetwork, deployConfig, loadContracts } from '~/networkConfig';
 
 import Dropdown from "./Dropdown.vue";
 import Homepage from "./Homepage.vue";
@@ -96,6 +96,7 @@ export default {
       selecting: false,
       provider: null,
       contract: null,
+      ketherNFT: null,
       isReadOnly: false,
       showNSFW: false,
       prerendered: null,
@@ -131,8 +132,8 @@ export default {
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
       if (this.networkConfig) {
-        const contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
-        this.setContract(contract);
+        const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
+        this.setContracts(contract, ketherNFT, ketherView);
         this.listenContractEvents(contract);
         this.isReadOnly = false;
       }
@@ -153,23 +154,22 @@ export default {
       this.provider = new ethers.providers.StaticJsonRpcProvider(web3Fallback);
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
-      const contract = new ethers.Contract(this.networkConfig.contractAddr, contractJSON.abi, this.provider);
-      this.setContract(contract);
+
+      const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
+      this.setContracts(contract, ketherNFT, ketherView);
       this.isReadOnly = true;
     },
-    async setContract(contract) {
-      if (this.activeNetwork == 'homestead') {
-        await this.$store.dispatch('initState');
-      }
+    setContracts(contract, ketherNFT, ketherView) {
       if (this.contract) {
         this.contract.removeAllListeners();
       }
       this.contract = contract;
+      this.ketherNFT = ketherNFT;
       this.contract.on('error', function(err) {
         console.error("Contract subscription error:", err);
       });
 
-      await this.$store.dispatch('loadAds', contract);
+      this.$store.dispatch('loadAds', {contract, ketherNFT, ketherView});
     },
     listenContractEvents(contract) {
       // These listeners will long-poll the provider every block, so probably
@@ -193,6 +193,8 @@ export default {
         this.$store.commit('addAd', {idx: idx.toNumber(), link, image, title, NSFW});
         console.log("Publish event processed.");
       }.bind(this));
+
+      // TODO we need to subscribe to either SetAdOwner or some NFT events in order to update when wrapping/unwrapping
     },
   },
   async created() {
