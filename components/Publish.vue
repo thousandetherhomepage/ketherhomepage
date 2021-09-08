@@ -58,6 +58,8 @@ input {
         </option>
       </select>
 
+      <button type="button" v-on:click="$store.dispatch('detectHalfWrapped', { ketherContract: contract, nftContract: ketherNFT })">Check for Half-Wrapped Ads</button>
+
       <Wrap v-if="ad" :ad="ad" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" />
 
       <div v-if="ad" class="editAd">

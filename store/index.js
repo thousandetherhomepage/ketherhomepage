@@ -10,6 +10,7 @@ export const state = () => {
     adsPixels: 0,
     ownedAds: {},
     nftAds: {},
+    halfWrapped: [],
     pixelsOwned: 0,
     grid: null, // lazy load
     previewAd: null,
@@ -102,7 +103,11 @@ export const mutations = {
       state.loadedBlockTimestamp = timestamp;
     }
     console.info("Contract loaded", state.ads.length, "ads until block number", blockNumber, "from", network);
-  }
+  },
+
+  addHalfWrapped(state, {idx, account}) {
+    state.halfWrapped.push({idx, account});
+  },
 }
 
 export const getters = {
@@ -254,7 +259,34 @@ export const actions = {
     if (state.accounts[account] === true) return; // Already added
     state.accounts[account] = true;
     commit('addAccount', account);
-  }
+  },
+
+  async detectHalfWrapped({ state, commit }, { ketherContract, nftContract, numBlocks }) {
+    const account = state.activeAccount;
+    if (!account) {
+      console.error("Can't detect half-wrapped ads without an active account. Connect a wallet.");
+      return;
+    }
+    if (numBlocks === undefined) {
+      numBlocks = 10 * 60 * 24 * 30; // Look 30 days back
+    }
+    const eventFilter = [ ketherContract.filters.SetAdOwner() ];
+    const events = await ketherContract.queryFilter(eventFilter, -numBlocks);
+    for (const evt in events) {
+      debugger;
+      const ad = eventToAd(state, evt);
+      if (state.ads[ad.idx].wrapped) {
+        continue
+      }
+      // Confirm it's not minted on-chain (local state is stale)
+      try {
+        await nftContract.ownerOf(ad.idx);
+      } catch(err) {
+        console.log("XXX", "detectHalfWrapped", err, ad);
+        commit('addHalfWrapped', {idx: ad.idx, account: account});
+      }
+    }
+  },
 }
 
 //// Helpers
