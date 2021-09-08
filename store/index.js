@@ -270,20 +270,29 @@ export const actions = {
     if (numBlocks === undefined) {
       numBlocks = 10 * 60 * 24 * 30; // Look 30 days back
     }
+    let ids = {};
     const eventFilter = [ ketherContract.filters.SetAdOwner() ];
     const events = await ketherContract.queryFilter(eventFilter, -numBlocks);
-    for (const evt in events) {
-      debugger;
-      const ad = eventToAd(state, evt);
-      if (state.ads[ad.idx].wrapped) {
-        continue
-      }
-      // Confirm it's not minted on-chain (local state is stale)
+    for (const evt of events.reverse()) {
+      // Only look at events from your account (alas not indexed so we can't filter above)
+      if (normalizeAddr(evt.args.from) !== normalizeAddr(account)) continue;
+
+      const idx = evt.args.idx.toNumber();
+      if (ids[idx] !== undefined) continue;
+      ids[idx] = true;
+    }
+
+    for (const idx in ids) {
+      // Skip ads already wrapped successfully
+      if (state.ads[idx].wrapped) continue;
+      if (state.ownedAds[idx]) continue;
+
       try {
-        await nftContract.ownerOf(ad.idx);
+        // Confirm it's not minted on-chain (local state is stale)
+        // Is there a better way to do this without throwing an exception?
+        await nftContract.ownerOf(idx);
       } catch(err) {
-        console.log("XXX", "detectHalfWrapped", err, ad);
-        commit('addHalfWrapped', {idx: ad.idx, account: account});
+        commit('addHalfWrapped', {idx: idx, account: account});
       }
     }
   },
@@ -392,7 +401,7 @@ function eventToAd(state, adEvent) {
   let existingAd = state.ads[ad.idx];
   if (existingAd !== undefined && existingAd.width !== undefined) {
     // Already counted, update values
-    return Object.assign(existingAd, ad);
+    return Object.assign({}, existingAd, ad);
   }
 
   // Add defaults to non-existing ad
