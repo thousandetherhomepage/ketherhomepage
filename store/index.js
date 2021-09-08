@@ -159,6 +159,9 @@ export const actions = {
   },
 
   async initState({ commit, state }, activeNetwork) {
+    // Disable initState for now
+    return;
+
     if (process.server) {
       // TODO: Server-side version of fetch
       return;
