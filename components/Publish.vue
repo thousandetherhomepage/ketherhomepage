@@ -1,8 +1,4 @@
 <style lang="scss">
-form {
-  margin-bottom: 2em;
-  width: 600px;
-}
 label {
   display: block;
   margin-bottom: 0.5em;
@@ -50,19 +46,9 @@ input {
 
 <template>
   <div id="adPublish">
-    <form v-if="$store.getters.numOwned > 0" v-on:submit='publish' v-on:submit.prevent>
-      <select v-model="ad">
-        <option disabled value="">Select ad to edit</option>
-        <option v-for="ad of $store.state.ownedAds" :key="ad.idx" v-bind:value="ad">>
-        #{{ad.idx}} ({{ad.wrapped ? "NFT" : "Not wrapped"}})- {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
-        </option>
-      </select>
+    <form v-on:submit='publish' v-on:submit.prevent>
 
-      <button type="button" v-on:click="$store.dispatch('detectHalfWrapped', { ketherContract: contract, nftContract: ketherNFT })">Check for Half-Wrapped Ads</button>
-
-      <Wrap v-if="ad" :ad="ad" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" />
-
-      <div v-if="ad" class="editAd">
+      <div class="editAd">
         <h3>Publish Changes</h3>
         <p>
           What do you want your ad to look like? Some rules:
@@ -105,6 +91,9 @@ input {
         <div>
           <button type="submit">Publish Changes</button>
         </div>
+        <p v-if="inProgress">
+        ⏳<strong>Transaction in progress.</strong> {{inProgress}}
+        </p>
         <small>
           It can take between 10 seconds to a few minutes for your published ad
           to get mined into the blockchain and show up. The fees are paid to miners
@@ -112,9 +101,6 @@ input {
         </small>
       </div>
     </form>
-    <p v-else>
-      No purchased ads detected for active accounts. Listening to Purchase events on the blockchain...
-    </p>
 
     <p v-if="error" class="error">
       {{ error }}
@@ -127,10 +113,10 @@ import Ad from './Ad.vue'
 import Wrap from './Wrap.vue'
 
 export default {
-  props: ["provider", "contract", "ketherNFT", "showNSFW"],
+  props: ["ad", "provider", "contract", "ketherNFT", "showNSFW"],
   data() {
     return {
-      ad: false,
+      inProgress: false,
       error: null,
     }
   },
@@ -147,13 +133,17 @@ export default {
         this.error = 'Incorrect active wallet. Must publish with: ' + this.ad.owner;
         return;
       }
+      this.inProgress = 'Waiting for wallet to confirm.';
       try {
+        let tx;
         if (this.ad.wrapped) {
-          await this.ketherNFT.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
+          tx = await this.ketherNFT.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
         } else {
-          await this.contract.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
+          tx = await this.contract.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
         }
-
+        this.inProgress = 'Submitted, waiting...';
+        await tx.wait();
+        this.inProgress = false;
       } catch(err) {
         ga('send', {
           hitType: 'event',
@@ -164,7 +154,7 @@ export default {
         this.error = err;
         return;
       } finally {
-        this.ad = false;
+        this.inProgress = false;
       }
       ga('send', {
         hitType: 'event',

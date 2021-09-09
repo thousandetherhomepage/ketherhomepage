@@ -10,7 +10,7 @@
       :isReadOnly="isReadOnly"
       :showNSFW="showNSFW"
       :prerendered="prerendered"
-    ></Homepage>
+      />
     <BuyButton :x="20" :y="940" />
 
     <LazyConnectWallet v-if="walletConnect" :networkConfig="networkConfig" @wallet-connect="connectEthereum" @wallet-disconnect="walletConnect = false"/>

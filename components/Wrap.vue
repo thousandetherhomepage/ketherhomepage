@@ -1,7 +1,4 @@
 <style lang="scss">
-form {
-  margin-bottom: 2em;
-}
 label {
   display: block;
   margin-bottom: 0.5em;
@@ -86,6 +83,7 @@ input {
 </template>
 
 <script>
+
 export default {
   props: ["provider", "contract", "ketherNFT", "ad"],
   data() {
@@ -103,7 +101,19 @@ export default {
         return;
       }
       try {
+        // FIXME: This throws if you cancel and hit wrap again, we could initiate a recovery here
         const { predictedAddress } = (await this.ketherNFT.precompute(this.ad.idx, signerAddr));
+
+        if (predictedAddress.length != 42 || predictedAddress == "0x0000000000000000000000000000000000000000") {
+          throw "Invalid predictedAddress, something is wrong: " + predictedAddress;
+        }
+
+        /* FIXME: Finish this:
+        const expectedPredictedAddress = this.$store.getters.precomputeEscrow({idx: this.ad.idx, KH: this.contract, KNFT: this.ketherNFT});
+        if (predictedAddress != expectedPredictedAddress) {
+          throw "predictedAddress does not match expected value, something went wrong: " + predictedAddress + " != " + expectedPredictedAddress;
+        }
+        */
 
         // TODO we need to be able to rescue if only the first part worked (e.g. if you have an ad at your predicted address)
         this.wrapInProgress = "Check your wallet for queued transactions, there will be 2 in total.";
