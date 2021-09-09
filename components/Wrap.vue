@@ -109,12 +109,11 @@ export default {
           throw "Invalid predictedAddress, something is wrong: " + predictedAddress;
         }
 
-        /*
+        // XXX: This is failing for now, need to figure out why (client-side issue)
         const expectedPredictedAddress = this.$store.getters.precomputeEscrow({idx: this.ad.idx, KH: this.contract, KNFT: this.ketherNFT});
         if (predictedAddress != expectedPredictedAddress) {
           throw "predictedAddress does not match expected value, something went wrong: " + predictedAddress + " != " + expectedPredictedAddress;
         }
-        */
 
         // TODO we need to be able to rescue if only the first part worked (e.g. if you have an ad at your predicted address)
         this.wrapInProgress = "Check your wallet for queued transactions, there will be 2 in total.";
