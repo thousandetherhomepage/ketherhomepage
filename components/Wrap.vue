@@ -102,13 +102,14 @@ export default {
       }
       try {
         // FIXME: This throws if you cancel and hit wrap again, we could initiate a recovery here
-        const { predictedAddress } = (await this.ketherNFT.precompute(this.ad.idx, signerAddr));
+        const { salt, predictedAddress } = (await this.ketherNFT.precompute(this.ad.idx, signerAddr));
+        console.log("predictedAddress", predictedAddress, salt, this.ad.idx, signerAddr);
 
         if (predictedAddress.length != 42 || predictedAddress == "0x0000000000000000000000000000000000000000") {
           throw "Invalid predictedAddress, something is wrong: " + predictedAddress;
         }
 
-        /* FIXME: Finish this:
+        /*
         const expectedPredictedAddress = this.$store.getters.precomputeEscrow({idx: this.ad.idx, KH: this.contract, KNFT: this.ketherNFT});
         if (predictedAddress != expectedPredictedAddress) {
           throw "predictedAddress does not match expected value, something went wrong: " + predictedAddress + " != " + expectedPredictedAddress;

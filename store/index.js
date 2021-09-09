@@ -147,16 +147,20 @@ export const getters = {
   precomputeEscrow: state => ({ idx, KH, KNFT }) => {
     // This should only be used for client-side confirmation or recovery. For actual
     // predictedAddress derivation, use the on-chain contract function.
-    throw "XXX: Not complete yet"; // FIXME: This is incorrect, possibly wrong bytecode?
+    throw "XXX: This isn't done yet."; // Outputs don't match up yet
+    const address = ethers.utils.getAddress(state.activeAccount); // Normalize to be consistant
+    const salt = ethers.utils.sha256(address);
 
-    const salt = ethers.utils.sha256(state.activeAccount);
-    const wrappedPayload = KH.interface.encodeFunctionData("setAdOwner", [idx, KNFT.address]);
+    const KNFT_address = ethers.utils.getAddress(KNFT.address);
+    const KH_address = ethers.utils.getAddress(KH.address);
+
+    const wrappedPayload = KH.interface.encodeFunctionData("setAdOwner", [idx, KNFT_address]);
     const bytecode = ethers.utils.hexlify(
       ethers.utils.concat([
         FlashEscrow_bytecode,
-        ethers.utils.defaultAbiCoder.encode(['address', 'bytes'], [KH.address, wrappedPayload]),
+        ethers.utils.defaultAbiCoder.encode(['address', 'bytes'], [KH_address, wrappedPayload]),
       ]));
-    return ethers.utils.getCreate2Address(KNFT.address, salt, ethers.utils.keccak256(bytecode));
+    return ethers.utils.getCreate2Address(KNFT_address, salt, ethers.utils.keccak256(bytecode));
   }
 }
 
@@ -276,6 +280,7 @@ export const actions = {
   },
 
   async detectHalfWrapped({ state, commit }, { ketherContract, nftContract, numBlocks }) {
+    // FIXME: Probably should move this into Wrap or a ResumeWrap component, no need to pollute global state
     const account = state.activeAccount;
     if (!account) {
       console.error("Can't detect half-wrapped ads without an active account. Connect a wallet.");
