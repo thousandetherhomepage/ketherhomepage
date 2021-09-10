@@ -441,33 +441,30 @@ function eventToAd(state, adEvent) {
 }
 
 function appendAd(state, ad) {
-  this._vm.$set(state.ads, ad.idx, ad); // Force reactive
-
   if (state.accounts[ad.owner]) {
     addAdOwned.call(this, state, ad);
   } else if (ad.owner === state.networkConfig.ketherNFTAddr) {
     addNFTAd.call(this, state, ad);
   }
-  if (ad.width === undefined) {
-    // This is just a publish event, will fill this out when it comes
-    // back with the buy event (race condition)
-    return;
+
+  // If we haven't added this ad before and it's not a Publish event, count the pixels
+  if (ad.width === undefined || state.ads[ad.idx] === undefined) {
+    state.adsPixels += ad.width * ad.height * 100;
+    if (state.grid !== null) {
+      // If the grid is already cached, update to include new ad.
+
+      // Ad properties might be BigNumbers maybe which don't play well with +'s...
+      // TODO: Fix this in a more general way?
+      const x1 = Number(ad.x);
+      const x2 = x1 + Number(ad.width) - 1;
+      const y1 = Number(ad.y);
+      const y2 = y1 + Number(ad.height) - 1;
+      setBox(state.grid, x1, y1, x2, y2);
+    }
   }
 
-  // Count pixels
-  // TODO remove this as we sold out
-  state.adsPixels += ad.width * ad.height * 100;
-  if (state.grid !== null) {
-    // If the grid is already cached, update to include new ad.
-
-    // Ad properties might be BigNumbers maybe which don't play well with +'s...
-    // TODO: Fix this in a more general way?
-    const x1 = Number(ad.x);
-    const x2 = x1 + Number(ad.width) - 1;
-    const y1 = Number(ad.y);
-    const y2 = y1 + Number(ad.height) - 1;
-    setBox(state.grid, x1, y1, x2, y2);
-  }
+  // Force reactivity
+  this._vm.$set(state.ads, ad.idx, ad);
 
   return state;
 }
