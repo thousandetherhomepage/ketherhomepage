@@ -1,6 +1,5 @@
 <style lang="scss">
 .edit {
-  display: inline-block;
   margin-top: 1em;
   margin-left: 5px;
   padding: 5px 10px;
@@ -13,35 +12,65 @@
     margin-left: 5px;
   }
 }
+
+section {
+  margin-bottom: 2em;
+}
 </style>
 
 <template>
   <div class="container">
     <AdGrid v-if="$store.state.gridVis" :provider="provider" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered" />
     <LazyAdList v-else />
+    <div class="edit" v-if="$store.getters.numOwned > 0 > 0">
+      {{$store.getters.numOwned}} ads owned by you, {{$store.getters.numOwnedWrapped}} wrapped as NFT.
+      <div v-if="$store.getters.numHalfWrapped >0">{{$store.getters.numHalfWrapped}} half wrapped and can be rescued.</div>
+      <form>
+        <p>
+          <select v-model="ad">
+            <option disabled value="">Select ad to edit</option>
 
-    <div class="edit" v-if="$store.getters.numOwned > 0">
-      {{$store.getters.numOwned}} ads owned by you, {{$store.getters.numOwnedWrapped}} wrapped as NFT. <button v-on:click="showPublish = true" v-if="!showPublish">Edit and Wrap Ads</button>
+            <option v-for="idx of Object.keys($store.state.halfWrapped)" :key="idx" v-bind:value="$store.state.ads[idx]">>
+            #{{idx}} - Rescue Half Wrapped
+            </option>
+
+            <option v-for="ad of $store.state.ownedAds" :key="ad.idx" v-bind:value="ad">>
+            #{{ad.idx}} ({{ad.wrapped ? "NFT" : "Not wrapped"}})- {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
+            </option>
+          </select>
+        </p>
+        <p>
+          <button v-on:click="tab = 'publish'" :disabled="tab == 'publish' || !ad || $store.state.halfWrapped[ad.idx]">Edit Ad</button>
+          <button v-on:click="tab = 'wrap'" :disabled="tab == 'wrap' || !ad">Wrap / Unwrap</button>
+        </p>
+      </form>
     </div>
-    <LazyPublish v-if="showPublish" :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :showNSFW="showNSFW" />
+    <p v-else-if="$store.state.activeAccount">
+      No purchased ads detected for active accounts. Reload after buying an ad.
+    </p>
+
+    <section>
+      <LazyPublish v-if="tab == 'publish'" :ad="ad" :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :showNSFW="showNSFW" />
+      <LazyWrap v-else-if="tab == 'wrap'" :ad="ad" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" />
+    </section>
+
   </div>
 </template>
 
 <script>
 import AdGrid from './AdGrid.vue'
 import AdList from './AdList.vue'
-import Publish from './Publish.vue'
 import Offline from './Offline.vue'
 
 export default {
   props: ["provider", "contract", "ketherNFT", "isReadOnly", "showNSFW", "prerendered"],
   data() {
     return {
-      showPublish: false,
+      ad: null,
+      tab: null,
     }
   },
   components: {
-    Publish,
     Offline,
     AdGrid,
     AdList,

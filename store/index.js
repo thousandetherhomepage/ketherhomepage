@@ -10,6 +10,7 @@ export const state = () => {
     adsPixels: 0,
     ownedAds: {},
     nftAds: {},
+    halfWrapped: {},
     pixelsOwned: 0,
     grid: null, // lazy load
     previewAd: null,
@@ -50,8 +51,9 @@ export const mutations = {
   addAccount(state, account) {
     account = normalizeAddr(account);
     for (const ad of state.ads) {
+      // TODO get our ads from NFT here as well
       if (normalizeAddr(ad.owner) === account) {
-        addAdOwned(state, ad);
+        addAdOwned.call(this, state, ad);
       }
     }
     state.ownedAds = Object.assign({}, state.ownedAds);
@@ -101,7 +103,16 @@ export const mutations = {
       state.loadedBlockTimestamp = timestamp;
     }
     console.info("Contract loaded", state.ads.length, "ads until block number", blockNumber, "from", network);
-  }
+  },
+
+  addHalfWrapped(state, {idx, account}) {
+    this._vm.$set(state.halfWrapped, idx, account);
+    this._vm.$delete(state.ownedAds, idx);
+  },
+
+  removeHalfWrapped(state, idx) {
+    this._vm.$delete(state.halfWrapped, idx);
+  },
 }
 
 export const getters = {
@@ -127,16 +138,33 @@ export const getters = {
     return state.ads.filter(ad => ad.wrapped).length;;
   },
   numOwned: state => {
-    return Object.keys(state.ownedAds).length;
+    return Object.keys({...state.ownedAds, ...state.halfWrapped}).length;
   },
   numOwnedWrapped: state => {
     return Object.values(state.ownedAds).filter(ad => ad.wrapped).length;
+  },
+  numHalfWrapped: state => {
+    return Object.keys(state.halfWrapped).length;
   },
   numNSFW: state => {
     return state.ads.filter(ad => ad.NSFW).length;
   },
   isSoldOut: state => {
     return isSoldOut(state);
+  },
+  precomputeEscrow: state => ({ idx, KH, KNFT }) => {
+    // This should only be used for client-side confirmation or recovery. For actual
+    // predictedAddress derivation, use the on-chain contract function.
+    const address = state.activeAccount; // Normalize to be consistant
+    const salt = ethers.utils.soliditySha256(["address"], [address]);
+
+    const wrappedPayload = KH.interface.encodeFunctionData("setAdOwner", [idx, KNFT.address]);
+    const bytecodeHash = ethers.utils.solidityKeccak256(["bytes", "bytes"],
+      [
+        state.networkConfig.flashEscrowInitCode,
+        ethers.utils.defaultAbiCoder.encode(["address", "bytes"], [KH.address, wrappedPayload])
+      ]);
+    return ethers.utils.getCreate2Address(KNFT.address, salt, bytecodeHash);
   }
 }
 
@@ -157,14 +185,16 @@ export const actions = {
     await dispatch('loadAds', contracts);
   },
 
-  async initState({ commit }) {
+  async initState({ commit, state }, activeNetwork) {
+    // Disable initState for now
+    return;
+
     if (process.server) {
       // TODO: Server-side version of fetch
       return;
     }
-
-    return; // FIXME: Disabled for now. Need to fix activeAccount issue.
-
+    // Only load state on network change and on mainnet
+    if (activeNetwork != "homestead" || activeNetwork == state.loadedNetwork) return;
     let s = await window.fetch('/initState.json').then(res => res.json())
     s.offlineMode = true;
     if (isSoldOut(s)) s.grid = null; // Skip grid
@@ -196,18 +226,19 @@ export const actions = {
       await dispatch('reset', activeNetwork);
     }
 
-    const loadFromKetherView = !!state.networkConfig.ketherViewAddr; // Only use View contract if deployed
+    const loadFromKetherView = !!state.networkConfig.ketherViewAddr && state.loadedNetwork != activeNetwork; // Only use View contract if deployed & we haven't loaded already
     const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
 
     if (loadFromKetherView) {
-      const loadAds = async (offset, limit, retries = 0) => {
+      console.log("Loading from KetherView");
+      const loadKetherView = async (offset, limit, retries = 0) => {
         try {
           const ads = await ketherView.allAds(contract.address, ketherNFT.address, offset, limit);
           commit('importAds', ads);
         } catch (err) { // TODO: catch specific errors here
           if (retries < 1) {
             console.log("retrying loading of ", offset);
-            await loadAds(offset, limit, retries + 1);
+            await loadKetherView(offset, limit, retries + 1);
           }
           else {
             console.error("Exhausted retries for ", offset, err);
@@ -219,7 +250,7 @@ export const actions = {
       commit('setAdsLength', len);
       let promises = [];
       for (let offset = 0; offset < len; offset+=limit) {
-        promises.push(loadAds(offset, limit));
+        promises.push(loadKetherView(offset, limit));
       }
       await Promise.all(promises);
 
@@ -248,9 +279,48 @@ export const actions = {
     account = normalizeAddr(account);
     if (!state.activeAccount) commit('setAccount', account);
     if (state.accounts[account] === true) return; // Already added
-    state.accounts[account] = true;
+    this._vm.$set(state.accounts, account, true);
     commit('addAccount', account);
-  }
+  },
+
+  async detectHalfWrapped({ state, commit }, { ketherContract, nftContract, numBlocks }) {
+    // FIXME: Probably should move this into Wrap or a ResumeWrap component, no need to pollute global state
+    const account = state.activeAccount;
+    console.log("statrt")
+    if (!account) {
+      console.error("Can't detect half-wrapped ads without an active account. Connect a wallet.");
+      return;
+    }
+    if (numBlocks === undefined) {
+      numBlocks = 10 * 60 * 24 * 7; // Look 7 days back
+    }
+    let ids = {};
+    const eventFilter = [ ketherContract.filters.SetAdOwner() ];
+    const events = await ketherContract.queryFilter(eventFilter, -numBlocks);
+    for (const evt of events.reverse()) {
+      // Only look at events from your account (alas not indexed so we can't filter above)
+      if (normalizeAddr(evt.args.from) !== normalizeAddr(account)) continue;
+
+      const idx = evt.args.idx.toNumber();
+      if (ids[idx] !== undefined) continue;
+      ids[idx] = true;
+    }
+
+    for (const idx in ids) {
+      // Skip ads already wrapped successfully
+      if (state.ads[idx].wrapped) continue;
+      if (state.ownedAds[idx]) continue;
+
+      try {
+        // Confirm it's not minted on-chain (local state is stale)
+        // Is there a better way to do this without throwing an exception?
+        await nftContract.ownerOf(idx);
+      } catch(err) {
+        commit('addHalfWrapped', {idx: idx, account: account});
+      }
+    }
+  },
+
 }
 
 //// Helpers
@@ -292,7 +362,7 @@ function addAdOwned(state, ad) {
   if (state.ownedAds[ad.idx] === undefined) {
     state.pixelsOwned += ad.width * ad.height * 100;
   }
-  state.ownedAds[ad.idx] = ad;
+  this._vm.$set(state.ownedAds, ad.idx, ad);
 }
 
 function addNFTAd(state, ad) {
@@ -356,7 +426,7 @@ function eventToAd(state, adEvent) {
   let existingAd = state.ads[ad.idx];
   if (existingAd !== undefined && existingAd.width !== undefined) {
     // Already counted, update values
-    return Object.assign(existingAd, ad);
+    return Object.assign({}, existingAd, ad);
   }
 
   // Add defaults to non-existing ad
@@ -371,39 +441,30 @@ function eventToAd(state, adEvent) {
 }
 
 function appendAd(state, ad) {
-  if (state.ads[ad.idx] !== undefined) {
-    // Already exists, update
-    this._vm.$set(state.ads, ad.idx, ad); // Force reactive
-    return;
-  }
-
-  // Need to use splice rather than this.ads[i] to make it reactive
-  state.ads.splice(ad.idx, 1, ad);
   if (state.accounts[ad.owner]) {
-    addAdOwned(state, ad);
+    addAdOwned.call(this, state, ad);
   } else if (ad.owner === state.networkConfig.ketherNFTAddr) {
-    addNFTAd(state, ad);
+    addNFTAd.call(this, state, ad);
   }
 
-  if (ad.width === undefined) {
-    // This is just a publish event, will fill this out when it comes
-    // back with the buy event (race condition)
-    return;
+  // If we haven't added this ad before and it's not a Publish event, count the pixels
+  if (ad.width === undefined || state.ads[ad.idx] === undefined) {
+    state.adsPixels += ad.width * ad.height * 100;
+    if (state.grid !== null) {
+      // If the grid is already cached, update to include new ad.
+
+      // Ad properties might be BigNumbers maybe which don't play well with +'s...
+      // TODO: Fix this in a more general way?
+      const x1 = Number(ad.x);
+      const x2 = x1 + Number(ad.width) - 1;
+      const y1 = Number(ad.y);
+      const y2 = y1 + Number(ad.height) - 1;
+      setBox(state.grid, x1, y1, x2, y2);
+    }
   }
 
-  // Count pixels
-  state.adsPixels += ad.width * ad.height * 100;
-  if (state.grid !== null) {
-    // If the grid is already cached, update to include new ad.
-
-    // Ad properties might be BigNumbers maybe which don't play well with +'s...
-    // TODO: Fix this in a more general way?
-    const x1 = Number(ad.x);
-    const x2 = x1 + Number(ad.width) - 1;
-    const y1 = Number(ad.y);
-    const y2 = y1 + Number(ad.height) - 1;
-    setBox(state.grid, x1, y1, x2, y2);
-  }
+  // Force reactivity
+  this._vm.$set(state.ads, ad.idx, ad);
 
   return state;
 }

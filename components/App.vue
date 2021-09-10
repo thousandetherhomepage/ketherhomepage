@@ -10,14 +10,17 @@
       :isReadOnly="isReadOnly"
       :showNSFW="showNSFW"
       :prerendered="prerendered"
-    ></Homepage>
+      />
     <BuyButton :x="20" :y="940" />
 
     <LazyConnectWallet v-if="walletConnect" :networkConfig="networkConfig" @wallet-connect="connectEthereum" @wallet-disconnect="walletConnect = false"/>
     <button @click="walletConnect = true" v-if="!$store.state.activeAccount">
       {{walletConnect ? "Loading..." : "Connect Wallet" }}
     </button>
-    <div v-else>Active Account: <strong>{{$store.state.activeAccount}}</strong></div>
+    <div v-else>
+      Active Account: <strong>{{$store.state.activeAccount}}</strong>
+    </div>
+
 
     <div class="info">
       <p>✅ Loaded {{$store.getters.numAds}} ads ({{$store.getters.numWrapped}} are wrapped as NFTs!) as of block {{$store.state.loadedBlockNumber}} ({{timeSinceLoaded}})</p>
@@ -133,9 +136,12 @@ export default {
       this.networkConfig = deployConfig[this.activeNetwork];
       if (this.networkConfig) {
         const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
-        this.setContracts(contract, ketherNFT, ketherView);
+        await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView);
         this.listenContractEvents(contract);
         this.isReadOnly = false;
+
+        // Find half-wrapped ads
+        this.$store.dispatch('detectHalfWrapped', { ketherContract: contract, nftContract: ketherNFT });
       }
 
       // When the network changes, refresh the page.
@@ -156,10 +162,12 @@ export default {
       this.networkConfig = deployConfig[this.activeNetwork];
 
       const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
-      this.setContracts(contract, ketherNFT, ketherView);
+      await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView);
       this.isReadOnly = true;
     },
-    setContracts(contract, ketherNFT, ketherView) {
+    async setContracts(activeNetwork, contract, ketherNFT, ketherView) {
+      // Load the initial state on network change
+      await this.$store.dispatch('initState', activeNetwork);
       if (this.contract) {
         this.contract.removeAllListeners();
       }
@@ -168,12 +176,15 @@ export default {
       this.contract.on('error', function(err) {
         console.error("Contract subscription error:", err);
       });
-
+      // FIXME this will trigger a second reload (using ketherview) when the user connects their wallet
       this.$store.dispatch('loadAds', {contract, ketherNFT, ketherView});
     },
     listenContractEvents(contract) {
       // These listeners will long-poll the provider every block, so probably
       // only makes sense to set them up if a wallet is connected.
+
+      //FIXME this is called twice if using MetaMask - when the page is loaded and when the wallet is connected.
+      // Do we want to only subscribe you connect the wallet, or just subscribe on page load?
       console.log("Subscribing to Buy and Publish events");
 
       contract.on('Buy', function(idx, owner, x, y, width, height) {

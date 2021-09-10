@@ -1,7 +1,4 @@
 <style lang="scss">
-form {
-  margin-bottom: 2em;
-}
 label {
   display: block;
   margin-bottom: 0.5em;
@@ -72,6 +69,12 @@ input {
       Ad is wrapped to NFT.
       <button type="button" v-on:click="unwrap" v-bind:disabled="!!wrapInProgress">Unwrap #{{ad.idx}} to Legacy Contract</button>
       </p>
+      <p v-else-if="$store.state.halfWrapped[ad.idx]">
+        <label>
+          <button type="button" v-on:click="wrap" v-bind:disabled="!!wrapInProgress">Finish Wrapping #{{ad.idx}} to NFT</button>
+          <small>Complete the wrapping of this ad as NFT</small>
+        </label>
+      </p>
       <p v-else>
         <label>
           <button type="button" v-on:click="wrap" v-bind:disabled="!!wrapInProgress">Wrap #{{ad.idx}} to NFT</button>
@@ -86,6 +89,7 @@ input {
 </template>
 
 <script>
+
 export default {
   props: ["provider", "contract", "ketherNFT", "ad"],
   data() {
@@ -98,20 +102,25 @@ export default {
     async wrap() {
       const signer = await this.provider.getSigner();
       const signerAddr = await signer.getAddress();
-      if (signerAddr.toLowerCase() != this.ad.owner) {
-        this.error = 'Incorrect active wallet. Must publish with: ' + this.ad.owner;
-        return;
-      }
-      try {
-        const { predictedAddress } = (await this.ketherNFT.precompute(this.ad.idx, signerAddr));
 
-        // TODO we need to be able to rescue if only the first part worked (e.g. if you have an ad at your predicted address)
+      try {
+        const { salt, predictedAddress } = (await this.ketherNFT.precompute(this.ad.idx, signerAddr));
+
+        if (predictedAddress.length != 42 || predictedAddress == "0x0000000000000000000000000000000000000000") {
+          throw "Invalid predictedAddress, something is wrong: " + predictedAddress;
+        }
+
+        const expectedPredictedAddress = this.$store.getters.precomputeEscrow({idx: this.ad.idx, KH: this.contract, KNFT: this.ketherNFT});
+        if (predictedAddress != expectedPredictedAddress) {
+          throw "predictedAddress does not match expected value, something went wrong: " + predictedAddress + " != " + expectedPredictedAddress;
+        }
+
         this.wrapInProgress = "Check your wallet for queued transactions, there will be 2 in total.";
-        // Right now it won't show up after a refresh in the UI because it belongs to a precomputed address and hasn't been minted yet..
-        {
+        if (!this.$store.state.halfWrapped[this.ad.idx]) {
           const tx = await this.contract.connect(signer).setAdOwner(this.ad.idx, predictedAddress);
           this.wrapInProgress = "First transaction submitted, waiting...";
           await tx.wait();
+          this.$store.commit('addHalfWrapped', {idx: this.ad.idx, account: signerAddr});
         }
 
         this.wrapInProgress = "Confirm 2nd wrap transaction, check your wallet queue.";
@@ -120,7 +129,10 @@ export default {
           this.wrapInProgress = "Second transaction submitted, waiting...";
           await tx.wait();
         }
-        this.$store.commit('importAds', [Object.assign(this.ad, {wrapped: true})]);
+
+        this.$store.commit('importAds', [Object.assign(this.ad, {owner: signerAddr, wrapped: true})]);
+        this.$store.commit('removeHalfWrapped', this.ad.idx);
+
       } catch(err) {
         this.error = err;
       } finally {
