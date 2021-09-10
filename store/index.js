@@ -10,7 +10,7 @@ export const state = () => {
     adsPixels: 0,
     ownedAds: {},
     nftAds: {},
-    halfWrapped: [],
+    halfWrapped: {},
     pixelsOwned: 0,
     grid: null, // lazy load
     previewAd: null,
@@ -53,7 +53,7 @@ export const mutations = {
     for (const ad of state.ads) {
       // TODO get our ads from NFT here as well
       if (normalizeAddr(ad.owner) === account) {
-        addAdOwned(state, ad);
+        addAdOwned.call(this, state, ad);
       }
     }
     state.ownedAds = Object.assign({}, state.ownedAds);
@@ -106,7 +106,11 @@ export const mutations = {
   },
 
   addHalfWrapped(state, {idx, account}) {
-    state.halfWrapped.push({idx, account});
+    this._vm.$set(state.halfWrapped, idx, account);
+  },
+
+  removeHalfWrapped(state, idx) {
+    this._vm.$delete(state.halfWrapped, idx);
   },
 }
 
@@ -133,10 +137,13 @@ export const getters = {
     return state.ads.filter(ad => ad.wrapped).length;;
   },
   numOwned: state => {
-    return Object.keys(state.ownedAds).length;
+    return Object.keys({...state.ownedAds, ...state.halfWrapped}).length;
   },
   numOwnedWrapped: state => {
     return Object.values(state.ownedAds).filter(ad => ad.wrapped).length;
+  },
+  numHalfWrapped: state => {
+    return Object.keys(state.halfWrapped).length;
   },
   numNSFW: state => {
     return state.ads.filter(ad => ad.NSFW).length;
@@ -271,13 +278,14 @@ export const actions = {
     account = normalizeAddr(account);
     if (!state.activeAccount) commit('setAccount', account);
     if (state.accounts[account] === true) return; // Already added
-    state.accounts[account] = true;
+    this._vm.$set(state.accounts, account, true);
     commit('addAccount', account);
   },
 
   async detectHalfWrapped({ state, commit }, { ketherContract, nftContract, numBlocks }) {
     // FIXME: Probably should move this into Wrap or a ResumeWrap component, no need to pollute global state
     const account = state.activeAccount;
+    console.log("statrt")
     if (!account) {
       console.error("Can't detect half-wrapped ads without an active account. Connect a wallet.");
       return;
@@ -300,7 +308,7 @@ export const actions = {
     for (const idx in ids) {
       // Skip ads already wrapped successfully
       if (state.ads[idx].wrapped) continue;
-      if (state.ownedAds[idx]) continue;
+     // if (state.ownedAds[idx]) continue;
 
       try {
         // Confirm it's not minted on-chain (local state is stale)
@@ -310,7 +318,10 @@ export const actions = {
         commit('addHalfWrapped', {idx: idx, account: account});
       }
     }
+    console.log("end")
+
   },
+
 }
 
 //// Helpers
@@ -352,7 +363,7 @@ function addAdOwned(state, ad) {
   if (state.ownedAds[ad.idx] === undefined) {
     state.pixelsOwned += ad.width * ad.height * 100;
   }
-  state.ownedAds[ad.idx] = ad;
+  this._vm.$set(state.ownedAds, ad.idx, ad);
 }
 
 function addNFTAd(state, ad) {
@@ -440,11 +451,10 @@ function appendAd(state, ad) {
   // Need to use splice rather than this.ads[i] to make it reactive
   state.ads.splice(ad.idx, 1, ad);
   if (state.accounts[ad.owner]) {
-    addAdOwned(state, ad);
+    addAdOwned.call(this, state, ad);
   } else if (ad.owner === state.networkConfig.ketherNFTAddr) {
-    addNFTAd(state, ad);
+    addNFTAd.call(this, state, ad);
   }
-
   if (ad.width === undefined) {
     // This is just a publish event, will fill this out when it comes
     // back with the buy event (race condition)

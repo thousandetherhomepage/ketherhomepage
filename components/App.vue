@@ -17,7 +17,12 @@
     <button @click="walletConnect = true" v-if="!$store.state.activeAccount">
       {{walletConnect ? "Loading..." : "Connect Wallet" }}
     </button>
-    <div v-else>Active Account: <strong>{{$store.state.activeAccount}}</strong></div>
+    <div v-else>
+      Active Account: <strong>{{$store.state.activeAccount}}</strong>
+      <p><button type="button" v-on:click="$store.dispatch('detectHalfWrapped', { ketherContract: contract, nftContract: ketherNFT })">Check for Half-Wrapped Ads</button>
+</p>
+    </div>
+
 
     <div class="info">
       <p>✅ Loaded {{$store.getters.numAds}} ads ({{$store.getters.numWrapped}} are wrapped as NFTs!) as of block {{$store.state.loadedBlockNumber}} ({{timeSinceLoaded}})</p>

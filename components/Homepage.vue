@@ -22,9 +22,9 @@ section {
   <div class="container">
     <AdGrid v-if="$store.state.gridVis" :provider="provider" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered" />
     <LazyAdList v-else />
-
-    <div class="edit" v-if="$store.getters.numOwned > 0">
+    <div class="edit" v-if="$store.getters.numOwned > 0 > 0">
       {{$store.getters.numOwned}} ads owned by you, {{$store.getters.numOwnedWrapped}} wrapped as NFT.
+      <div v-if="$store.getters.numHalfWrapped >0">{{$store.getters.numHalfWrapped}} half wrapped and can be rescued.</div>
       <form>
         <p>
           <select v-model="ad">
@@ -32,12 +32,14 @@ section {
             <option v-for="ad of $store.state.ownedAds" :key="ad.idx" v-bind:value="ad">>
             #{{ad.idx}} ({{ad.wrapped ? "NFT" : "Not wrapped"}})- {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
             </option>
+            <option v-for="idx of Object.keys($store.state.halfWrapped)" :key="idx" v-bind:value="$store.state.ads[idx]">>
+            #{{idx}} - Rescue Half Wrapped
+            </option>
           </select>
         </p>
         <p>
-          <button v-on:click="tab = 'publish'" :disabled="tab == 'publish' || !ad">Edit Ad</button>
+          <button v-on:click="tab = 'publish'" :disabled="tab == 'publish' || !ad || $store.state.halfWrapped[ad.idx]">Edit Ad</button>
           <button v-on:click="tab = 'wrap'" :disabled="tab == 'wrap' || !ad">Wrap / Unwrap</button>
-          <button type="button" v-on:click="$store.dispatch('detectHalfWrapped', { ketherContract: contract, nftContract: ketherNFT })">Check for Half-Wrapped Ads</button>
         </p>
       </form>
     </div>
