@@ -286,9 +286,7 @@ export const actions = {
   async detectHalfWrapped({ state, commit }, { ketherContract, nftContract, numBlocks }) {
     // FIXME: Probably should move this into Wrap or a ResumeWrap component, no need to pollute global state
     const account = state.activeAccount;
-    console.log("statrt")
     if (!account) {
-      console.error("Can't detect half-wrapped ads without an active account. Connect a wallet.");
       return;
     }
     if (numBlocks === undefined) {
