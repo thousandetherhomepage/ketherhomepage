@@ -176,7 +176,6 @@ export default {
       this.contract.on('error', function(err) {
         console.error("Contract subscription error:", err);
       });
-      // FIXME this will trigger a second reload (using ketherview) when the user connects their wallet
       this.$store.dispatch('loadAds', {contract, ketherNFT, ketherView});
     },
     listenContractEvents(contract) {

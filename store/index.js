@@ -229,6 +229,8 @@ export const actions = {
     const loadFromKetherView = !!state.networkConfig.ketherViewAddr && state.loadedNetwork != activeNetwork; // Only use View contract if deployed & we haven't loaded already
     const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
 
+    commit('setLoadedNetwork', {network: activeNetwork, blockNumber: blockNumber, timestamp: blockTimestamp});
+
     if (loadFromKetherView) {
       console.log("Loading from KetherView");
       const loadKetherView = async (offset, limit, retries = 0) => {
@@ -271,8 +273,6 @@ export const actions = {
         commit('addAd', toAd(i, await ad));
       }
     }
-
-    commit('setLoadedNetwork', {network: activeNetwork, blockNumber: blockNumber, timestamp: blockTimestamp});
   },
 
   async addAccount({ commit, state }, account) {
