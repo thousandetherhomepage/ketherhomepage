@@ -119,7 +119,6 @@ export default {
           throw "predictedAddress does not match expected value, something went wrong: " + predictedAddress + " != " + expectedPredictedAddress;
         }
 
-        // TODO we need to be able to rescue if only the first part worked (e.g. if you have an ad at your predicted address)
         this.wrapInProgress = "Check your wallet for queued transactions, there will be 2 in total.";
         if (!this.$store.state.halfWrapped[this.ad.idx]) {
           const tx = await this.contract.connect(signer).setAdOwner(this.ad.idx, predictedAddress);
@@ -135,6 +134,8 @@ export default {
           await tx.wait();
         }
         this.$store.commit('importAds', [Object.assign(this.ad, {wrapped: true})]);
+        this.$store.commit('removeHalfWrapped', this.ad.idx);
+
       } catch(err) {
         this.error = err;
       } finally {
