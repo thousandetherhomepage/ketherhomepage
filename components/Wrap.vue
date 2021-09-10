@@ -102,11 +102,7 @@ export default {
     async wrap() {
       const signer = await this.provider.getSigner();
       const signerAddr = await signer.getAddress();
-      // TODO: do we want this check for safety
-      //if (signerAddr.toLowerCase() != this.ad.owner) {
-      //  this.error = 'Incorrect active wallet. Must wrap with: ' + this.ad.owner;
-      //  return;
-      //}
+
       try {
         const { salt, predictedAddress } = (await this.ketherNFT.precompute(this.ad.idx, signerAddr));
 
@@ -133,6 +129,7 @@ export default {
           this.wrapInProgress = "Second transaction submitted, waiting...";
           await tx.wait();
         }
+
         this.$store.commit('importAds', [Object.assign(this.ad, {wrapped: true})]);
         this.$store.commit('removeHalfWrapped', this.ad.idx);
 
