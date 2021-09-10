@@ -19,8 +19,6 @@
     </button>
     <div v-else>
       Active Account: <strong>{{$store.state.activeAccount}}</strong>
-      <p><button type="button" v-on:click="$store.dispatch('detectHalfWrapped', { ketherContract: contract, nftContract: ketherNFT })">Check for Half-Wrapped Ads</button>
-</p>
     </div>
 
 
@@ -141,6 +139,9 @@ export default {
         await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView);
         this.listenContractEvents(contract);
         this.isReadOnly = false;
+
+        // Find half-wrapped ads
+        this.$store.dispatch('detectHalfWrapped', { ketherContract: contract, nftContract: ketherNFT });
       }
 
       // When the network changes, refresh the page.
