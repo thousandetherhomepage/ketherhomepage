@@ -29,11 +29,13 @@ section {
         <p>
           <select v-model="ad">
             <option disabled value="">Select ad to edit</option>
-            <option v-for="ad of $store.state.ownedAds" :key="ad.idx" v-bind:value="ad">>
-            #{{ad.idx}} ({{ad.wrapped ? "NFT" : "Not wrapped"}})- {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
-            </option>
+
             <option v-for="idx of Object.keys($store.state.halfWrapped)" :key="idx" v-bind:value="$store.state.ads[idx]">>
             #{{idx}} - Rescue Half Wrapped
+            </option>
+
+            <option v-for="ad of $store.state.ownedAds" :key="ad.idx" v-bind:value="ad">>
+            #{{ad.idx}} ({{ad.wrapped ? "NFT" : "Not wrapped"}})- {{ad.width*10}}x{{ad.height*10}}px at ({{ad.x}}, {{ad.y}}): {{ad.title}} - {{ ad.link || "(no link)" }}
             </option>
           </select>
         </p>
