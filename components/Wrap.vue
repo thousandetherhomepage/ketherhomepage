@@ -130,7 +130,7 @@ export default {
           await tx.wait();
         }
 
-        this.$store.commit('importAds', [Object.assign(this.ad, {wrapped: true})]);
+        this.$store.commit('importAds', [Object.assign(this.ad, {owner: signerAddr, wrapped: true})]);
         this.$store.commit('removeHalfWrapped', this.ad.idx);
 
       } catch(err) {

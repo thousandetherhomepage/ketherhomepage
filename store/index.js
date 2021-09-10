@@ -441,14 +441,8 @@ function eventToAd(state, adEvent) {
 }
 
 function appendAd(state, ad) {
-  if (state.ads[ad.idx] !== undefined) {
-    // Already exists, update
-    this._vm.$set(state.ads, ad.idx, ad); // Force reactive
-    return;
-  }
+  this._vm.$set(state.ads, ad.idx, ad); // Force reactive
 
-  // Need to use splice rather than this.ads[i] to make it reactive
-  state.ads.splice(ad.idx, 1, ad);
   if (state.accounts[ad.owner]) {
     addAdOwned.call(this, state, ad);
   } else if (ad.owner === state.networkConfig.ketherNFTAddr) {
@@ -461,6 +455,7 @@ function appendAd(state, ad) {
   }
 
   // Count pixels
+  // TODO remove this as we sold out
   state.adsPixels += ad.width * ad.height * 100;
   if (state.grid !== null) {
     // If the grid is already cached, update to include new ad.
