@@ -107,6 +107,7 @@ export const mutations = {
 
   addHalfWrapped(state, {idx, account}) {
     this._vm.$set(state.halfWrapped, idx, account);
+    this._vm.$delete(state.ownedAds, idx);
   },
 
   removeHalfWrapped(state, idx) {
@@ -291,7 +292,7 @@ export const actions = {
       return;
     }
     if (numBlocks === undefined) {
-      numBlocks = 10 * 60 * 24 * 30; // Look 30 days back
+      numBlocks = 10 * 60 * 24 * 7; // Look 7 days back
     }
     let ids = {};
     const eventFilter = [ ketherContract.filters.SetAdOwner() ];
@@ -308,7 +309,7 @@ export const actions = {
     for (const idx in ids) {
       // Skip ads already wrapped successfully
       if (state.ads[idx].wrapped) continue;
-     // if (state.ownedAds[idx]) continue;
+      if (state.ownedAds[idx]) continue;
 
       try {
         // Confirm it's not minted on-chain (local state is stale)
@@ -318,8 +319,6 @@ export const actions = {
         commit('addHalfWrapped', {idx: idx, account: account});
       }
     }
-    console.log("end")
-
   },
 
 }
