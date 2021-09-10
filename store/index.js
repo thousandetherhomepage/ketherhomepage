@@ -147,20 +147,16 @@ export const getters = {
   precomputeEscrow: state => ({ idx, KH, KNFT }) => {
     // This should only be used for client-side confirmation or recovery. For actual
     // predictedAddress derivation, use the on-chain contract function.
-    throw "XXX: This isn't done yet."; // Outputs don't match up yet
-    const address = ethers.utils.getAddress(state.activeAccount); // Normalize to be consistant
-    const salt = ethers.utils.sha256(address);
+    const address = state.activeAccount; // Normalize to be consistant
+    const salt = ethers.utils.soliditySha256(["address"], [address]);
 
-    const KNFT_address = ethers.utils.getAddress(KNFT.address);
-    const KH_address = ethers.utils.getAddress(KH.address);
-
-    const wrappedPayload = KH.interface.encodeFunctionData("setAdOwner", [idx, KNFT_address]);
-    const bytecode = ethers.utils.hexlify(
-      ethers.utils.concat([
-        FlashEscrow_bytecode,
-        ethers.utils.defaultAbiCoder.encode(['address', 'bytes'], [KH_address, wrappedPayload]),
-      ]));
-    return ethers.utils.getCreate2Address(KNFT_address, salt, ethers.utils.keccak256(bytecode));
+    const wrappedPayload = KH.interface.encodeFunctionData("setAdOwner", [idx, KNFT.address]);
+    const bytecodeHash = ethers.utils.solidityKeccak256(["bytes", "bytes"],
+      [
+        state.networkConfig.flashEscrowInitCode,
+        ethers.utils.defaultAbiCoder.encode(["address", "bytes"], [KH.address, wrappedPayload])
+      ]);
+    return ethers.utils.getCreate2Address(KNFT.address, salt, bytecodeHash);
   }
 }
 
@@ -475,6 +471,3 @@ function appendAd(state, ad) {
 function isSoldOut(state) {
     return state.adsPixels === 1000000;
 }
-
-
-const FlashEscrow_bytecode = "0x608060405234801561001057600080fd5b506040516102db3803806102db83398101604081905261002f91610139565b6000826001600160a01b03168260405161004991906101ac565b6000604051808303816000865af19150503d8060008114610086576040519150601f19603f3d011682016040523d82523d6000602084013e61008b565b606091505b50509050806100b55760405162461bcd60e51b81526004016100ac906101bf565b60405180910390fd5b826001600160a01b0316ff5b60006100d46100cf84610216565b6101fa565b9050828152602081018484840111156100ec57600080fd5b6100f7848285610251565b509392505050565b805161010a816102c3565b92915050565b600082601f83011261012157600080fd5b81516101318482602086016100c1565b949350505050565b6000806040838503121561014c57600080fd5b600061015885856100ff565b92505060208301516001600160401b0381111561017457600080fd5b61018085828601610110565b9150509250929050565b6000610194825190565b6101a2818560208601610251565b9290920192915050565b60006101b8828461018a565b9392505050565b6020808252810161010a81601f81527f466c617368457363726f773a207461726765742063616c6c206661696c656400602082015260400190565b600061020560405190565b90506102118282610281565b919050565b60006001600160401b0382111561022f5761022f6102ad565b601f19601f83011660200192915050565b60006001600160a01b03821661010a565b60005b8381101561026c578181015183820152602001610254565b8381111561027b576000848401525b50505050565b601f19601f83011681018181106001600160401b03821117156102a6576102a66102ad565b6040525050565b634e487b7160e01b600052604160045260246000fd5b6102cc81610240565b81146102d757600080fd5b5056fe";
