@@ -115,16 +115,24 @@ export default {
           throw "predictedAddress does not match expected value, something went wrong: " + predictedAddress + " != " + expectedPredictedAddress;
         }
 
-        this.wrapInProgress = "Check your wallet for queued transactions, there will be 2 in total.";
-        if (!this.$store.state.halfWrapped[this.ad.idx]) {
+        this.wrapInProgress = "Fetching latest state...";
+
+        // Change ad owner if not already changed (check for stale state)
+        if ((await this.contract.ads(this.ad.idx)).owner === predictedAddress) {
+          // setAdOwner already done, skip
+          this.$store.commit('addHalfWrapped', {idx: this.ad.idx, account: signerAddr});
+
+        } else if (!this.$store.state.halfWrapped[this.ad.idx]) {
+          this.wrapInProgress = "Check your wallet for queued transactions, there will be 2 in total.";
           const tx = await this.contract.connect(signer).setAdOwner(this.ad.idx, predictedAddress);
-          this.wrapInProgress = "First transaction submitted, waiting...";
+          this.wrapInProgress = "First transaction submitted, waiting... (This can take a few minutes)";
           await tx.wait();
           this.$store.commit('addHalfWrapped', {idx: this.ad.idx, account: signerAddr});
         }
 
-        this.wrapInProgress = "Confirm 2nd wrap transaction, check your wallet queue.";
-        {
+        // Wrap if not already wrapped (check for stale state again)
+        if ((await this.contract.ads(this.ad.idx)).owner !== this.ketherNFT.address) {
+          this.wrapInProgress = "Confirm 2nd wrap transaction, check your wallet queue.";
           const tx = await this.ketherNFT.connect(signer).wrap(this.ad.idx, signerAddr);
           this.wrapInProgress = "Second transaction submitted, waiting...";
           await tx.wait();
@@ -133,6 +141,7 @@ export default {
         this.$store.commit('importAds', [Object.assign(this.ad, {owner: signerAddr, wrapped: true})]);
         this.$store.commit('removeHalfWrapped', this.ad.idx);
 
+        this.error = null; // Reset error if completed successfully.
       } catch(err) {
         this.error = err;
       } finally {
@@ -142,15 +151,17 @@ export default {
     async unwrap() {
       const signer = await this.provider.getSigner();
       const signerAddr = await signer.getAddress();
-      if (signerAddr.toLowerCase() != this.ad.owner) {
-        this.error = 'Incorrect active wallet. Must publish with: ' + this.ad.owner;
-        return;
-      }
+
       try {
-        const tx = await this.ketherNFT.connect(signer).unwrap(this.ad.idx, signerAddr);
-        this.wrapInProgress = "Unwrapping transaction submitted, waiting...";
-        await tx.wait();
+        // Unwrap if ketherNFT is the owner (check for stale state)
+        if ((await this.contract.ads(this.ad.idx)).owner === this.ketherNFT.address) {
+          const tx = await this.ketherNFT.connect(signer).unwrap(this.ad.idx, signerAddr);
+          this.wrapInProgress = "Unwrapping transaction submitted, waiting...";
+          await tx.wait();
+        }
         this.$store.commit('importAds', [Object.assign(this.ad, {wrapped: false})]);
+
+        this.error = null; // Reset error if completed successfully.
       } catch(err) {
         this.error = err;
       } finally {
