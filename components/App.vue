@@ -147,7 +147,6 @@ export default {
       // When the network changes, refresh the page.
         // see https://docs.ethers.io/v5/concepts/best-practices/#best-practices
       this.provider.on("network", (_, oldNetwork) => {
-        console.log("LOL")
         // When a Provider makes its initial connection, it emits a "network"
         // event with a null oldNetwork along with the newNetwork. So, if the
         // oldNetwork exists, it represents a changing network
