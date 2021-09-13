@@ -39,11 +39,11 @@ section {
             </option>
           </select>
         </p>
-        <p>
-          <button v-on:click="tab = 'publish'" :disabled="tab == 'publish' || !ad || $store.state.halfWrapped[ad.idx]">Edit Ad</button>
-          <button v-on:click="tab = 'wrap'" :disabled="tab == 'wrap' || !ad">Wrap / Unwrap</button>
-        </p>
-      </form>
+       </form>
+      <p>
+        <button type="button" v-on:click="tab = 'publish'" :disabled="tab == 'publish' || !ad || $store.state.halfWrapped[ad.idx]">Edit Ad</button>
+        <button type="button" v-on:click="tab = 'wrap'" :disabled="tab == 'wrap' || !ad">Wrap / Unwrap</button>
+      </p>
     </div>
     <p v-else-if="$store.state.activeAccount">
       No purchased ads detected for active accounts. Reload after buying an ad.
