@@ -3,6 +3,28 @@ import fs from 'fs';
 export default {
   // Target: https://go.nuxtjs.dev/config-target
   target: 'static',
+
+  // NOTE this doesn't work in Firefox:
+  // Metamask + Firefox is broken with CSP when served via header: https://github.com/MetaMask/metamask-extension/issues/3133#issuecomment-759116472
+  // We only serve via header under local development, when we serve production the CSP header is set by the
+
+  render: {
+    // These csp values are only set in headers when served by nuxt. We need
+    // these because nuxt serves an extra <script>window.__NUXT__... element
+    // which is non-deterministic.
+    csp: {
+      addMeta: false, // This does not do what you'd think 🙃
+      reportOnly: false,
+      policies: {
+        'default-src': ["'self'"],
+        'script-src': ["'self'", '*.infura.io'],
+        'connect-src': ["'self'", '*.infura.io', '*.walletconnect.org', 'wss://*.walletconnect.org'],
+        'style-src': ["'self'", "'unsafe-inline'"], // Would be nice to have the hashes built here - see https://github.com/nuxt/nuxt.js/pull/8022/files
+        'img-src': ['*', 'data:']
+      }
+    }
+  },
+
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: 'The Thousand Ether Homepage',
