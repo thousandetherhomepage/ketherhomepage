@@ -4,6 +4,10 @@ export default {
   // Target: https://go.nuxtjs.dev/config-target
   target: 'static',
 
+  // NOTE this doesn't work in Firefox:
+  // Metamask + Firefox is broken with CSP when served via header: https://github.com/MetaMask/metamask-extension/issues/3133#issuecomment-759116472
+  // We only serve via header under local development, when we serve production the CSP header is set by the
+
   render: {
     // These csp values are only set in headers when served by nuxt. We need
     // these because nuxt serves an extra <script>window.__NUXT__... element

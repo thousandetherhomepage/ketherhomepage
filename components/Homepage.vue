@@ -25,7 +25,7 @@ section {
     <div class="edit" v-if="$store.getters.numOwned > 0 > 0">
       {{$store.getters.numOwned}} ads owned by you, {{$store.getters.numOwnedWrapped}} wrapped as NFT.
       <div v-if="$store.getters.numHalfWrapped >0">{{$store.getters.numHalfWrapped}} half wrapped and can be rescued.</div>
-      <form>
+      <form v-on:submit.prevent>
         <p>
           <select v-model="ad">
             <option disabled value="">Select ad to edit</option>
@@ -39,11 +39,11 @@ section {
             </option>
           </select>
         </p>
-        <p>
-          <button v-on:click="tab = 'publish'" :disabled="tab == 'publish' || !ad || $store.state.halfWrapped[ad.idx]">Edit Ad</button>
-          <button v-on:click="tab = 'wrap'" :disabled="tab == 'wrap' || !ad">Wrap / Unwrap</button>
-        </p>
-      </form>
+       </form>
+      <p>
+        <button type="button" v-on:click="tab = 'publish'" :disabled="tab == 'publish' || !ad || $store.state.halfWrapped[ad.idx]">Edit Ad</button>
+        <button type="button" v-on:click="tab = 'wrap'" :disabled="tab == 'wrap' || !ad">Wrap / Unwrap</button>
+      </p>
     </div>
     <p v-else-if="$store.state.activeAccount">
       No purchased ads detected for active accounts. Reload after buying an ad.
