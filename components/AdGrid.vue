@@ -17,6 +17,7 @@
     font-size: 11px;
     color: rgba(0, 0, 0, 0.7);
     white-space: nowrap;
+    image-rendering: pixelated;
   }
 
   .blank {
