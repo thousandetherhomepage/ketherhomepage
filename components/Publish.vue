@@ -134,9 +134,13 @@ export default {
         return;
       }
       this.inProgress = 'Waiting for wallet to confirm.';
+
+      // Load latest wrapped state from blockchain (avoid stale state)
+      const isWrapped = (await this.contract.ads(this.ad.idx)).owner === this.ketherNFT.address;
+
       try {
         let tx;
-        if (this.ad.wrapped) {
+        if (isWrapped) {
           tx = await this.ketherNFT.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
         } else {
           tx = await this.contract.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
