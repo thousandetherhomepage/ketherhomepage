@@ -16,6 +16,7 @@ export default {
       addMeta: false, // This does not do what you'd think 🙃
       reportOnly: false,
       policies: {
+        'upgrade-insecure-requests': '',
         'default-src': ["'self'"],
         'script-src': ["'self'", '*.infura.io'],
         'connect-src': ["'self'", '*.infura.io', '*.walletconnect.org', 'wss://*.walletconnect.org'],
