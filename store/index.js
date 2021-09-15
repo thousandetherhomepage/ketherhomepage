@@ -419,7 +419,7 @@ function eventToAd(state, adEvent) {
   if (adEvent.wrapped !== undefined) {
     ad.wrapped = adEvent.wrapped;
   } else {
-    ad.wrapped = adEvent.owner === state.networkConfig.ketherNFTAddr;
+    ad.wrapped = normalizeAddr(adEvent.owner) === state.networkConfig.ketherNFTAddr;
   }
   let existingAd = state.ads[ad.idx];
   if (existingAd !== undefined && existingAd.width !== undefined) {
