@@ -41,6 +41,14 @@ input {
     background: #ddd;
     margin-bottom: 1em;
   }
+  .progress {
+    display: flex;
+    align-items: center;
+
+    .spinner {
+      margin-right: .5rem;
+    }
+  }
 }
 </style>
 
@@ -91,8 +99,14 @@ input {
         <div>
           <button type="submit">Publish Changes</button>
         </div>
-        <p v-if="inProgress">
-        ⏳<strong>Transaction in progress.</strong> {{inProgress}}
+        <p class="progress" v-if="inProgress">
+          <circles-to-rhombuses-spinner
+            class="spinner"
+            :animation-duration="1000"
+            :circles-num="3"
+            :circle-size="5"
+            :color="'#42b983'"/>
+          <strong>Transaction in progress.</strong> {{inProgress}}
         </p>
         <small>
           It can take between 10 seconds to a few minutes for your published ad
