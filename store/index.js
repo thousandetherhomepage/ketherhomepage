@@ -34,11 +34,13 @@ function normalizeAd(rawAd) {
   let normalized = {idx: undefined, owner: undefined, x: undefined, y: undefined, width: undefined, height: undefined, link: "", image: "", title: "", NSFW: false, forceNSFW: false, wrapped: false};
   for (const key in normalized) {
     const value = rawAd[key];
-    if (value && value._isBigNumber) {
-      normalized[key] = value.toNumber();
-    } else {
-      normalized[key] = value;
-    }
+    if (value !== undefined) {
+      if (value._isBigNumber) {
+        normalized[key] = value.toNumber();
+      } else {
+        normalized[key] = value;
+      }
+   }
   }
   normalized.owner = normalizeAddr(normalized.owner);
 
