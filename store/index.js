@@ -44,6 +44,11 @@ function normalizeAd(rawAd) {
   }
   normalized.owner = normalizeAddr(normalized.owner);
 
+  // Flip NSFW always if forceNSFW is set
+  if (normalized.forceNSFW) {
+    normalized.NSFW = true;
+  }
+
   return normalized;
 }
 
