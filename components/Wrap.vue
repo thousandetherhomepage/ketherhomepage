@@ -12,6 +12,7 @@ input {
 }
 
 .wrapAd {
+  width: 700px;
   border-left: 10px solid #eee;
   padding-left: 10px;
 
@@ -36,16 +37,6 @@ input {
     display: block;
     border-width: 2px;
   }
-  .mini-adGrid {
-    padding: 10px;
-    background: #ddd;
-    margin-bottom: 1em;
-  }
-}
-
-.wrapAd {
-  width: 700px;
-
   label {
     line-height: 2em;
 
@@ -54,7 +45,19 @@ input {
       margin-right: 0.25em;
     }
   }
+  .mini-adGrid {
+    padding: 10px;
+    background: #ddd;
+    margin-bottom: 1em;
+  }
+  .progress {
+    display: flex;
+    align-items: center;
 
+    .spinner {
+      margin-right: .5rem;
+    }
+  }
 }
 </style>
 
@@ -62,15 +65,15 @@ input {
   <div>
     <form v-on:submit.prevent class="wrapAd">
       <h3>NFT</h3>
-      <div class="progress" v-if="wrapInProgress">
+      <p class="progress" v-if="wrapInProgress">
         <circles-to-rhombuses-spinner
           class="spinner"
-          :animation-duration="1200"
+          :animation-duration="1000"
           :circles-num="3"
           :circle-size="5"
           :color="'#42b983'"/>
         <strong>Transaction in progress.</strong> {{wrapInProgress}}
-      </div>
+      </p>
       <p v-if="ad.wrapped">
       Ad is wrapped to NFT.
       <button type="button" v-on:click="unwrap" v-bind:disabled="!!wrapInProgress">Unwrap #{{ad.idx}} to Legacy Contract</button>
@@ -177,16 +180,3 @@ export default {
   },
 }
 </script>
-
-<style lang="scss">
-  .progress {
-    display: flex;
-    align-items: center;
-
-    .spinner {
-      margin-right: .5rem;
-    }
-  }
-
-
-</style>
