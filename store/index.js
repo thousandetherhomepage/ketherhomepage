@@ -31,6 +31,21 @@ function normalizeAddr(addr) {
   return addr.toLowerCase();
 }
 
+function normalizeAd(rawAd) {
+  let normalized = {idx: undefined, owner: undefined, x: undefined, y: undefined, width: undefined, height: undefined, link: "", image: "", title: "", NSFW: false, forceNSFW: false, wrapped: false};
+  for (const key in normalized) {
+    const value = rawAd[key];
+    if (value && value._isBigNumber) {
+      normalized[key] = value.toNumber();
+    } else {
+      normalized[key] = value;
+    }
+  }
+  normalized.owner = normalizeAddr(normalized.owner);
+
+  return normalized;
+}
+
 export const mutations = {
   loadState(state, loadState) {
     for (const [k, v] of Object.entries(loadState)) {
@@ -84,15 +99,26 @@ export const mutations = {
   },
   importAds(state, ads) {
     // Bulk version of addAd
-    for (const adOrEvent of ads) {
-      const ad = eventToAd(state, adOrEvent)
+    for (const ad of ads) {
       appendAd.call(this, state, ad);
     }
     if (isSoldOut(state)) state.grid = null;
   },
-  addAd(state, {idx, owner, x, y, width, height, link="", image="", title="", NSFW=false, forceNSFW=false}) {
-    const ad = eventToAd(state, {idx, owner, x, y, width, height, link, image, title, NSFW, forceNSFW})
+  addAd(state, ad) {
     appendAd.call(this, state, ad);
+  },
+
+  updateAd(state, {idx, toUpdate}) {
+    const ad = state.ads[idx];
+    if (ad !== undefined) {
+      let updatedAd = normalizeAd({...ad, ...toUpdate});
+      this._vm.$set(state.ads, idx, updatedAd);
+      if (state.accounts[updatedAd.owner]) {
+        addAdOwned.call(this, state, updatedAd);
+      } else if (state.accounts[ad.owner]) {
+        removeAdOwned.call(this, state, ad.idx);
+      }
+    }
   },
 
   setLoadedNetwork(state, {network, blockNumber, timestamp}) {
@@ -265,6 +291,7 @@ export const actions = {
       console.info("Loaded additional", events.length, "events since cached state from block number:", state.loadedBlockNumber);
 
     } else {
+      // TODO delete this
       // Load fresh from the contract (does N queries to eth_call)
       const numAds = await contract.getAdsLength();
       commit('setAdsLength', numAds);
@@ -363,15 +390,12 @@ function addAdOwned(state, ad) {
   this._vm.$set(state.ownedAds, ad.idx, ad);
 }
 
-function addNFTAd(state, ad) {
-  // FIXME: This is redundant with wrapped eventToAd, we will need to do stuff
-  // here to make it compatible with event-based loading later.
-  ad.isNFT = true;
-  state.nftAds[ad.idx] = ad;
-
-  // TODO: Check if NFT is owned, addAdOwned if it is.
+function removeAdOwned(state, idx) {
+  this._vm.$delete(state.ownedAds, idx);
 }
 
+// TODO: this is only used when loading with N calls to the contract
+// delete it now that we have loading via events and the view
 function toAd(i, r) {
   return {
     idx: i,
@@ -388,63 +412,12 @@ function toAd(i, r) {
   }
 }
 
-function eventToAd(state, adEvent) {
-  let ad = {
-    idx: adEvent.idx.toNumber !== undefined ? adEvent.idx.toNumber() : adEvent.idx
-  }
+function appendAd(state, rawAd) {
+  let ad = normalizeAd(rawAd);
 
-  if (adEvent.owner !== undefined) {
-    ad.owner = normalizeAddr(adEvent.owner);
-  }
-  if (adEvent.to !== undefined) { // Convert SetAdOwner event
-    ad.owner = normalizeAddr(adEvent.to);
-  }
-  if (adEvent.x !== undefined) { // Normalize ints for Buy event
-    ad.x = Number(adEvent.x);
-    ad.y = Number(adEvent.y);
-    ad.width = Number(adEvent.width);
-    ad.height = Number(adEvent.height);
-  }
-  if (adEvent.link !== undefined) {
-    ad.link = adEvent.link;
-    ad.image = adEvent.image;
-    ad.title = adEvent.title;
-  }
-  if (adEvent.forceNSFW === true) { // Force NSFW
-    ad.NSFW = true;
-  } else if (adEvent.NSFW !== undefined) {
-    ad.NSFW = adEvent.NSFW;
-  }
-  // TODO will this break if we load stuff from events and not KetherView?
-  if (adEvent.wrapped !== undefined) {
-    ad.wrapped = adEvent.wrapped;
-  } else {
-    ad.wrapped = normalizeAddr(adEvent.owner) === state.networkConfig.ketherNFTAddr;
-  }
-  let existingAd = state.ads[ad.idx];
-  if (existingAd !== undefined && existingAd.width !== undefined) {
-    // Already counted, update values
-    return Object.assign({}, existingAd, ad);
-  }
-
-  // Add defaults to non-existing ad
-  return Object.assign({
-    link: "",
-    image: "",
-    title: "",
-    NSFW: false,
-    forceNSFW: false,
-    wrapped: false,
-  }, ad);
-}
-
-function appendAd(state, ad) {
   if (state.accounts[ad.owner]) {
     addAdOwned.call(this, state, ad);
-  } else if (ad.owner === state.networkConfig.ketherNFTAddr) {
-    addNFTAd.call(this, state, ad);
   }
-
   // If we haven't added this ad before and it's not a Publish event, count the pixels
   if (ad.width === undefined || state.ads[ad.idx] === undefined) {
     state.adsPixels += ad.width * ad.height * 100;

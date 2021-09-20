@@ -137,7 +137,7 @@ export default {
       if (this.networkConfig) {
         const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
         await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView);
-        this.listenContractEvents(contract);
+        this.listenContractEvents(contract, ketherNFT);
         this.isReadOnly = false;
 
         // Find half-wrapped ads
@@ -171,6 +171,9 @@ export default {
       if (this.contract) {
         this.contract.removeAllListeners();
       }
+      if (this.ketherNFT) {
+        this.ketherNFT.removeAllListeners();
+      }
       this.contract = contract;
       this.ketherNFT = ketherNFT;
       this.contract.on('error', function(err) {
@@ -178,16 +181,15 @@ export default {
       });
       this.$store.dispatch('loadAds', {contract, ketherNFT, ketherView});
     },
-    listenContractEvents(contract) {
+    listenContractEvents(contract, ketherNFT) {
       // These listeners will long-poll the provider every block, so probably
       // only makes sense to set them up if a wallet is connected.
 
-      //FIXME this is called twice if using MetaMask - when the page is loaded and when the wallet is connected.
-      // Do we want to only subscribe you connect the wallet, or just subscribe on page load?
-      console.log("Subscribing to Buy and Publish events");
+      console.log("Subscribing to events", contract);
+      console.log(contract.listenerCount())
 
       contract.on('Buy', function(idx, owner, x, y, width, height) {
-        this.$store.commit('addAd', {idx: idx.toNumber(), owner, x, y, width, height});
+        this.$store.commit('addAd', {idx: idx.toNumber(), owner, x: x.toNumber(), y: y.toNumber(), width: width.toNumber(), height: height.toNumber()});
 
         const previewAd = this.$store.state.previewAd;
         if (this.previewLocked && Number(x*10) == previewAd.x && Number(y*10) == previewAd.y) {
@@ -196,15 +198,35 @@ export default {
           this.$store.commit('clearPreview');
         }
 
-        console.log("Buy event processed.");
+        console.log("[KetherHomepage] Buy event processed.");
       }.bind(this));
 
       contract.on('Publish', function(idx, link, image, title, NSFW) {
-        this.$store.commit('addAd', {idx: idx.toNumber(), link, image, title, NSFW});
-        console.log("Publish event processed.");
+        this.$store.commit('updateAd', {idx: idx.toNumber(), toUpdate: {link, image, title, NSFW}});
+        console.log("[KetherHomepage] Publish event processed.");
       }.bind(this));
 
-      // TODO we need to subscribe to either SetAdOwner or some NFT events in order to update when wrapping/unwrapping
+      contract.on('SetAdOwner', function(idx, _from, to) {
+        if (to === ketherNFT.address) {
+          // Only record updated owner if it's not the NFT, otherwise we will get it from the transfer event.
+          console.log("[KetherHomepage] SetAdOwner event ignored (transfer to NFT).");
+          return;
+        }
+
+        this.$store.commit('updateAd', {idx: idx.toNumber(), toUpdate: {owner: to, wrapped: false}});
+        console.log("[KetherHomepage] SetAdOwner event processed.");
+      }.bind(this));
+
+      ketherNFT.on('Transfer', function(_from, to, idx) {
+        if (to === '0x0000000000000000000000000000000000000000') {
+          // Only record updated owner if it's not being burned, otherwise we will get it from the setAdOwner event.
+          return;
+        }
+
+        this.$store.commit('updateAd', {idx: idx.toNumber(), toUpdate: {owner: to, wrapped: true}});
+        console.log("[KetherNFT] Transfer event processed.");
+        debugger;
+      }.bind(this));
     },
   },
   async created() {
