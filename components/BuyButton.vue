@@ -10,7 +10,7 @@
 .sold {
   display: inline-block;
   margin-left: 5px;
-  padding: 5px 10px;
+  padding: 8px 10px;
   border-radius: 3px;
   background: #4A90E2;
   color: white;
@@ -21,10 +21,11 @@
   }
 
   a {
-    background: rgba(255,255,255,0.9);
-    border: 1px solid rgba(0,0,0,0.5);
+    background: rgba(255,255,255);
+    border: 1px solid rgba(255,255,255,0.5);
     padding: 2px 0.5em;
     border-radius: 3px;
+    margin-left: 0.5em;
   }
 }
 </style>
