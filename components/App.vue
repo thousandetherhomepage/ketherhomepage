@@ -225,7 +225,6 @@ export default {
 
         this.$store.commit('updateAd', {idx: idx.toNumber(), toUpdate: {owner: to, wrapped: true}});
         console.log("[KetherNFT] Transfer event processed.");
-        debugger;
       }.bind(this));
     },
   },
