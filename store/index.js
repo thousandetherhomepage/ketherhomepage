@@ -9,7 +9,6 @@ export const state = () => {
     ads: [],
     adsPixels: 0,
     ownedAds: {},
-    nftAds: {},
     halfWrapped: {},
     pixelsOwned: 0,
     grid: null, // lazy load
@@ -85,7 +84,6 @@ export const mutations = {
     state.ads = [];
     state.adsPixels = 0;
     state.ownedAds = {};
-    state.nftAds = {};
     state.pixelsOwned = 0;
     state.loadedBlockNumber = 0;
     state.networkConfig = networkConfig;
