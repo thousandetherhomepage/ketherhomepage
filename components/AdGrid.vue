@@ -18,9 +18,6 @@
     color: rgba(0, 0, 0, 0.7);
     white-space: nowrap;
     image-rendering: pixelated;
-  }
-
-  .blank {
     outline: 2px solid rgba(0,0,0,0.1);
     outline-offset: -2px;
   }
@@ -48,8 +45,10 @@
 <template>
   <div :class="{ adGrid: true, active: !!$store.state.previewAd }" :style="gridStyle(prerendered)">
     <template v-for="ad in $store.state.ads">
-      <Ad :showNSFW="showNSFW" :ad="ad" :skipImage="!loadRemoteImages" v-if="ad" :key="ad.idx"></Ad>
-
+      <a v-if="ad" href="ad.link" target="_blank" :key="ad.idx">
+        <img v-if="loadRemoteImages" :src="image(ad)" :title="ad.title" :style="adStyle(ad)" @error="setBroken"/>
+        <div v-else :title="ad.title" :style="adStyle(ad)"></div>
+      </a>
     </template>
     <vue-draggable-resizable ref="draggable" :active="true" :minWidth="10" :minHeight="10"
       :x="$store.state.previewAd.x" :y="$store.state.previewAd.y"
@@ -62,12 +61,25 @@
 </template>
 
 <script>
-import Ad from './Ad.vue';
 import Buy from './Buy.vue';
 import VueDraggableResizable from 'vue-draggable-resizable';
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
 
-
+const REPLACE_BROKEN_IMAGES = "/broken-image.png"; // Alternative: "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
+function gatewayURL(url) {
+  const u = url.trim().toLowerCase();
+  if (!u) return "";
+  if (u.startsWith('bzz://')) {
+    url = 'http://swarm-gateways.net/bzz:/' + url.slice(6);
+  } else if (u.startsWith('ipfs://')) {
+    url = 'https://gateway.ipfs.io/ipfs/' + url.slice(7);
+  } else if (u.startsWith('https://gateway.pinata.cloud/ipfs/')) { // People aren't paying for their pinata bandwidth...
+    url = 'https://gateway.ipfs.io/ipfs/' + url.slice(34);
+  } else if (u.startsWith('file:')) { // Disallowed by our CSP, but block it here too.
+    return "";
+  }
+  return url;
+}
 export default {
   props: ["provider", "contract", "isReadOnly", "showNSFW", "prerendered"],
   data() {
@@ -95,10 +107,38 @@ export default {
         'background-image': 'url(' + config.image + ')',
       }
     },
+    setBroken(el) {
+      el.src = REPLACE_BROKEN_IMAGES;
+    },
+
+    adStyle(ad) {
+      if (!ad.width) {
+        return {
+          "display": "none",
+        }
+      }
+      const s = {
+        "left": ad.x * 10 + "px",
+        "top": ad.y * 10 + "px",
+        "width": ad.width * 10 + "px",
+        "height": ad.height * 10 + "px",
+        "background": '#' + ad.owner.slice(-6) + 'cc'
+      }
+      return s;
+    },
+    image(ad) {
+      //if (!this.shown) return "";
+      const imageSrc = gatewayURL(ad.image);
+      if (imageSrc === "") {
+        //this.blank = true;
+        if (ad.title) return imageSrc; // Blank image so it's transparent but title renders
+        return REPLACE_BROKEN_IMAGES;
+      }
+      return imageSrc;
+    },
   },
   components: {
     'vue-draggable-resizable': VueDraggableResizable,
-    Ad,
     Buy,
   },
 }
