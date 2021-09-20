@@ -46,7 +46,7 @@ export default {
 
     ],
     link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/icon-32px.png' }
+      { rel: 'icon', type: 'image/x-icon', href: '/teh-64px.png' }
     ]
   },
 
