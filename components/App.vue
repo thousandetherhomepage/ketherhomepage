@@ -185,46 +185,27 @@ export default {
       // These listeners will long-poll the provider every block, so probably
       // only makes sense to set them up if a wallet is connected.
 
-      console.log("Subscribing to events", contract);
-      console.log(contract.listenerCount())
+      console.log("Subscribing to events");
 
-      contract.on('Buy', function(idx, owner, x, y, width, height) {
-        this.$store.commit('addAd', {idx: idx.toNumber(), owner, x: x.toNumber(), y: y.toNumber(), width: width.toNumber(), height: height.toNumber()});
-
-        const previewAd = this.$store.state.previewAd;
-        if (this.previewLocked && Number(x*10) == previewAd.x && Number(y*10) == previewAd.y) {
-          // Colliding ad purchased
-          this.previewLocked = false;
-          this.$store.commit('clearPreview');
-        }
-
-        console.log("[KetherHomepage] Buy event processed.");
+      contract.on('Buy', function(...args) {
+        // event is passed as last arg
+        const event = args[args.length - 1];
+        this.$store.dispatch('processBuyEvents', [event])
       }.bind(this));
 
-      contract.on('Publish', function(idx, link, image, title, NSFW) {
-        this.$store.commit('updateAd', {idx: idx.toNumber(), toUpdate: {link, image, title, NSFW}});
-        console.log("[KetherHomepage] Publish event processed.");
+      contract.on('Publish', function(...args) {
+        const event = args[args.length - 1];
+        this.$store.dispatch('processPublishEvents', [event]);
       }.bind(this));
 
-      contract.on('SetAdOwner', function(idx, _from, to) {
-        if (to === ketherNFT.address) {
-          // Only record updated owner if it's not the NFT, otherwise we will get it from the transfer event.
-          console.log("[KetherHomepage] SetAdOwner event ignored (transfer to NFT).");
-          return;
-        }
-
-        this.$store.commit('updateAd', {idx: idx.toNumber(), toUpdate: {owner: to, wrapped: false}});
-        console.log("[KetherHomepage] SetAdOwner event processed.");
+      contract.on('SetAdOwner', function(...args) {
+        const event = args[args.length - 1];
+        this.$store.dispatch('processSetAdOwnerEvents', [event]);
       }.bind(this));
 
-      ketherNFT.on('Transfer', function(_from, to, idx) {
-        if (to === '0x0000000000000000000000000000000000000000') {
-          // Only record updated owner if it's not being burned, otherwise we will get it from the setAdOwner event.
-          return;
-        }
-
-        this.$store.commit('updateAd', {idx: idx.toNumber(), toUpdate: {owner: to, wrapped: true}});
-        console.log("[KetherNFT] Transfer event processed.");
+      ketherNFT.on('Transfer', function(...args) {
+        const event = args[args.length - 1];
+        this.$store.dispatch('processTransferEvents', [event]);
       }.bind(this));
     },
   },

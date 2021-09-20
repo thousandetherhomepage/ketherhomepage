@@ -108,15 +108,17 @@ export const mutations = {
     appendAd.call(this, state, ad);
   },
 
-  updateAd(state, {idx, toUpdate}) {
-    const ad = state.ads[idx];
-    if (ad !== undefined) {
-      let updatedAd = normalizeAd({...ad, ...toUpdate});
-      this._vm.$set(state.ads, idx, updatedAd);
-      if (state.accounts[updatedAd.owner]) {
-        addAdOwned.call(this, state, updatedAd);
-      } else if (state.accounts[ad.owner]) {
-        removeAdOwned.call(this, state, ad.idx);
+  updateAds(state, updates) {
+    for (const {idx, update} of updates) {
+      const ad = state.ads[idx];
+      if (ad !== undefined) {
+        let updatedAd = normalizeAd({...ad, ...update});
+        this._vm.$set(state.ads, idx, updatedAd);
+        if (state.accounts[updatedAd.owner]) {
+          addAdOwned.call(this, state, updatedAd);
+        } else if (state.accounts[ad.owner]) {
+          removeAdOwned.call(this, state, ad.idx);
+        }
       }
     }
   },
@@ -196,6 +198,7 @@ export const getters = {
 
 export const actions = {
   async nuxtServerInit({ dispatch }, { route }) {
+    // TODO this can be replaced with initState basically
     // TODO: make this preload both?
     // TODO: refactor this since it shares code with App.vue
     if (process.dev) return; // Don't preload ads in dev mode so we don't spam Infura 😥
@@ -254,9 +257,6 @@ export const actions = {
 
     const loadFromKetherView = !!state.networkConfig.ketherViewAddr && state.loadedNetwork != activeNetwork; // Only use View contract if deployed & we haven't loaded already
     const loadFromEvents = true; // Okay to do it always? or should we do: state.loadedBlockNumber > 0
-
-    commit('setLoadedNetwork', {network: activeNetwork, blockNumber: blockNumber, timestamp: blockTimestamp});
-
     if (loadFromKetherView) {
       console.log("Loading from KetherView");
       const loadKetherView = async (offset, limit, retries = 0) => {
@@ -283,23 +283,27 @@ export const actions = {
       await Promise.all(promises);
 
     } else if (loadFromEvents) {
-      // Skip loading and use event filter instead (does 1 query to eth_logs)
-      const eventFilter= [ contract.filters.Buy(), contract.filters.Publish(), contract.filters.SetAdOwner() ];
-      const events = await contract.queryFilter(eventFilter, state.loadedBlockNumber);
-      commit('importAds', events.map(evt => Object.assign({}, evt.args))); // Clone args and import them
+      // Skip loading and use event filter instead (does 4 query to eth_logs)
+      const [buyEvents, publishEvents, setAdOwnerEvents, transferEvents] = await Promise.all([
+        contract.queryFilter(contract.filters.Buy(), state.loadedBlockNumber),
+        contract.queryFilter(contract.filters.Publish(), state.loadedBlockNumber),
+        contract.queryFilter(contract.filters.SetAdOwner(), state.loadedBlockNumber),
+        ketherNFT.queryFilter(ketherNFT.filters.Transfer(), state.loadedBlockNumber)
+      ]);
+      // load the Buy events first as they set the grid
+      await dispatch('processBuyEvents', buyEvents);
 
-      console.info("Loaded additional", events.length, "events since cached state from block number:", state.loadedBlockNumber);
+      await Promise.all([
+        dispatch('processPublishEvents', publishEvents),
+        dispatch('processSetAdOwnerEvents', setAdOwnerEvents),
+        dispatch('processTransferEvents', transferEvents)
+      ]);
 
-    } else {
-      // TODO delete this
-      // Load fresh from the contract (does N queries to eth_call)
-      const numAds = await contract.getAdsLength();
-      commit('setAdsLength', numAds);
-      const ads = [...Array(numAds.toNumber()).keys()].map(i => contract.ads(i));
-      for await (const [i, ad] of ads.entries()) {
-        commit('addAd', toAd(i, await ad));
-      }
+      console.info("Loaded additional", buyEvents.length + publishEvents.length + setAdOwnerEvents.length + transferEvents.length, "events since cached state from block number:", state.loadedBlockNumber);
+
     }
+    commit('setLoadedNetwork', {network: activeNetwork, blockNumber: blockNumber, timestamp: blockTimestamp});
+
   },
 
   async addAccount({ commit, state }, account) {
@@ -346,6 +350,64 @@ export const actions = {
     }
   },
 
+  async processBuyEvents({ state, commit }, events) {
+    const ads = events.map((e) => {
+      const [idx, owner, x, y, width, height] = e.args;
+      if (state.previewAd && Number(x*10) == state.previewAd.x && Number(y*10) == state.previewAd.y) {
+        // Colliding ad purchased
+        commit('clearPreview');
+      }
+      return {idx: idx.toNumber(), owner, x: x.toNumber(), y: y.toNumber(), width: width.toNumber(), height: height.toNumber()};
+    });
+    commit('importAds', ads)
+
+    console.log(`[KetherHomepage] ${events.length} Buy event processed.`);
+  },
+
+  async processPublishEvents({ commit }, events) {
+    const updates = events.map((e) => {
+      const [idx, link, image, title, NSFW] = e.args;
+      return {idx: idx.toNumber(), update: {link, image, title, NSFW}}
+    });
+
+    commit('updateAds', updates);
+    console.log(`[KetherHomepage] ${events.length} Publish event processed.`);
+  },
+
+  async processSetAdOwnerEvents({ state, commit }, events) {
+    const updates = events.map((e) => {
+      const [idx, from, to] = e.args;
+      if (normalizeAddr(to) === normalizeAddr(state.networkConfig.ketherNFTAddr)) {
+        // Only record updated owner if it's not the NFT, otherwise we will get it from the transfer event.
+        return {idx: idx.toNumber(), update: {wrapped: true}};
+      } else if (normalizeAddr(from) === normalizeAddr(state.networkConfig.ketherNFTAddr)) {
+        // Only record updated owner if it's not the NFT, otherwise we will get it from the transfer event.
+        return {idx: idx.toNumber(), update: {wrapped: false}};
+      } else {
+        return {idx: idx.toNumber(), update: {owner: to, wrapped: false}};
+      }
+    });
+
+    commit('updateAds', updates);
+    console.log(`[KetherHomepage] ${events.length} SetAdOwner event processed.`);
+  },
+
+  async processTransferEvents({ commit }, events) {
+    const updates = events.flatMap((e) => {
+      const [_from, to, idx] = e.args;
+
+      if (to !== '0x0000000000000000000000000000000000000000') {
+        // Only record updated owner if it's not being burned, otherwise we will get it from the setAdOwner event.
+        return {idx: idx.toNumber(), update: {owner: to, wrapped: true}};
+      } else {
+        // Skip event
+        return [];
+      }
+    });
+
+    commit('updateAds', updates);
+    console.log(`[KetherNFT] ${events.length} Transfer event processed.`);
+  },
 }
 
 //// Helpers
