@@ -202,27 +202,7 @@ export const getters = {
 }
 
 export const actions = {
-  async nuxtServerInit({ dispatch }, { route }) {
-    // TODO this can be replaced with initState basically
-    // TODO: make this preload both?
-    // TODO: refactor this since it shares code with App.vue
-    if (process.dev) return; // Don't preload ads in dev mode so we don't spam Infura 😥
-    if (route.name !== 'index') return; // We only want to preload ads for the index route
-
-    const web3Fallback = deployConfig[defaultNetwork].web3Fallback || "http://localhost:8545/";
-    const provider = new ethers.providers.StaticJsonRpcProvider(web3Fallback);
-    const activeNetwork = (await provider.getNetwork()).name;
-    const networkConfig = deployConfig[activeNetwork];
-    const contracts = loadContracts(networkConfig, provider)
-
-    //await dispatch('loadState');
-    await dispatch('loadAds', contracts);
-  },
-
   async initState({ commit, state }, activeNetwork) {
-    // Disable initState for now
-    return;
-
     if (process.server) {
       // TODO: Server-side version of fetch
       return;
