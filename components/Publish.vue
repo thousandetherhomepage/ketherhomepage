@@ -150,7 +150,7 @@ export default {
       this.inProgress = 'Waiting for wallet to confirm.';
 
       // Load latest wrapped state from blockchain (avoid stale state)
-      const isWrapped = (await this.contract.ads(this.ad.idx)).owner === this.ketherNFT.address;
+      const isWrapped = this.$address.equal((await this.contract.ads(this.ad.idx)).owner, this.ketherNFT.address);
 
       try {
         let tx;
