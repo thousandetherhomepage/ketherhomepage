@@ -120,14 +120,14 @@ export default {
         }
 
         const expectedPredictedAddress = this.$store.getters.precomputeEscrow({idx: this.ad.idx, KH: this.contract, KNFT: this.ketherNFT});
-        if (predictedAddress != expectedPredictedAddress) {
+        if (!this.$address.equal(predictedAddress, expectedPredictedAddress)) {
           throw "predictedAddress does not match expected value, something went wrong: " + predictedAddress + " != " + expectedPredictedAddress;
         }
 
         this.wrapInProgress = "Fetching latest state...";
 
         // Change ad owner if not already changed (check for stale state)
-        if ((await this.contract.ads(this.ad.idx)).owner === predictedAddress) {
+        if (this.$address.equal((await this.contract.ads(this.ad.idx)).owner, predictedAddress)) {
           // setAdOwner already done, skip
           this.$store.commit('addHalfWrapped', {idx: this.ad.idx, account: signerAddr});
 
@@ -140,7 +140,7 @@ export default {
         }
 
         // Wrap if not already wrapped (check for stale state again)
-        if ((await this.contract.ads(this.ad.idx)).owner !== this.ketherNFT.address) {
+        if (!this.$address.equal((await this.contract.ads(this.ad.idx)).owner, this.ketherNFT.address)) {
           this.wrapInProgress = "Confirm 2nd wrap transaction, check your wallet queue.";
           const tx = await this.ketherNFT.connect(signer).wrap(this.ad.idx, signerAddr);
           this.wrapInProgress = "Second transaction submitted, waiting...";
@@ -163,7 +163,7 @@ export default {
 
       try {
         // Unwrap if ketherNFT is the owner (check for stale state)
-        if ((await this.contract.ads(this.ad.idx)).owner === this.ketherNFT.address) {
+        if (this.$address.equal((await this.contract.ads(this.ad.idx)).owner, this.ketherNFT.address)) {
           const tx = await this.ketherNFT.connect(signer).unwrap(this.ad.idx, signerAddr);
           this.wrapInProgress = "Unwrapping transaction submitted, waiting...";
           await tx.wait();
