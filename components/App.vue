@@ -137,7 +137,7 @@ export default {
       if (this.networkConfig) {
         const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
         await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView);
-        this.listenContractEvents(contract, ketherNFT);
+        this.listenContractEvents(contract);
         this.isReadOnly = false;
 
         // Find half-wrapped ads
@@ -171,9 +171,6 @@ export default {
       if (this.contract) {
         this.contract.removeAllListeners();
       }
-      if (this.ketherNFT) {
-        this.ketherNFT.removeAllListeners();
-      }
       this.contract = contract;
       this.ketherNFT = ketherNFT;
       this.contract.on('error', function(err) {
@@ -181,32 +178,33 @@ export default {
       });
       this.$store.dispatch('loadAds', {contract, ketherNFT, ketherView});
     },
-    listenContractEvents(contract, ketherNFT) {
+    listenContractEvents(contract) {
       // These listeners will long-poll the provider every block, so probably
       // only makes sense to set them up if a wallet is connected.
 
-      console.log("Subscribing to events");
+      //FIXME this is called twice if using MetaMask - when the page is loaded and when the wallet is connected.
+      // Do we want to only subscribe you connect the wallet, or just subscribe on page load?
+      console.log("Subscribing to Buy and Publish events");
 
-      contract.on('Buy', function(...args) {
-        // event is passed as last arg
-        const event = args[args.length - 1];
-        this.$store.dispatch('processBuyEvents', [event])
+      contract.on('Buy', function(idx, owner, x, y, width, height) {
+        this.$store.commit('addAd', {idx: idx.toNumber(), owner, x, y, width, height});
+
+        const previewAd = this.$store.state.previewAd;
+        if (this.previewLocked && Number(x*10) == previewAd.x && Number(y*10) == previewAd.y) {
+          // Colliding ad purchased
+          this.previewLocked = false;
+          this.$store.commit('clearPreview');
+        }
+
+        console.log("Buy event processed.");
       }.bind(this));
 
-      contract.on('Publish', function(...args) {
-        const event = args[args.length - 1];
-        this.$store.dispatch('processPublishEvents', [event]);
+      contract.on('Publish', function(idx, link, image, title, NSFW) {
+        this.$store.commit('addAd', {idx: idx.toNumber(), link, image, title, NSFW});
+        console.log("Publish event processed.");
       }.bind(this));
 
-      contract.on('SetAdOwner', function(...args) {
-        const event = args[args.length - 1];
-        this.$store.dispatch('processSetAdOwnerEvents', [event]);
-      }.bind(this));
-
-      ketherNFT.on('Transfer', function(...args) {
-        const event = args[args.length - 1];
-        this.$store.dispatch('processTransferEvents', [event]);
-      }.bind(this));
+      // TODO we need to subscribe to either SetAdOwner or some NFT events in order to update when wrapping/unwrapping
     },
   },
   async created() {

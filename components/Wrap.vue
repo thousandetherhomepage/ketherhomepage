@@ -147,7 +147,7 @@ export default {
           await tx.wait();
         }
 
-        this.$store.commit('updateAds', [{idx: this.ad.idx, update: {owner: signerAddr, wrapped: true}}]);
+        this.$store.commit('importAds', [Object.assign(this.ad, {owner: signerAddr, wrapped: true})]);
         this.$store.commit('removeHalfWrapped', this.ad.idx);
 
         this.error = null; // Reset error if completed successfully.
@@ -168,7 +168,7 @@ export default {
           this.wrapInProgress = "Unwrapping transaction submitted, waiting...";
           await tx.wait();
         }
-        this.$store.commit('updateAds', [{idx: this.ad.idx, update: {wrapped: false}}]);
+        this.$store.commit('importAds', [Object.assign(this.ad, {wrapped: false})]);
 
         this.error = null; // Reset error if completed successfully.
       } catch(err) {
