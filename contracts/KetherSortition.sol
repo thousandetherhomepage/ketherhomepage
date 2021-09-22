@@ -22,6 +22,7 @@ library Errors {
   string constant MustHaveEntropy = "election not executed";
   string constant AlreadyStarted = "election already started";
   string constant AlreadyExecuted = "election already executed";
+  string constant AlreadyExecuted = "address already nominated";
 
   string constant NotEnoughLink = "not enough LINK";
 }
@@ -35,11 +36,13 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   uint256 constant TERM_DURATION = 30 days; // TODO: Confirm OpenSea's royalty interval
   uint256 termStarted;
   uint256 termExpires;
+  uint256 termNumber = 0;
 
   IERC721 ketherNFTContract;
   IKetherHomepage ketherContract;
 
-  address[] nominations; // TODO: Could store a struct{ address, idx, pixels }[] and confirm ownership in getNextMagistrate
+  address[] nominatedAddresses; // TODO: Could store a struct{ address, idx, pixels }[] and confirm ownership in getNextMagistrate
+  mapping(address => uint256) nominations;
   uint256 electionEntropy;
 
   bool waitingForEntropy = false;
@@ -71,6 +74,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     waitingForEntropy = false;
     gotEntropy = false;
     nominating = true;
+    termNumber += 1;
   }
 
   /**
@@ -108,42 +112,28 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   function getNextMagistrateToken() public view returns (uint256) {
     require(gotEntropy, Errors.MustHaveEntropy);
 
-    // FIXME: Don't love this code, can we do it more efficiently? Only the
-    // known next magistrate will have to call it on-chain.
-
-    // FIXME: Can't have inline mappings like this, need to deduplicate in contract state
-    mapping(address => uint256) memory counts;
-    uint256[] memory nominationCounts;
+    //TODO: we could rewrite this using an array of structs caching pixelCounts
+    //      see if this is cheaper.
 
     uint256 total = 0;
-    for(uint256 i = 0; i < nominations.length; i++) {
-      address n = nominations[i];
-      if (counts[n] != 0) continue; // Double nomination, skip (nominationCounts[i] remains 0)
-
-      uint256 count = pixelCount(n);
-      counts[n] = count;
-      total += count;
+    for(uint256 i = 0; i < nominatedAddresses.length; i++) {
+      total += pixelCount(nominatedAddresses[i]);
     }
 
     // FIXME: Check off-by-ones
 
     uint256 pixelChosen = electionEntropy.mod(total);
-    uint256 pixelCursor = 0;
+    uint256 curPixel = 0;
     address nominated;
-    for(uint256 i = 0; i < nominations.length; i++) {
-      pixelCursor += counts[nominations[i]];
-      if (pixelCursor >= pixelChosen) {
-        nominated = nominations[i];
-      }
-    }
 
-    // Choose ad owned by nominated (reverse traverse until we land on relative pixelChosen within pixelCursor window)
-    pixelCursor -= pixelChosen;
-    for (uint256 i = ketherNFTContract.balanceOf(owner) - 1; i >= 0; i--) {
-      uint256 idx = ketherNFTContract.tokenOfOwnerByIndex(owner, i);
-      uint256 pixels = getAdPixels(idx);
-      if (pixels > pixelCursor) return idx;
-      pixelCursor -= pixels;
+    for(uint256 i = 0; i < nominations.length; i++) {
+      for (uint256 i = ketherNFTContract.balanceOf(owner) - 1; i >= 0; i--) {
+        uint256 idx = ketherNFTContract.tokenOfOwnerByIndex(owner, i);
+        uint256 pixels = getAdPixels(idx);
+        if (pixels > pixelChosen) { //TODO: is this > or >=
+          return idx;
+        }
+      }
     }
   }
 
@@ -157,9 +147,11 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     require(!waitingForEntropy, Errors.AlreadyStarted);
 
     address sender = _msgSender();
+    require(nominations[sender] <= termNumber, Errors.AlreadyNominated);
     require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustHaveBalance);
 
-    nominations.push(address);
+    nominations[sender] = termNumber + 1;
+    nominatedAddresses.push(sender);
   }
 
   /**
