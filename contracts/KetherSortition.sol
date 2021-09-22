@@ -204,6 +204,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   // Only owner (admin helpers):
 
+  // TODO: adminUpdateChainlinkValues(bytes32 keyHash, uint256 fee) external onlyOwner
+
   function adminDelayNextEpoch(uint256 nextEpoch) external onlyOwner {
     // XXX: Implement this.
     // TODO: Should this also allow adjusting the interval?
