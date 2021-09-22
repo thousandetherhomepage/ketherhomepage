@@ -22,7 +22,8 @@ library Errors {
   string constant MustHaveEntropy = "election not executed";
   string constant AlreadyStarted = "election already started";
   string constant AlreadyExecuted = "election already executed";
-  string constant AlreadyExecuted = "address already nominated";
+  string constant AlreadyNominated = "address already nominated";
+  string constant TermNotExpired = "term has not expired";
 
   string constant NotEnoughLink = "not enough LINK";
 }
@@ -49,6 +50,13 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   bool gotEntropy = false;
   bool nominating = true;
 
+  uint8 constant STATE_NOMINATING = 0;
+  uint8 constant STATE_WAITING_FOR_ENTROPY = 1;
+  uint8 constant STATE_GOT_ENTROPY = 2;
+  uint8 state = 0;
+
+  // nominating -[term expired & startElection() calls]> waitingForEntropy -[Chainlink calls into fullfillrandomness()]> gotEntropy -[completeElection()] -> nominating
+
   // Chainlink values
   bytes32 private s_keyHash;
   uint256 private s_fee;
@@ -66,23 +74,12 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   // Internal helpers:
 
   /**
-   * @dev Called during completeElection.
-   */
-  function _resetElection() internal {
-    delete nominations;
-
-    waitingForEntropy = false;
-    gotEntropy = false;
-    nominating = true;
-    termNumber += 1;
-  }
-
-  /**
    * @dev Only callable by Chainlink VRF, async triggered via startElection().
    */
   function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-    gotEntropy = true;
+    require(state == STATE_WAITING_FOR_ENTROPY, Errors.AlreadyExecuted);
     electionEntropy = randomness;
+    state = STATE_GOT_ENTROPY;
   }
 
   // Views:
@@ -110,10 +107,10 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   }
 
   function getNextMagistrateToken() public view returns (uint256) {
-    require(gotEntropy, Errors.MustHaveEntropy);
+    require(state == STATE_GOT_ENTROPY, Errors.MustHaveEntropy);
 
-    //TODO: we could rewrite this using an array of structs caching pixelCounts
-    //      see if this is cheaper.
+    // TODO: we could rewrite this using an array of structs caching pixelCounts
+    // let's see if this is cheaper.
 
     uint256 total = 0;
     for(uint256 i = 0; i < nominatedAddresses.length; i++) {
@@ -144,7 +141,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
    * @dev Nominate address of held NFTs as a candidate for magistrate in the next epoch.
    */
   function nominateSelf() external {
-    require(!waitingForEntropy, Errors.AlreadyStarted);
+    require(state == STATE_NOMINATING, Errors.AlreadyStarted);
 
     address sender = _msgSender();
     require(nominations[sender] <= termNumber, Errors.AlreadyNominated);
@@ -154,14 +151,19 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     nominatedAddresses.push(sender);
   }
 
+  // TODO: do we want to have a unNominateSelf()
+
   /**
    * @dev Stop accepting nominations, start election.
    */
   function startElection() external {
-    require(!waitingForEntropy && !gotEntropy, Errors.AlreadyExecuted);
+    //FIXME: check that term expired
+    require(state == STATE_NOMINATING, Errors.AlreadyExecuted);
+    require(termExpires <= block.timestamp, Errors.TermNotExpired);
     require(LINK.balanceOf(address(this)) >= s_fee, Errors.NotEnoughLink);
 
-    waitingForEntropy = true;
+    // TODO: check if this is a re-entry vector
+    state = STATE_WAITING_FOR_ENTROPY;
     requestRandomness(s_keyHash, s_fee);
   }
 
@@ -169,15 +171,18 @@ contract KetherSortition is Ownable, VRFConsumerBase {
    * @dev Assign new magistrate and open up for nominations for next election.
    */
   function completeElection() external {
+    require(state == STATE_GOT_ENTROPY, Errors.MustHaveEntropy);
     magistrateToken = getNextMagistrateToken();
 
     // FIXME: This is going to stagger terms, do we want to align them to
     // royalty payouts? Or maybe we could assign payouts to terms on a payment
     // receiver.
+    termNumber += 1;
     termStarted = block.timestamp;
     termExpires = termStarted + TERM_DURATION;
 
-    _resetElection();
+    delete nominations;
+    state = STATE_NOMINATING;
   }
 
 
@@ -185,6 +190,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   function withdraw(address payable to) public {
     require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
+    // NOTE: you have exclusive rights to withdraw until the end of your term.
+    // afterwards it becomes a race as someone call call an election.
 
     // FIXME: Would it be fun if this required having a >2 LINK balance to
     // withdraw? If we wanna be super cute, could automagically buy LINK from
