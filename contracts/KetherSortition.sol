@@ -22,6 +22,8 @@ library Errors {
   string constant MustHaveEntropy = "election not executed";
   string constant AlreadyStarted = "election already started";
   string constant AlreadyExecuted = "election already executed";
+
+  // TODO: deadcode
   string constant AlreadyNominated = "address already nominated";
   string constant TermNotExpired = "term has not expired";
 
@@ -42,8 +44,12 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   IERC721 ketherNFTContract;
   IKetherHomepage ketherContract;
 
-  address[] nominatedAddresses; // TODO: Could store a struct{ address, idx, pixels }[] and confirm ownership in getNextMagistrate
-  mapping(address => uint256) nominations;
+  uint256[] public nominatedTokens;
+  uint256 public nominatedPixels = 0;
+  mapping(uint256 => uint256) nominations; // mapping of tokenId => termNumber
+
+  //address[] nominatedAddresses; // TODO: Could store a struct{ address, idx, pixels }[] and confirm ownership in getNextMagistrate
+  //mapping(address => uint256) nominations;
   uint256 electionEntropy;
 
   bool waitingForEntropy = false;
@@ -97,58 +103,52 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     return width * height * 10;
   }
 
-  function pixelCount(address owner) public view returns (uint256) {
-    uint256 count = 0;
-    for (uint256 i = 0; i < ketherNFTContract.balanceOf(owner); i++) {
-      uint256 idx = ketherNFTContract.tokenOfOwnerByIndex(owner, i);
-      count += getAdPixels(idx);
-    }
-    return count;
+  function isNominated(uint256 _idx) public view returns (bool) {
+    return nominations[idx] > termNumber;
   }
 
   function getNextMagistrateToken() public view returns (uint256) {
     require(state == STATE_GOT_ENTROPY, Errors.MustHaveEntropy);
-
-    // TODO: we could rewrite this using an array of structs caching pixelCounts
-    // let's see if this is cheaper.
-
-    uint256 total = 0;
-    for(uint256 i = 0; i < nominatedAddresses.length; i++) {
-      total += pixelCount(nominatedAddresses[i]);
-    }
-
     // FIXME: Check off-by-ones
 
-    uint256 pixelChosen = electionEntropy.mod(total);
+    uint256 pixelChosen = electionEntropy.mod(nominatedPixels);
     uint256 curPixel = 0;
     address nominated;
 
-    for(uint256 i = 0; i < nominations.length; i++) {
-      for (uint256 i = ketherNFTContract.balanceOf(owner) - 1; i >= 0; i--) {
-        uint256 idx = ketherNFTContract.tokenOfOwnerByIndex(owner, i);
-        uint256 pixels = getAdPixels(idx);
-        if (pixels > pixelChosen) { //TODO: is this > or >=
-          return idx;
-        }
+    for(uint256 i = 0; i < nominatedTokens.length; i++) {
+      uint256 idx = nominatedTokens[i];
+      curPixel += getAdPixels(idx);
+      if (curPixel > pixelChosen) {
+        return idx;
       }
     }
   }
 
-
   // External interface:
 
   /**
-   * @dev Nominate address of held NFTs as a candidate for magistrate in the next epoch.
+   * @dev Nominate tokens held by the sender as candidates for magistrate in the next term.
+   *      Nominations of tokens are independent of their owner.
+   * @return Number of nominated pixels
    */
-  function nominateSelf() external {
+  function nominateSelf() external returns (uint256) {
     require(state == STATE_NOMINATING, Errors.AlreadyStarted);
-
     address sender = _msgSender();
-    require(nominations[sender] <= termNumber, Errors.AlreadyNominated);
     require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustHaveBalance);
 
-    nominations[sender] = termNumber + 1;
-    nominatedAddresses.push(sender);
+    uint256 pixels = 0;
+    for (uint256 i = 0; i < ketherNFTContract.balanceOf(sender); i++) {
+      uint256 idx = ketherNFTContract.tokenOfOwnerByIndex(sender, i);
+      if (!isNominated(idx)) {
+        pixels += getAdPixels(idx);
+        nominations[idx] = termNumber + 1;
+        nominatedTokens.push(idx);
+        // TODO: emit nomintated event
+      }
+    }
+
+    nominatedPixels += pixels;
+    return pixels;
   }
 
   // TODO: do we want to have a unNominateSelf()
@@ -181,7 +181,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     termStarted = block.timestamp;
     termExpires = termStarted + TERM_DURATION;
 
-    delete nominations;
+    delete nominatedTokens;
+    nominatedPixels = 0;
     state = STATE_NOMINATING;
   }
 
