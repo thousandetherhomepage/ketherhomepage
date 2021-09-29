@@ -36,7 +36,9 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   // MagistrateToken is tokenId of an NFT whose owner controls the royalties purse for this term.
   uint256 public magistrateToken;
 
-  uint256 constant TERM_DURATION = 30 days; // TODO: Confirm OpenSea's royalty interval
+  uint256 constant MIN_ELECTION_DURATION = 2 days;
+  uint256 constant TERM_DURATION = 6 weeks;
+
   uint256 termStarted;
   uint256 termExpires;
   uint256 termNumber = 0;
@@ -48,8 +50,6 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   uint256 public nominatedPixels = 0;
   mapping(uint256 => uint256) nominations; // mapping of tokenId => termNumber
 
-  //address[] nominatedAddresses; // TODO: Could store a struct{ address, idx, pixels }[] and confirm ownership in getNextMagistrate
-  //mapping(address => uint256) nominations;
   uint256 electionEntropy;
 
   bool waitingForEntropy = false;
@@ -189,6 +189,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   // Only magistrate:
 
+  /// @dev Transfer balance controlled by magistrate.
   function withdraw(address payable to) public {
     require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
     // NOTE: you have exclusive rights to withdraw until the end of your term.
@@ -201,6 +202,17 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     to.transfer(address(this).balance);
   }
 
+  /// @dev Cut the term short, leaving enough time for new nominations.
+  function stepDown() public {
+    require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
+
+    uint256 timeRemaining = termExpires - block.timestamp;
+    if (timeRemaining > MIN_ELECTION_DURATION) {
+      termExpires = block.timestamp + MIN_ELECTION_DURATION;
+    }
+
+    // TODO: Emit event
+  }
 
   // Only owner (admin helpers):
 
