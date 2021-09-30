@@ -124,11 +124,6 @@ export default {
   },
   methods: {
     async publish() {
-      ga('send', {
-        hitType: 'event',
-        eventCategory: this.contract._network,
-        eventAction: 'publish-submit',
-      });
       const signer = await this.provider.getSigner();
       const signerAddr = await signer.getAddress();
       if (signerAddr.toLowerCase() != this.ad.owner) {
@@ -151,22 +146,11 @@ export default {
         await tx.wait();
         this.inProgress = false;
       } catch(err) {
-        ga('send', {
-          hitType: 'event',
-          eventCategory: this.contract._network,
-          eventAction: 'publish-error',
-          eventLabel: JSON.stringify(err),
-        });
         this.error = err;
         return;
       } finally {
         this.inProgress = false;
       }
-      ga('send', {
-        hitType: 'event',
-        eventCategory: this.contract._network,
-        eventAction: 'publish-success',
-      });
       return false;
     },
   },

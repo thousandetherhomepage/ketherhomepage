@@ -53,11 +53,6 @@ const ethPerPixel = 1000 / 1000000;
 export default {
   props: ["provider", "contract", "isReadOnly"],
   data() {
-    ga('send', {
-      hitType: 'event',
-      eventCategory: this.contract._network,
-      eventAction: 'buy-open',
-    });
     return {
       error: null,
       success: null,
@@ -102,25 +97,10 @@ export default {
       }
       const weiPrice = ethers.utils.parseUnits(this.price(ad.width, ad.height).toString(), "ether");
       const x = Math.floor(ad.x/10), y = Math.floor(ad.y/10), width = Math.floor(ad.width/10), height = Math.floor(ad.height/10);
-      ga('send', {
-        hitType: 'event',
-        eventCategory: this.contract._network,
-        eventAction: 'buy-submit',
-        eventValue: weiPrice,
-        eventLabel: ad.width + "x" + ad.height,
-      });
-
       const signer = await this.provider.getSigner();
       try {
         const tx = await this.contract.connect(signer).buy(x, y, width, height, { value: weiPrice });
       } catch (err) {
-        ga('send', {
-          hitType: 'event',
-          eventCategory: this.contract._network,
-          eventAction: 'buy-error',
-          eventLabel: JSON.stringify(err),
-        });
-
         if ((err.stack || err.message || "").indexOf('User denied transaction signature.') !== -1)  {
           // Aborted, revert to original state.
           return;
@@ -131,13 +111,6 @@ export default {
 
       this.success = 'Transaction sent successfully.'
       this.$emit("buy", {x, y, width, height})
-      ga('send', {
-        hitType: 'event',
-        eventCategory: this.contract._network,
-        eventAction: 'buy-success',
-        eventValue: weiPrice,
-        eventLabel: ad.width + "x" + ad.height,
-      });
       // TODO: Transition to Publish route?
     },
   },
