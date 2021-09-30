@@ -306,11 +306,16 @@ export const actions = {
       return;
     }
     if (numBlocks === undefined) {
-      numBlocks = 10 * 60 * 24 * 7; // Look 7 days back
+      numBlocks = -(10 * 60 * 24 * 7); // Look 7 days back
+    } else if (numBlocks === "all") {
+      numBlocks = undefined;
     }
     let ids = {};
     const eventFilter = [ ketherContract.filters.SetAdOwner() ];
-    const events = await ketherContract.queryFilter(eventFilter, -numBlocks);
+    const events = await ketherContract.queryFilter(eventFilter, numBlocks);
+
+    console.log("Looking for half-wrapped ads, processing", events.length, "events from", numBlocks || "all", "blocks");
+
     for (const evt of events.reverse()) {
       // Only look at events from your account (alas not indexed so we can't filter above)
       if (normalizeAddr(evt.args.from) !== normalizeAddr(account)) continue;
