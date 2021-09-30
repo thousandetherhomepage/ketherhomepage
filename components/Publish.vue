@@ -74,7 +74,7 @@ input {
         </label>
         <label>
           <span>Image</span>
-          <input type="text" v-model="ad.image" placeholder="https://...." />
+          <input type="text" @change="checkImage" v-model="ad.image" placeholder="https://...." />
           <small>URL to PNG image. Preferably <code>ipfs://</code> or <code>data:image/png,base64,...</code> encoded. Can be <code>https://</code> but <strong>do not hotlink</strong> because they tend to break. Link to an actual image, not a website containing it. <br />Must be less than 100KB.</small>
         </label>
         <label>
@@ -85,11 +85,14 @@ input {
         <div>
           <h3>Preview <small>(not published yet)</small></h3>
           <div class="mini-adGrid">
-            <Ad :showNSFW="showNSFW" :ad="ad" class="previewAd"></Ad>
+            <Ad :showNSFW="showNSFW" :ad="ad" class="previewAd" ref="adPreview"></Ad>
           </div>
         </div>
+        <ul v-if="warnings.length > 0">
+          <li v-for="w in warnings" :key="w">⚠️ {{w}}</li>
+        </ul>
         <div>
-          <button type="submit">Publish Changes</button>
+          <button type="submit" v-bind:disabled="!canPublish">Publish Changes</button>
         </div>
         <p class="progress" v-if="inProgress">
           <img src="/throbber.svg" style="width: 32px; height: 18px; vertical-align: text-bottom;" alt="⏳" />
@@ -118,29 +121,65 @@ export default {
   props: ["ad", "provider", "contract", "ketherNFT", "showNSFW"],
   data() {
     return {
+      canPublish: true,
+      warnings: [],
       inProgress: false,
       error: null,
     }
   },
+  watch: {
+    ad() {
+      // Reset checkImage
+      this.canPublish = true;
+      this.warnings = [];
+    },
+  },
   methods: {
+    async checkImage() {
+      // FIXME: This is hacky AF for now
+      const warnings = [];
+      const el = this.$refs.adPreview.$el.children[0];
+      const maxWidth = this.ad.width * 20;
+      const maxHeight = this.ad.height * 20;
+      const maxRes = maxWidth * maxHeight * 2;
+
+      if (el.naturalWidth > maxWidth) {
+        warnings.push(`Image is too wide: Width is ${el.naturalWidth}px but it should be ${maxWidth / 2}px (or ${maxWidth}px for HiDPI).`);
+      }
+      if (el.naturalHeight > maxHeight) {
+        warnings.push(`Image is too tall: Height is ${el.naturalHeight}px but it should be ${maxHeight / 2}px (or ${maxHeight}px for HiDPI).`);
+      }
+      if ((el.naturalWidth / el.naturalHeight) != (maxWidth / maxHeight)) {
+        warnings.push(`Image aspect ratio is incorrect, it will appear squished and blurry.`);
+      }
+      const resTooBig = (el.naturalWidth * el.naturalHeight > maxRes);
+      if (resTooBig) {
+        warnings.push(`Image is way too big. Please resize to ${maxWidth}x${maxHeight}px or smaller before publishing.`);
+      }
+      this.canPublish = !resTooBig;
+      this.warnings = warnings;
+    },
     async publish() {
+      await this.checkImage();
+      if (!this.canPublish) return;
+      const ad = this.ad;
       const signer = await this.provider.getSigner();
       const signerAddr = await signer.getAddress();
-      if (signerAddr.toLowerCase() != this.ad.owner) {
-        this.error = 'Incorrect active wallet. Must publish with: ' + this.ad.owner;
+      if (signerAddr.toLowerCase() != ad.owner) {
+        this.error = 'Incorrect active wallet. Must publish with: ' + ad.owner;
         return;
       }
       this.inProgress = 'Waiting for wallet to confirm.';
 
       // Load latest wrapped state from blockchain (avoid stale state)
-      const isWrapped = this.$address.equal((await this.contract.ads(this.ad.idx)).owner, this.ketherNFT.address);
+      const isWrapped = this.$address.equal((await this.contract.ads(ad.idx)).owner, this.ketherNFT.address);
 
       try {
         let tx;
         if (isWrapped) {
-          tx = await this.ketherNFT.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
+          tx = await this.ketherNFT.connect(signer).publish(ad.idx, ad.link, ad.image, ad.title, Number(ad.NSFW));
         } else {
-          tx = await this.contract.connect(signer).publish(this.ad.idx, this.ad.link, this.ad.image, this.ad.title, Number(this.ad.NSFW));
+          tx = await this.contract.connect(signer).publish(ad.idx, ad.link, ad.image, ad.title, Number(ad.NSFW));
         }
         this.inProgress = 'Submitted, waiting...';
         await tx.wait();
@@ -151,6 +190,7 @@ export default {
       } finally {
         this.inProgress = false;
       }
+      // TODO: (Re)load this.ad from contract?
       return false;
     },
   },

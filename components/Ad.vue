@@ -5,9 +5,6 @@
   </a>
 </template>
 
-<style lang="scss">
-</style>
-
 <script>
 function gatewayURL(url) {
   const u = url.trim().toLowerCase();
