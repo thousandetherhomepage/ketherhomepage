@@ -43,6 +43,7 @@ section {
       <p>
         <button type="button" v-on:click="tab = 'publish'" :disabled="tab == 'publish' || !ad || $store.state.halfWrapped[ad.idx]">Edit Ad</button>
         <button type="button" v-on:click="tab = 'wrap'" :disabled="tab == 'wrap' || !ad">Wrap / Unwrap</button>
+        <button type="button" v-on:click="tab = 'missing'" :disabled="tab == 'missing'">Find Missing Ad</button>
       </p>
     </div>
     <p v-else-if="$store.state.activeAccount">
@@ -52,6 +53,7 @@ section {
     <section>
       <LazyPublish v-if="tab == 'publish'" :ad="ad" :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :showNSFW="showNSFW" />
       <LazyWrap v-else-if="tab == 'wrap'" :ad="ad" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" />
+      <LazyMissing v-else-if="tab == 'missing'" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" />
     </section>
 
   </div>
