@@ -52,7 +52,7 @@ section {
 
     <section>
       <LazyPublish v-if="tab == 'publish'" :ad="ad" :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :showNSFW="showNSFW" />
-      <LazyWrap v-else-if="tab == 'wrap'" :ad="ad" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" />
+      <LazyWrap v-else-if="tab == 'wrap'" :ad="ad" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" @refresh="refresh" />
       <LazyMissing v-else-if="tab == 'missing'" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" />
     </section>
 
@@ -71,6 +71,11 @@ export default {
       ad: null,
       tab: null,
     }
+  },
+  methods: {
+    refresh({ idx }) {
+      this.ad = this.$store.state.ads[idx];
+    },
   },
   components: {
     Offline,

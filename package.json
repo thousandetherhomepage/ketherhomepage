@@ -12,7 +12,6 @@
   "dependencies": {
     "@walletconnect/web3-provider": "^1.5.4",
     "core-js": "^3.16.0",
-    "epic-spinners": "^1.1.0",
     "ethers": "^5.4.6",
     "nuxt": "^2.15.8",
     "vue-draggable-resizable": "^2.3.0",
