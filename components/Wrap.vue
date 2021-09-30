@@ -50,14 +50,6 @@ input {
     background: #ddd;
     margin-bottom: 1em;
   }
-  .progress {
-    display: flex;
-    align-items: center;
-
-    .spinner {
-      margin-right: .5rem;
-    }
-  }
 }
 </style>
 
@@ -66,13 +58,9 @@ input {
     <form v-on:submit.prevent class="wrapAd">
       <h3>NFT</h3>
       <p class="progress" v-if="wrapInProgress">
-        <circles-to-rhombuses-spinner
-          class="spinner"
-          :animation-duration="1000"
-          :circles-num="3"
-          :circle-size="5"
-          :color="'#42b983'"/>
-        <strong>Transaction in progress.</strong> {{wrapInProgress}}
+        <img src="/throbber.svg" style="width: 32px; height: 18px; vertical-align: text-bottom;" alt="⏳" />
+        <strong>Transaction in progress.</strong>
+        <span>{{wrapInProgress}}</span>
       </p>
       <p v-if="ad.wrapped">
       Ad is wrapped to NFT.
@@ -150,6 +138,8 @@ export default {
         this.$store.commit('updateAds', [{idx: this.ad.idx, update: {owner: signerAddr, wrapped: true}}]);
         this.$store.commit('removeHalfWrapped', this.ad.idx);
 
+        this.$emit("refresh", {idx: this.ad.idx});
+
         this.error = null; // Reset error if completed successfully.
       } catch(err) {
         this.error = err;
@@ -169,6 +159,7 @@ export default {
           await tx.wait();
         }
         this.$store.commit('updateAds', [{idx: this.ad.idx, update: {wrapped: false}}]);
+        this.$emit("refresh", {idx: this.ad.idx});
 
         this.error = null; // Reset error if completed successfully.
       } catch(err) {
