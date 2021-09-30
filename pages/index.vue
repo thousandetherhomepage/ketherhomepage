@@ -11,9 +11,5 @@
 </template>
 
 <script>
-// Stub for ga. TODO should we cut this entirely?
-if (process.client) {
-  window.ga = function () {};
-}
 export default {}
 </script>
