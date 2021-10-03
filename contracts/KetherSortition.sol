@@ -16,6 +16,11 @@ interface IERC721 {
   function tokenOfOwnerByIndex(address, uint256) external view returns (uint256);
 }
 
+interface IERC20 {
+  function balanceOf(address account) external view returns (uint256);
+  function transfer(address recipient, uint256 amount) external returns (bool);
+}
+
 library Errors {
   string constant MustHaveBalance = "must have balance to nominate";
   string constant OnlyMagistrate = "only active magistrate can do this";
@@ -104,16 +109,15 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   }
 
   function isNominated(uint256 _idx) public view returns (bool) {
-    return nominations[idx] > termNumber;
+    return nominations[_idx] > termNumber;
   }
 
   function getNextMagistrateToken() public view returns (uint256) {
     require(state == STATE_GOT_ENTROPY, Errors.MustHaveEntropy);
     // FIXME: Check off-by-ones
 
-    uint256 pixelChosen = electionEntropy.mod(nominatedPixels);
+    uint256 pixelChosen = electionEntropy % nominatedPixels;
     uint256 curPixel = 0;
-    address nominated;
 
     for(uint256 i = 0; i < nominatedTokens.length; i++) {
       uint256 idx = nominatedTokens[i];
@@ -224,10 +228,11 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   }
 
   /**
-   * @dev Withdraw remaining LINK, for rescuing once the experiment is over.
+   * @dev Withdraw ERC20 tokens, primarily for rescuing remaining LINK once the
+   *      experiment is over.
    */
-  function adminWithdrawLINK(address to) external onlyOwner {
-    // XXX: Add require to confirm that the contract is suspended
-    LINK.transfer(to, LINK.balanceOf(this));
+  function adminWithdrawToken(IERC20 token, address to) external onlyOwner {
+    // XXX: Add require to confirm that the contract is suspended?
+    token.transfer(to, token.balanceOf(address(this)));
   }
 }
