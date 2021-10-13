@@ -25,6 +25,7 @@ library Errors {
   string constant MustHaveBalance = "must have balance to nominate";
   string constant OnlyMagistrate = "only active magistrate can do this";
   string constant MustHaveEntropy = "election not executed";
+  string constant MustHaveNominations = "must have nominations";
   string constant AlreadyStarted = "election already started";
   string constant AlreadyExecuted = "election already executed";
 
@@ -113,7 +114,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   function getNextMagistrateToken() public view returns (uint256) {
     require(state == STATE_GOT_ENTROPY, Errors.MustHaveEntropy);
-    // FIXME: Check off-by-ones
+    require(nominatedTokens.length > 0, Errors.MustHaveNominations);
 
     uint256 pixelChosen = electionEntropy % nominatedPixels;
     uint256 curPixel = 0;
@@ -146,7 +147,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
         pixels += getAdPixels(idx);
         nominations[idx] = termNumber + 1;
         nominatedTokens.push(idx);
-        // TODO: emit nomintated event
+        // TODO: emit nominated event
       }
     }
 
@@ -154,15 +155,18 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     return pixels;
   }
 
-  // TODO: do we want to have a unNominateSelf()
+  // TODO: Do we want nominateOther, so people can easily delegate their nominations?
+
+  // TODO: Do we want to have a unNominateSelf()
 
   /**
    * @dev Stop accepting nominations, start election.
    */
   function startElection() external {
-    //FIXME: check that term expired
+    // FIXME: check that term expired
     require(state == STATE_NOMINATING, Errors.AlreadyExecuted);
     require(termExpires <= block.timestamp, Errors.TermNotExpired);
+    require(nominatedTokens.length > 0, Errors.MustHaveNominations);
     require(LINK.balanceOf(address(this)) >= s_fee, Errors.NotEnoughLink);
 
     // TODO: check if this is a re-entry vector
