@@ -65,17 +65,18 @@
             Contract on Etherscan
           </a>
         </li>
-        <li>
-          <a v-if="$store.state.gridVis" v-on:click="$store.commit('setVis', 'list')">List View</a>
-          <a v-else v-on:click="$store.commit('setVis', 'grid')">Grid View</a>
-        </li>
-        <li v-if="$store.state.numNSFW > 0">
+        <li v-if="$store.getters.numNSFW > 0">
           <a v-if="!showNSFW" v-on:click="showNSFW = true"
-            >Show NSFW ({{ $store.state.numNSFW }})</a
+            >Show NSFW ({{ $store.getters.numNSFW }})</a
           >
           <a v-else v-on:click="showNSFW = false">Hide NSFW</a>
         </li>
         <li><a href="https://v1.thousandetherhomepage.com">Switch to v1 (2017)</a></li>
+        <li class="buttons">
+          <button :disabled="$store.state.vis == 'grid'"  v-on:click="$store.commit('setVis', 'grid')">Grid</button>
+          <button :disabled="$store.state.vis == 'list'" v-on:click="$store.commit('setVis', 'list')">List</button>
+          <button :disabled="$store.state.vis == 'svg'"  v-on:click="$store.commit('setVis', 'svg')">SVG</button>
+        </li>
       </ul>
     </Footer>
   </div>
@@ -236,5 +237,9 @@ header {
   h2 {
     display: inline-block;
   }
+}
+.buttons button {
+  border-width: 1px;
+  border-radius: 5px;
 }
 </style>
