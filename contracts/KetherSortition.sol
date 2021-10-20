@@ -45,9 +45,9 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   uint256 constant MIN_ELECTION_DURATION = 2 days;
   uint256 constant TERM_DURATION = 6 weeks;
 
-  uint256 termStarted;
-  uint256 termExpires;
-  uint256 termNumber = 0;
+  uint256 public termStarted;
+  uint256 public termExpires;
+  uint256 public termNumber = 0;
 
   IERC721 ketherNFTContract;
   IKetherHomepage ketherContract;
@@ -57,7 +57,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   mapping(uint256 => uint256) nominations; // mapping of tokenId => termNumber
   // TODO: mapping(uint256 => uint256) electedCount;
 
-  uint256 electionEntropy; // Provided by Chainlink
+  uint256 public electionEntropy; // Provided by Chainlink
 
   uint8 constant STATE_NOMINATING = 0;
   uint8 constant STATE_WAITING_FOR_ENTROPY = 1;
@@ -81,6 +81,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
     termExpires = block.timestamp + MIN_ELECTION_DURATION;
   }
+
 
   // Internal helpers:
 

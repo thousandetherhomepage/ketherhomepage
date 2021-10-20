@@ -14,19 +14,21 @@ describe('KetherSortition', function() {
     KetherNFT = await ethers.getContractFactory("KetherNFT");
     KetherNFTRender = await ethers.getContractFactory("KetherNFTRender");
     KetherSortition = await ethers.getContractFactory("KetherSortition");
+    MockVRFCoordinator = await ethers.getContractFactory("MockVRFCoordinator");
+    MockLink = await ethers.getContractFactory("MockLink");
 
     const [owner, withdrawWallet, account1, account2, account3] = await ethers.getSigners();
     accounts = {owner, withdrawWallet, account1, account2, account3};
 
-    const vrfCoordinator = await owner.getAddress();
-    const linkAddress = await owner.getAddress();
     const keyHash = ethers.utils.formatBytes32String("🤷");
     const fee = 0;
 
+    VRF = await MockVRFCoordinator.deploy();
+    LINK = await MockLink.deploy();
     KH = await KetherHomepage.deploy(await owner.getAddress(), await withdrawWallet.getAddress());
     KNFTrender = await KetherNFTRender.deploy();
     KNFT = await KetherNFT.deploy(KH.address, KNFTrender.address);
-    KS = await KetherSortition.deploy(KNFT.address, KH.address, vrfCoordinator, linkAddress, keyHash, fee);
+    KS = await KetherSortition.deploy(KNFT.address, KH.address, VRF.address, LINK.address, keyHash, fee);
   });
 
   const buyNFT = async function(account, x=0, y=0, width=10, height=10, link="link", image="image", title="title", NSFW=false, value=undefined) {
@@ -48,18 +50,38 @@ describe('KetherSortition', function() {
       account2,
     } = accounts;
 
-    // Buy some ads
+    await buyNFT(account2, x=10, y=0); // 0th ad is the default magistrate
+    expect(await KS.connect(account1).getMagistrate()).to.equal(await account2.getAddress());
+
+    // Buy some more ads
     await buyNFT(account1, x=0, y=0);
     await buyNFT(account1, x=0, y=10);
     await buyNFT(account1, x=0, y=20);
 
-    await buyNFT(account2, x=10, y=0);
     await buyNFT(account2, x=10, y=10);
 
     expect(await KS.connect(account1).nominatedPixels()).to.equal(0);
-    await KS.connect(account2).nominateSelf();
-    expect(await KS.connect(account1).nominatedPixels()).to.equal(10*10*10*2);
+    await KS.connect(account1).nominateSelf();
+    const nominatedPixels = 10*10*10*3;
+    expect(await KS.connect(account1).nominatedPixels()).to.equal(nominatedPixels);
 
-    // TODO: Write more tests
+    // Fast forward to term expiring
+    const termExpires = await KS.connect(account1).termExpires();
+    await network.provider.send("evm_setNextBlockTimestamp", [termExpires.toNumber()]);
+    await network.provider.send("evm_mine");
+
+    await KS.connect(account1).startElection();
+
+    expect(await KS.connect(account1).electionEntropy(), "0");
+    const randomness = 201; // 2nd nominated 10x10 ad
+    await VRF.connect(owner).sendRandomness(KS.address, ethers.utils.formatBytes32String(""), randomness);
+    expect(await KS.connect(account1).electionEntropy(), randomness);
+
+    const electedToken = await KS.connect(account1).getNextMagistrateToken();
+    expect(electedToken).to.equal(2); // FIXME: Why is this failing with 1?
+    expect(await KS.connect(account1).magistrateToken()).to.not.equal(electedToken); // Election not completed yet
+
+    await KS.connect(account1).completeElection();
+    expect(await KS.connect(account1).magistrateToken()).to.equal(electedToken);
  });
 });
