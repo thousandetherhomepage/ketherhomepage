@@ -28,11 +28,7 @@ library Errors {
   string constant MustHaveNominations = "must have nominations";
   string constant AlreadyStarted = "election already started";
   string constant AlreadyExecuted = "election already executed";
-
-  // TODO: deadcode
-  string constant AlreadyNominated = "address already nominated";
   string constant TermNotExpired = "term has not expired";
-
   string constant NotEnoughLink = "not enough LINK";
 }
 
@@ -59,12 +55,11 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   uint256 public electionEntropy; // Provided by Chainlink
 
-  uint8 constant STATE_NOMINATING = 0;
-  uint8 constant STATE_WAITING_FOR_ENTROPY = 1;
-  uint8 constant STATE_GOT_ENTROPY = 2;
-  uint8 state = 0;
 
   // nominating -[term expired & startElection() calls]> waitingForEntropy -[Chainlink calls into fullfillrandomness()]> gotEntropy -[completeElection()] -> nominating
+  enum StateMachine { NOMINATING, WAITING_FOR_ENTROPY, GOT_ENTROPY }
+  StateMachine state = StateMachine.NOMINATING;
+
 
   // Chainlink values
   bytes32 private s_keyHash;
@@ -89,9 +84,9 @@ contract KetherSortition is Ownable, VRFConsumerBase {
    * @dev Only callable by Chainlink VRF, async triggered via startElection().
    */
   function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-    require(state == STATE_WAITING_FOR_ENTROPY, Errors.AlreadyExecuted);
+    require(state == StateMachine.WAITING_FOR_ENTROPY, Errors.AlreadyExecuted);
     electionEntropy = randomness;
-    state = STATE_GOT_ENTROPY;
+    state = StateMachine.GOT_ENTROPY;
   }
 
   // Views:
@@ -114,7 +109,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   }
 
   function getNextMagistrateToken() public view returns (uint256) {
-    require(state == STATE_GOT_ENTROPY, Errors.MustHaveEntropy);
+    require(state == StateMachine.GOT_ENTROPY, Errors.MustHaveEntropy);
     require(nominatedTokens.length > 0, Errors.MustHaveNominations);
 
     uint256 pixelChosen = electionEntropy % nominatedPixels;
@@ -127,6 +122,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
         return idx;
       }
     }
+    return 0;
   }
 
   // External interface:
@@ -137,7 +133,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
    * @return Number of nominated pixels
    */
   function nominateSelf() external returns (uint256) {
-    require(state == STATE_NOMINATING, Errors.AlreadyStarted);
+    require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
     address sender = _msgSender();
     require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustHaveBalance);
 
@@ -165,13 +161,13 @@ contract KetherSortition is Ownable, VRFConsumerBase {
    */
   function startElection() external {
     // FIXME: check that term expired
-    require(state == STATE_NOMINATING, Errors.AlreadyExecuted);
+    require(state == StateMachine.NOMINATING, Errors.AlreadyExecuted);
     require(termExpires <= block.timestamp, Errors.TermNotExpired);
     require(nominatedTokens.length > 0, Errors.MustHaveNominations);
     require(LINK.balanceOf(address(this)) >= s_fee, Errors.NotEnoughLink);
 
     // TODO: check if this is a re-entry vector
-    state = STATE_WAITING_FOR_ENTROPY;
+    state = StateMachine.WAITING_FOR_ENTROPY;
     requestRandomness(s_keyHash, s_fee);
   }
 
@@ -179,7 +175,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
    * @dev Assign new magistrate and open up for nominations for next election.
    */
   function completeElection() external {
-    require(state == STATE_GOT_ENTROPY, Errors.MustHaveEntropy);
+    require(state == StateMachine.GOT_ENTROPY, Errors.MustHaveEntropy);
     magistrateToken = getNextMagistrateToken();
 
     // FIXME: This is going to stagger terms, do we want to align them to
@@ -191,7 +187,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
     delete nominatedTokens;
     nominatedPixels = 0;
-    state = STATE_NOMINATING;
+    state = StateMachine.NOMINATING;
   }
 
 
