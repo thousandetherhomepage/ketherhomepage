@@ -4,8 +4,20 @@ const weiPixelPrice = ethers.utils.parseUnits("0.001", "ether");
 const pixelsPerCell = ethers.BigNumber.from(100);
 const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
 
+// FIXME: Is there a good way to import this from KetherSortition.sol?
+const Errors = {
+  MustHaveBalance: "must have tokens to nominate",
+  OnlyMagistrate: "only active magistrate can do this",
+  MustHaveEntropy: "waiting for entropy",
+  MustHaveNominations: "must have nominations",
+  AlreadyStarted: "election already started",
+  NotExecuted: "election not executed",
+  TermNotExpired: "term not expired",
+  NotEnoughLink: "not enough LINK",
+};
+
 describe('KetherSortition', function() {
-  let KetherHomepage, KetherNFT, KetherSortition, Errors;
+  let KetherHomepage, KetherNFT, KetherSortition;
   let accounts, KH, KNFT, KS;
 
   beforeEach(async () => {
@@ -49,22 +61,20 @@ describe('KetherSortition', function() {
       account1,
     } = accounts;
 
-    // TODO: What's a good way to access the Errors.* library from here?
-
     expect(
       KS.connect(account1).completeElection()
-    ).to.be.revertedWith("waiting for entropy");
+    ).to.be.revertedWith(Errors.MustHaveEntropy);
 
     expect(
       KS.connect(account1).startElection()
-    ).to.be.revertedWith("must have nominations");
+    ).to.be.revertedWith(Errors.MustHaveNominations);
 
     await buyNFT(account1, x=0, y=0);
     await KS.connect(account1).nominateSelf();
 
     expect(
       KS.connect(account1).startElection()
-    ).to.be.revertedWith("term not expired");
+    ).to.be.revertedWith(Errors.TermNotExpired);
 
     const termExpires = await KS.connect(account1).termExpires();
     await network.provider.send("evm_setNextBlockTimestamp", [termExpires.toNumber()]);
@@ -72,31 +82,31 @@ describe('KetherSortition', function() {
 
     expect(
       VRF.connect(owner).sendRandomness(KS.address, ethers.utils.formatBytes32String(""), 42)
-    ).to.be.revertedWith("election not executed");
+    ).to.be.revertedWith(Errors.NotExecuted);
 
     await KS.connect(account1).startElection();
 
     expect(
       KS.connect(account1).startElection()
-    ).to.be.revertedWith("election already started");
+    ).to.be.revertedWith(Errors.AlreadyStarted);
 
     expect(
       KS.connect(account1).nominateSelf()
-    ).to.be.revertedWith("election already started");
+    ).to.be.revertedWith(Errors.AlreadyStarted);
 
     expect(
       KS.connect(account1).completeElection()
-    ).to.be.revertedWith("waiting for entropy");
+    ).to.be.revertedWith(Errors.MustHaveEntropy);
 
     await VRF.connect(owner).sendRandomness(KS.address, ethers.utils.formatBytes32String(""), 42);
 
     expect(
       KS.connect(account1).startElection()
-    ).to.be.revertedWith("election already started");
+    ).to.be.revertedWith(Errors.AlreadyStarted);
 
     expect(
       KS.connect(account1).nominateSelf()
-    ).to.be.revertedWith("election already started");
+    ).to.be.revertedWith(Errors.AlreadyStarted);
 
     await KS.connect(account1).completeElection();
   });
