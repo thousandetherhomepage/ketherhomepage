@@ -5,7 +5,7 @@ const pixelsPerCell = ethers.BigNumber.from(100);
 const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
 
 describe('KetherSortition', function() {
-  let KetherHomepage, KetherNFT, KetherSortition;
+  let KetherHomepage, KetherNFT, KetherSortition, Errors;
   let accounts, KH, KNFT, KS;
 
   beforeEach(async () => {
@@ -43,7 +43,65 @@ describe('KetherSortition', function() {
     return idx;
   }
 
-  it("it should nominate ads by owner", async function() {
+  it("should respect the state machine", async function() {
+    const {
+      owner,
+      account1,
+    } = accounts;
+
+    // TODO: What's a good way to access the Errors.* library from here?
+
+    expect(
+      KS.connect(account1).completeElection()
+    ).to.be.revertedWith("waiting for entropy");
+
+    expect(
+      KS.connect(account1).startElection()
+    ).to.be.revertedWith("must have nominations");
+
+    await buyNFT(account1, x=0, y=0);
+    await KS.connect(account1).nominateSelf();
+
+    expect(
+      KS.connect(account1).startElection()
+    ).to.be.revertedWith("term not expired");
+
+    const termExpires = await KS.connect(account1).termExpires();
+    await network.provider.send("evm_setNextBlockTimestamp", [termExpires.toNumber()]);
+    await network.provider.send("evm_mine");
+
+    expect(
+      VRF.connect(owner).sendRandomness(KS.address, ethers.utils.formatBytes32String(""), 42)
+    ).to.be.revertedWith("election not executed");
+
+    await KS.connect(account1).startElection();
+
+    expect(
+      KS.connect(account1).startElection()
+    ).to.be.revertedWith("election already started");
+
+    expect(
+      KS.connect(account1).nominateSelf()
+    ).to.be.revertedWith("election already started");
+
+    expect(
+      KS.connect(account1).completeElection()
+    ).to.be.revertedWith("waiting for entropy");
+
+    await VRF.connect(owner).sendRandomness(KS.address, ethers.utils.formatBytes32String(""), 42);
+
+    expect(
+      KS.connect(account1).startElection()
+    ).to.be.revertedWith("election already started");
+
+    expect(
+      KS.connect(account1).nominateSelf()
+    ).to.be.revertedWith("election already started");
+
+    await KS.connect(account1).completeElection();
+  });
+
+  it("should nominate ads by owner", async function() {
     const {
       owner,
       account1,

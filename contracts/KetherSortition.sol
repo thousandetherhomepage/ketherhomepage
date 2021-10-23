@@ -22,13 +22,13 @@ interface IERC20 {
 }
 
 library Errors {
-  string constant MustHaveBalance = "must have balance to nominate";
+  string constant MustHaveBalance = "must have tokens to nominate";
   string constant OnlyMagistrate = "only active magistrate can do this";
-  string constant MustHaveEntropy = "election not executed";
+  string constant MustHaveEntropy = "waiting for entropy";
   string constant MustHaveNominations = "must have nominations";
   string constant AlreadyStarted = "election already started";
-  string constant AlreadyExecuted = "election already executed";
-  string constant TermNotExpired = "term has not expired";
+  string constant NotExecuted = "election not executed";
+  string constant TermNotExpired = "term not expired";
   string constant NotEnoughLink = "not enough LINK";
 }
 
@@ -55,11 +55,9 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   uint256 public electionEntropy; // Provided by Chainlink
 
-
   // nominating -[term expired & startElection() calls]> waitingForEntropy -[Chainlink calls into fullfillrandomness()]> gotEntropy -[completeElection()] -> nominating
   enum StateMachine { NOMINATING, WAITING_FOR_ENTROPY, GOT_ENTROPY }
   StateMachine state = StateMachine.NOMINATING;
-
 
   // Chainlink values
   bytes32 private s_keyHash;
@@ -84,7 +82,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
    * @dev Only callable by Chainlink VRF, async triggered via startElection().
    */
   function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-    require(state == StateMachine.WAITING_FOR_ENTROPY, Errors.AlreadyExecuted);
+    require(state == StateMachine.WAITING_FOR_ENTROPY, Errors.NotExecuted);
     electionEntropy = randomness;
     state = StateMachine.GOT_ENTROPY;
   }
@@ -161,9 +159,9 @@ contract KetherSortition is Ownable, VRFConsumerBase {
    */
   function startElection() external {
     // FIXME: check that term expired
-    require(state == StateMachine.NOMINATING, Errors.AlreadyExecuted);
-    require(termExpires <= block.timestamp, Errors.TermNotExpired);
+    require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
     require(nominatedTokens.length > 0, Errors.MustHaveNominations);
+    require(termExpires <= block.timestamp, Errors.TermNotExpired);
     require(LINK.balanceOf(address(this)) >= s_fee, Errors.NotEnoughLink);
 
     // TODO: check if this is a re-entry vector
