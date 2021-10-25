@@ -33,7 +33,7 @@ library Errors {
 }
 
 contract KetherSortition is Ownable, VRFConsumerBase {
-  event Nomination(
+  event Nominated(
       uint256 indexed termNumber,
       address nominator,
       uint256 pixels
@@ -55,6 +55,11 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     address currentTokenOwner
   );
 
+  struct Nomination{
+    uint256 termNumber;
+    uint256 nominatedToken;
+  }
+
   // MagistrateToken is tokenId of an NFT whose owner controls the royalties purse for this term.
   uint256 public magistrateToken;
 
@@ -71,7 +76,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   uint256[] public nominatedTokens;
   uint256 public nominatedPixels = 0;
-  mapping(uint256 => uint256) nominations; // mapping of tokenId => termNumber
+  mapping(uint256 => Nomination) nominations; // mapping of tokenId => termNumber
   // TODO: mapping(uint256 => uint256) electedCount;
 
   uint256 public electionEntropy; // Provided by Chainlink
@@ -124,8 +129,15 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   }
 
   function isNominated(uint256 _idx) public view returns (bool) {
-    return nominations[_idx] > termNumber;
+    return nominations[_idx].termNumber > termNumber;
   }
+
+  function getNominatedToken(uint256 _idx) public view returns (uint256) {
+    require(isNominated(_idx), "erorr todo");
+
+    return nominations[_idx].nominatedToken;
+  }
+
 
   function getNextMagistrateToken() public view returns (uint256) {
     require(state == StateMachine.GOT_ENTROPY, Errors.MustHaveEntropy);
@@ -138,7 +150,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
       uint256 idx = nominatedTokens[i];
       curPixel += getAdPixels(idx);
       if (curPixel > pixelChosen) {
-        return idx;
+        return getNominatedToken(idx);
       }
     }
     return 0;
@@ -146,11 +158,50 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   // External interface:
 
+  // TODO: function nominateAll() external
+  // TODO: function nominate(ownedTokenId) external
+
   /**
    * @dev Nominate tokens held by the sender as candidates for magistrate in the next term.
    *      Nominations of tokens are independent of their owner.
    * @return Number of nominated pixels
+   *
+   * TODO
    */
+  function nominate(uint256 _ownedTokenId, uint256 _nominateTokenId) external returns (uint256) {
+    require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
+    address sender = _msgSender();
+    require(ketherNFTContract.ownerOf(_ownedTokenId) == sender, Errors.MustHaveBalance);
+
+    uint256 pixels = _nominate(_ownedTokenId, _nominateTokenId);
+    emit Nominated(termNumber+1, sender, pixels);
+
+    return pixels;
+  }
+
+  /**
+   * @dev Nominate tokens held by the sender as candidates for magistrate in the next term
+   *      Nominations of tokens are independent of their owner.
+   * @return Number of nominated pixels
+   * TODO
+   */
+  function nominateAll(uint256 _nominateTokenId) external returns (uint256) {
+    require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
+    address sender = _msgSender();
+    require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustHaveBalance);
+
+    uint256 pixels = 0;
+    for (uint256 i = 0; i < ketherNFTContract.balanceOf(sender); i++) {
+      uint256 idx = ketherNFTContract.tokenOfOwnerByIndex(sender, i);
+      pixels += _nominate(idx, _nominateTokenId);
+    }
+
+    nominatedPixels += pixels;
+
+    emit Nominated(termNumber+1, sender, pixels);
+    return pixels;
+  }
+
   function nominateSelf() external returns (uint256) {
     require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
     address sender = _msgSender();
@@ -159,28 +210,27 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     uint256 pixels = 0;
     for (uint256 i = 0; i < ketherNFTContract.balanceOf(sender); i++) {
       uint256 idx = ketherNFTContract.tokenOfOwnerByIndex(sender, i);
-      if (!isNominated(idx)) {
-        pixels += getAdPixels(idx);
-        nominations[idx] = termNumber + 1;
-        nominatedTokens.push(idx);
-      }
+      pixels += _nominate(idx, idx);
     }
 
     nominatedPixels += pixels;
 
-    emit Nomination(termNumber, sender, pixels);
+    emit Nominated(termNumber+1, sender, pixels);
     return pixels;
   }
 
-  /*
-  // TODO: function nominate(ownedTokenId) external
-  function nominate(ownedTokenId, nominateTokenId) external {
+  function _nominate(uint256 _ownedTokenId, uint256 _nominateTokenId) internal returns (uint256 pixels) {
+      // Only push the ad and update pixel count if it's not been nominated before
+      if (!isNominated(_ownedTokenId)) {
+        pixels += getAdPixels(_ownedTokenId);
+        nominatedTokens.push(_ownedTokenId);
+      }
+
+      nominations[_ownedTokenId] = Nomination(termNumber + 1, _nominateTokenId);
+
+      return pixels;
   }
 
-  // TODO: function nominateAll() external
-  function nominateAll(nominateTokenId) external {
-  }
-  */
 
   // TODO: Do we want nominateOther, so people can easily delegate their nominations?
 
