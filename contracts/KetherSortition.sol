@@ -172,6 +172,16 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     return pixels;
   }
 
+  /*
+  // TODO: function nominate(ownedTokenId) external
+  function nominate(ownedTokenId, nominateTokenId) external {
+  }
+
+  // TODO: function nominateAll() external
+  function nominateAll(nominateTokenId) external {
+  }
+  */
+
   // TODO: Do we want nominateOther, so people can easily delegate their nominations?
 
   // TODO: Do we want to have a unNominateSelf()
