@@ -154,5 +154,9 @@ describe('KetherSortition', function() {
 
     await KS.connect(account1).completeElection();
     expect(await KS.connect(account1).magistrateToken()).to.equal(electedToken);
- });
+  });
+
+  // TODO: it("should not nominate ads you don't own")
+  // TODO: it("should withdraw")
+  // TODO: ...
 });
