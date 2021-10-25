@@ -32,9 +32,29 @@ library Errors {
   string constant NotEnoughLink = "not enough LINK";
 }
 
-// TODO: Emit events.
-
 contract KetherSortition is Ownable, VRFConsumerBase {
+  event Nomination(
+      uint256 indexed termNumber,
+      address nominator,
+      uint256 pixels
+  );
+
+  event ElectionExecuting(
+    uint256 indexed termNumber
+  );
+
+  event ElectionCompleted(
+    uint256 indexed termNumber,
+    uint256 magistrateToken,
+    address currentTokenOwner
+  );
+
+  event StepDown(
+    uint256 indexed termNumber,
+    uint256 magistrateToken,
+    address currentTokenOwner
+  );
+
   // MagistrateToken is tokenId of an NFT whose owner controls the royalties purse for this term.
   uint256 public magistrateToken;
 
@@ -143,11 +163,12 @@ contract KetherSortition is Ownable, VRFConsumerBase {
         pixels += getAdPixels(idx);
         nominations[idx] = termNumber + 1;
         nominatedTokens.push(idx);
-        // TODO: emit nominated event
       }
     }
 
     nominatedPixels += pixels;
+
+    emit Nomination(termNumber, sender, pixels);
     return pixels;
   }
 
@@ -168,6 +189,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     // TODO: check if this is a re-entry vector
     state = StateMachine.WAITING_FOR_ENTROPY;
     requestRandomness(s_keyHash, s_fee);
+
+    emit ElectionExecuting(termNumber);
   }
 
   /**
@@ -187,6 +210,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     delete nominatedTokens;
     nominatedPixels = 0;
     state = StateMachine.NOMINATING;
+
+    emit ElectionCompleted(termNumber, magistrateToken, getMagistrate());
   }
 
 
@@ -214,7 +239,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
       termExpires = block.timestamp + MIN_ELECTION_DURATION;
     }
 
-    // TODO: Emit event
+    emit StepDown(termNumber, magistrateToken, _msgSender());
   }
 
   // Only owner (admin helpers):
