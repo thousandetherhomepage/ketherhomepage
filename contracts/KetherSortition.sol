@@ -60,7 +60,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     uint256 nominatedToken;
   }
 
-  // MagistrateToken is tokenId of an NFT whose owner controls the royalties purse for this term.
+  /// tokenId of an NFT whose owner controls the royalties purse for this term.
   uint256 public magistrateToken;
 
   uint256 constant MIN_ELECTION_DURATION = 2 days;
@@ -76,8 +76,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   uint256[] public nominatedTokens;
   uint256 public nominatedPixels = 0;
-  mapping(uint256 => Nomination) nominations; // mapping of tokenId => termNumber
-  // TODO: mapping(uint256 => uint256) electedCount;
+  mapping(uint256 => Nomination) nominations; // mapping of tokenId => {termNumber, nominatedToken}
 
   uint256 public electionEntropy; // Provided by Chainlink
 
@@ -105,13 +104,33 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   // Internal helpers:
 
   /**
-   * @dev Only callable by Chainlink VRF, async triggered via startElection().
+   * @notice Only callable by Chainlink VRF, async triggered via startElection().
    */
   function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
     require(state == StateMachine.WAITING_FOR_ENTROPY, Errors.NotExecuted);
     electionEntropy = randomness;
     state = StateMachine.GOT_ENTROPY;
   }
+
+  /// @dev _nominate does not check token ownership, must already be checked.
+  /// @param _ownedTokenId Token to nominate from
+  /// @param _nominateTokenId Token to nominate to, defaults to _ownedTokenId if does not exist.
+  function _nominate(uint256 _ownedTokenId, uint256 _nominateTokenId) internal returns (uint256 pixels) {
+    if (ketherContract.getAdsLength() < _nominateTokenId) {
+      _nominateTokenId = _ownedTokenId;
+    }
+
+    // Only push the ad and update pixel count if it's not been nominated before
+    if (!isNominated(_ownedTokenId)) {
+      pixels += getAdPixels(_ownedTokenId);
+      nominatedTokens.push(_ownedTokenId);
+    }
+
+    nominations[_ownedTokenId] = Nomination(termNumber + 1, _nominateTokenId);
+
+    return pixels;
+  }
+
 
   // Views:
 
@@ -133,11 +152,10 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   }
 
   function getNominatedToken(uint256 _idx) public view returns (uint256) {
-    require(isNominated(_idx), "erorr todo");
+    require(isNominated(_idx), "XXX: TODO");
 
     return nominations[_idx].nominatedToken;
   }
-
 
   function getNextMagistrateToken() public view returns (uint256) {
     require(state == StateMachine.GOT_ENTROPY, Errors.MustHaveEntropy);
@@ -158,15 +176,12 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   // External interface:
 
-  // TODO: function nominateAll() external
-  // TODO: function nominate(ownedTokenId) external
-
   /**
-   * @dev Nominate tokens held by the sender as candidates for magistrate in the next term.
+   * @notice Nominate tokens held by the sender as candidates for magistrate in the next term.
    *      Nominations of tokens are independent of their owner.
-   * @return Number of nominated pixels
+   * @return Number of nominated pixels.
    *
-   * TODO
+   * Emits {Nominated} event.
    */
   function nominate(uint256 _ownedTokenId, uint256 _nominateTokenId) external returns (uint256) {
     require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
@@ -180,12 +195,13 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   }
 
   /**
-   * @dev Nominate tokens held by the sender as candidates for magistrate in the next term
-   *      Nominations of tokens are independent of their owner.
-   * @return Number of nominated pixels
-   * TODO
+   * @notice Nominate tokens held by the sender as candidates towards a specific `_nominateTokenId` as magistrate in the next term
+   * @param _nominateTokenId tokenId to count nominations towards. If doesn't exist, then tokens nominate themselves.
+   * @return Number of nominated pixels.
+   *
+   * Emits {Nominated} event.
    */
-  function nominateAll(uint256 _nominateTokenId) external returns (uint256) {
+  function nominateAll(uint256 _nominateTokenId) public returns (uint256) {
     require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
     address sender = _msgSender();
     require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustHaveBalance);
@@ -202,42 +218,20 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     return pixels;
   }
 
-  function nominateSelf() external returns (uint256) {
-    require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
-    address sender = _msgSender();
-    require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustHaveBalance);
-
-    uint256 pixels = 0;
-    for (uint256 i = 0; i < ketherNFTContract.balanceOf(sender); i++) {
-      uint256 idx = ketherNFTContract.tokenOfOwnerByIndex(sender, i);
-      pixels += _nominate(idx, idx);
-    }
-
-    nominatedPixels += pixels;
-
-    emit Nominated(termNumber+1, sender, pixels);
-    return pixels;
+  /**
+   * @notice Nominate tokens held by the sender as candidates towards a specific `_nominateTokenId` as magistrate in the next term
+   * @return Number of nominated pixels.
+   *
+   * Emits {Nominated} event.
+   */
+  function nominateSelf() public returns (uint256) {
+    return nominateAll(2 ** 255); // Pass in a tokenId that does not exist.
   }
-
-  function _nominate(uint256 _ownedTokenId, uint256 _nominateTokenId) internal returns (uint256 pixels) {
-      // Only push the ad and update pixel count if it's not been nominated before
-      if (!isNominated(_ownedTokenId)) {
-        pixels += getAdPixels(_ownedTokenId);
-        nominatedTokens.push(_ownedTokenId);
-      }
-
-      nominations[_ownedTokenId] = Nomination(termNumber + 1, _nominateTokenId);
-
-      return pixels;
-  }
-
-
-  // TODO: Do we want nominateOther, so people can easily delegate their nominations?
-
-  // TODO: Do we want to have a unNominateSelf()
 
   /**
-   * @dev Stop accepting nominations, start election.
+   * @notice Stop accepting nominations, start election.
+   *
+   * Emits {ElectionExecuting} event.
    */
   function startElection() external {
     // FIXME: check that term expired
@@ -254,7 +248,9 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   }
 
   /**
-   * @dev Assign new magistrate and open up for nominations for next election.
+   * @notice Assign new magistrate and open up for nominations for next election.
+   *
+   * Emits {ElectionCompleted} event.
    */
   function completeElection() external {
     require(state == StateMachine.GOT_ENTROPY, Errors.MustHaveEntropy);
@@ -277,7 +273,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   // Only magistrate:
 
-  /// @dev Transfer balance controlled by magistrate.
+  /// @notice Transfer balance controlled by magistrate.
   function withdraw(address payable to) public {
     require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
     // NOTE: you have exclusive rights to withdraw until the end of your term.
@@ -290,7 +286,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     to.transfer(address(this).balance);
   }
 
-  /// @dev Cut the term short, leaving enough time for new nominations.
+  /// @notice Cut the term short, leaving enough time for new nominations.
+  /// Emits {StepDown} event.
   function stepDown() public {
     require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
 
@@ -312,8 +309,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   }
 
   /**
-   * @dev Withdraw ERC20 tokens, primarily for rescuing remaining LINK once the
-   *      experiment is over.
+   * @notice Withdraw ERC20 tokens, primarily for rescuing remaining LINK once the experiment is over.
    */
   function adminWithdrawToken(IERC20 token, address to) external onlyOwner {
     // XXX: Add require to confirm that the contract is suspended?
