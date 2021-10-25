@@ -114,12 +114,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   /// @dev _nominate does not check token ownership, must already be checked.
   /// @param _ownedTokenId Token to nominate from
-  /// @param _nominateTokenId Token to nominate to, defaults to _ownedTokenId if does not exist.
+  /// @param _nominateTokenId Token to nominate to.
   function _nominate(uint256 _ownedTokenId, uint256 _nominateTokenId) internal returns (uint256 pixels) {
-    if (ketherContract.getAdsLength() < _nominateTokenId) {
-      _nominateTokenId = _ownedTokenId;
-    }
-
     // Only push the ad and update pixel count if it's not been nominated before
     if (!isNominated(_ownedTokenId)) {
       pixels += getAdPixels(_ownedTokenId);
@@ -128,6 +124,30 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
     nominations[_ownedTokenId] = Nomination(termNumber + 1, _nominateTokenId);
 
+    return pixels;
+  }
+
+  /// @dev _nominate does not check token ownership, must already be checked.
+  /// @param _nominateSelf if true each token nominates itself
+  /// @param _nominateTokenId if nominateSelf is falst, token to nominate to
+  function _nominateAll(bool _nominateSelf, uint256 _nominateTokenId) internal returns (uint256) {
+    require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
+    address sender = _msgSender();
+    require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustHaveBalance);
+
+    uint256 pixels = 0;
+    for (uint256 i = 0; i < ketherNFTContract.balanceOf(sender); i++) {
+      uint256 idx = ketherNFTContract.tokenOfOwnerByIndex(sender, i);
+      if (_nominateSelf) {
+        pixels += _nominate(idx, idx);
+      } else {
+        pixels += _nominate(idx, _nominateTokenId);
+      }
+    }
+
+    nominatedPixels += pixels;
+
+    emit Nominated(termNumber+1, sender, pixels);
     return pixels;
   }
 
@@ -196,26 +216,13 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   /**
    * @notice Nominate tokens held by the sender as candidates towards a specific `_nominateTokenId` as magistrate in the next term
-   * @param _nominateTokenId tokenId to count nominations towards. If doesn't exist, then tokens nominate themselves.
+   * @param _nominateTokenId tokenId to count nominations towards.
    * @return Number of nominated pixels.
    *
    * Emits {Nominated} event.
    */
   function nominateAll(uint256 _nominateTokenId) public returns (uint256) {
-    require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
-    address sender = _msgSender();
-    require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustHaveBalance);
-
-    uint256 pixels = 0;
-    for (uint256 i = 0; i < ketherNFTContract.balanceOf(sender); i++) {
-      uint256 idx = ketherNFTContract.tokenOfOwnerByIndex(sender, i);
-      pixels += _nominate(idx, _nominateTokenId);
-    }
-
-    nominatedPixels += pixels;
-
-    emit Nominated(termNumber+1, sender, pixels);
-    return pixels;
+    return _nominateAll(false, _nominateTokenId);
   }
 
   /**
@@ -225,7 +232,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
    * Emits {Nominated} event.
    */
   function nominateSelf() public returns (uint256) {
-    return nominateAll(2 ** 255); // Pass in a tokenId that does not exist.
+    return _nominateAll(true, 0);
   }
 
   /**
