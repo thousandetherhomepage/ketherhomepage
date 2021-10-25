@@ -55,7 +55,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   uint256 public electionEntropy; // Provided by Chainlink
 
-  // nominating -[term expired & startElection() calls]> waitingForEntropy -[Chainlink calls into fullfillrandomness()]> gotEntropy -[completeElection()] -> nominating
+  // nominating -[term expired & startElection() calls]> waitingForEntropy -[Chainlink calls into fulfillrandomness()]> gotEntropy -[completeElection()] -> nominating
   enum StateMachine { NOMINATING, WAITING_FOR_ENTROPY, GOT_ENTROPY }
   StateMachine state = StateMachine.NOMINATING;
 
