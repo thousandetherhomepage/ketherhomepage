@@ -45,7 +45,7 @@ describe('KetherSortition', function() {
 
   const buyNFT = async function(account, x=0, y=0, width=10, height=10, link="link", image="image", title="title", NSFW=false, value=undefined) {
     if (value === undefined) {
-      value = weiPixelPrice.mul(width * height * 100);
+      value = oneHundredCellPrice;
     }
     const txn = await KNFT.connect(account).buy(x, y, width, height, { value: value });
     const receipt = await txn.wait();
@@ -122,15 +122,15 @@ describe('KetherSortition', function() {
     expect(await KS.connect(account1).getMagistrate()).to.equal(await account2.getAddress());
 
     // Buy some more ads
-    await buyNFT(account1, x=0, y=0);
-    await buyNFT(account1, x=0, y=10);
-    await buyNFT(account1, x=0, y=20);
+    await buyNFT(account1, x=0, y=0); // 1
+    await buyNFT(account1, x=0, y=10); // 2
+    await buyNFT(account1, x=0, y=20); // 3
 
-    await buyNFT(account2, x=10, y=10);
+    await buyNFT(account2, x=10, y=10); // 4
 
     expect(await KS.connect(account1).nominatedPixels()).to.equal(0);
     await KS.connect(account1).nominateSelf();
-    const nominatedPixels = 10*10*10*3;
+    const nominatedPixels = 3*10*10*100;
     expect(await KS.connect(account1).nominatedPixels()).to.equal(nominatedPixels);
 
     // Fast forward to term expiring
@@ -140,13 +140,16 @@ describe('KetherSortition', function() {
 
     await KS.connect(account1).startElection();
 
-    expect(await KS.connect(account1).electionEntropy(), "0");
-    const randomness = 201; // 2nd nominated 10x10 ad
+    // Each ad is 10000 pixels
+    // 1 is 0-9999
+    // 2 is 10000-19999
+    // 3 is 20000-29999
+    const randomness = 10000;
     await VRF.connect(owner).sendRandomness(KS.address, ethers.utils.formatBytes32String(""), randomness);
     expect(await KS.connect(account1).electionEntropy(), randomness);
 
     const electedToken = await KS.connect(account1).getNextMagistrateToken();
-    expect(electedToken).to.equal(2); // FIXME: Why is this failing with 1?
+    expect(electedToken).to.equal(2);
     expect(await KS.connect(account1).magistrateToken()).to.not.equal(electedToken); // Election not completed yet
 
     await KS.connect(account1).completeElection();

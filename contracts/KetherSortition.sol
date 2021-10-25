@@ -40,6 +40,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   uint256 constant MIN_ELECTION_DURATION = 2 days;
   uint256 constant TERM_DURATION = 6 weeks;
+  uint256 constant PIXELS_PER_CELL = 100;
 
   uint256 public termStarted;
   uint256 public termExpires;
@@ -99,7 +100,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   function getAdPixels(uint256 _idx) public view returns (uint256) {
     (,,,uint width,uint height,,,,,) = ketherContract.ads(_idx);
-    return width * height * 10;
+    return width * height * PIXELS_PER_CELL;
   }
 
   function isNominated(uint256 _idx) public view returns (bool) {
