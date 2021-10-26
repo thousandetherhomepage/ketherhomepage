@@ -158,7 +158,28 @@ describe('KetherSortition', function() {
   });
 
   // needed tests
-  xit("should not nominate ads you don't own");
+  it("should not nominate ads you don't own", async function() {
+    const {
+      account1,
+      account2
+    } = accounts;
+     // Buy some more ads
+     await buyNFT(account2, x=10, y=0);
+     await buyNFT(account1, x=0, y=0); // 0
+     await buyNFT(account1, x=0, y=10); // 1
+     await buyNFT(account1, x=0, y=20); // 2
+
+     // account2 only has one ad
+     expect(await KS.connect(account2).nominatedPixels()).to.equal(0);
+     await KS.connect(account2).nominateSelf();
+     expect(await KS.connect(account2).nominatedPixels()).to.equal(10000);
+     expect (KS.connect(account2).nominate(0,0)).to.be.revertedWith(Errors.MustHaveBalance);
+     expect(await KS.connect(account2).nominatedPixels()).to.equal(10000);
+
+    // nominate as account 1
+    await KS.connect(account1).nominateSelf();
+    expect(await KS.connect(account2).nominatedPixels()).to.equal(40000);
+  });
   xit("should be able to override nomination");
   xit("changing owners after magistrate is set changes magistrate");
   xit("changing owners allows new owner to re-nominate"); // esp nominateAll
