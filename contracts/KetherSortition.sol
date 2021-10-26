@@ -22,6 +22,7 @@ interface IERC20 {
 }
 
 library Errors {
+  // TODO: this error message is inaccurate, when you try to nominate a token you don't own
   string constant MustHaveBalance = "must have tokens to nominate";
   string constant OnlyMagistrate = "only active magistrate can do this";
   string constant MustHaveEntropy = "waiting for entropy";
@@ -153,6 +154,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
     nominatedPixels += pixels;
 
+    // Note this is emitted in the helper while `nominate` emits the event in the public function
     emit Nominated(termNumber+1, sender, pixels);
     return pixels;
   }
@@ -215,6 +217,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     require(ketherNFTContract.ownerOf(_ownedTokenId) == sender, Errors.MustHaveBalance);
 
     uint256 pixels = _nominate(_ownedTokenId, _nominateTokenId);
+
+    // Note this is emitted in the public function while `_nominateAll` emits the event in the helper
     emit Nominated(termNumber+1, sender, pixels);
 
     return pixels;
@@ -314,18 +318,10 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   // Only owner (admin helpers):
 
-  // TODO: adminUpdateChainlinkValues(bytes32 keyHash, uint256 fee) external onlyOwner
-
-  function adminDelayNextEpoch(uint256 nextEpoch) external onlyOwner {
-    // XXX: Implement this.
-    // TODO: Should this also allow adjusting the interval?
-  }
-
   /**
    * @notice Withdraw ERC20 tokens, primarily for rescuing remaining LINK once the experiment is over.
    */
   function adminWithdrawToken(IERC20 token, address to) external onlyOwner {
-    // XXX: Add require to confirm that the contract is suspended?
     token.transfer(to, token.balanceOf(address(this)));
   }
 }
