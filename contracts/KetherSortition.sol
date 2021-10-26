@@ -59,26 +59,32 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     uint256 termNumber;
     uint256 nominatedToken;
   }
-
-  /// tokenId of an NFT whose owner controls the royalties purse for this term.
-  uint256 public magistrateToken;
-
-  uint256 constant MIN_ELECTION_DURATION = 2 days;
-  uint256 constant TERM_DURATION = 6 weeks;
   uint256 constant PIXELS_PER_CELL = 100;
 
+  /// @notice tokenId of an NFT whose owner controls the royalties purse for this term.
+  uint256 public magistrateToken;
+  /// @notice length of magistrate term
+  uint256 public termDuration;
+  /// @notice minimum time period for new nominations (e.g. if a magistrate steps down)
+  uint256 public minElectionDuration;
+  /// @notice timestamp of start of current term
   uint256 public termStarted;
+  /// @notice timestamp of end of current term
   uint256 public termExpires;
+  /// @notice current term
   uint256 public termNumber = 0;
 
   IERC721 ketherNFTContract;
   IKetherHomepage ketherContract;
 
+  /// @dev tokenIDs nominated in the current term
   uint256[] public nominatedTokens;
+  /// @dev count of pixels nominated in the current term
   uint256 public nominatedPixels = 0;
   mapping(uint256 => Nomination) nominations; // mapping of tokenId => {termNumber, nominatedToken}
 
-  uint256 public electionEntropy; // Provided by Chainlink
+  /// @dev provided by Chainlink
+  uint256 public electionEntropy;
 
   // nominating -[term expired & startElection() calls]> waitingForEntropy -[Chainlink calls into fulfillrandomness()]> gotEntropy -[completeElection()] -> nominating
   enum StateMachine { NOMINATING, WAITING_FOR_ENTROPY, GOT_ENTROPY }
@@ -88,16 +94,16 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   bytes32 private s_keyHash;
   uint256 private s_fee;
 
-  constructor(address _ketherNFTContract, address _ketherContract, address vrfCoordinator, address link, bytes32 keyHash, uint256 fee)
-  public
-  VRFConsumerBase(vrfCoordinator, link) {
+  constructor(address _ketherNFTContract, address _ketherContract, address vrfCoordinator, address link, bytes32 keyHash, uint256 fee, uint256 _termDuration, uint256 _minElectionDuration ) VRFConsumerBase(vrfCoordinator, link) {
     s_keyHash = keyHash;
     s_fee = fee;
 
     ketherNFTContract = IERC721(_ketherNFTContract);
     ketherContract = IKetherHomepage(_ketherContract);
 
-    termExpires = block.timestamp + MIN_ELECTION_DURATION;
+    termDuration = _termDuration;
+    minElectionDuration = _minElectionDuration;
+    termExpires = block.timestamp + minElectionDuration;
   }
 
 
@@ -268,7 +274,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     // receiver.
     termNumber += 1;
     termStarted = block.timestamp;
-    termExpires = termStarted + TERM_DURATION;
+    termExpires = termStarted + termDuration;
 
     delete nominatedTokens;
     nominatedPixels = 0;
@@ -299,8 +305,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
 
     uint256 timeRemaining = termExpires - block.timestamp;
-    if (timeRemaining > MIN_ELECTION_DURATION) {
-      termExpires = block.timestamp + MIN_ELECTION_DURATION;
+    if (timeRemaining > minElectionDuration) {
+      termExpires = block.timestamp + minElectionDuration;
     }
 
     emit StepDown(termNumber, magistrateToken, _msgSender());

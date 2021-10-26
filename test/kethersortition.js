@@ -40,7 +40,8 @@ describe('KetherSortition', function() {
     KH = await KetherHomepage.deploy(await owner.getAddress(), await withdrawWallet.getAddress());
     KNFTrender = await KetherNFTRender.deploy();
     KNFT = await KetherNFT.deploy(KH.address, KNFTrender.address);
-    KS = await KetherSortition.deploy(KNFT.address, KH.address, VRF.address, LINK.address, keyHash, fee);
+    let hour = 60*60;
+    KS = await KetherSortition.deploy(KNFT.address, KH.address, VRF.address, LINK.address, keyHash, fee, 2 * hour, 1 * hour);
   });
 
   const buyNFT = async function(account, x=0, y=0, width=10, height=10, link="link", image="image", title="title", NSFW=false, value=undefined) {
@@ -156,7 +157,18 @@ describe('KetherSortition', function() {
     expect(await KS.connect(account1).magistrateToken()).to.equal(electedToken);
   });
 
-  // TODO: it("should not nominate ads you don't own")
-  // TODO: it("should withdraw")
-  // TODO: ...
+  // needed tests
+  xit("should not nominate ads you don't own");
+  xit("should be able to override nomination");
+  xit("changing owners after magistrate is set changes magistrate");
+  xit("changing owners allows new owner to re-nominate"); // esp nominateAll
+  xit("test multiple terms"); // cant do election with 0 noms, make sure nominations from prev elections don't count
+  xit("chainlink helpers are private")
+  xit("should withdraw");
+  xit("stepdown works");
+
+  // nice to have tests
+  xit("should withdraw LINK");
+
+
 });
