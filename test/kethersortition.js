@@ -6,7 +6,7 @@ const oneHundredCellPrice = pixelsPerCell.mul(weiPixelPrice).mul(100);
 
 // FIXME: Is there a good way to import this from KetherSortition.sol?
 const Errors = {
-  MustHaveBalance: "must have tokens to nominate",
+  MustOwnToken: "must own token",
   OnlyMagistrate: "only active magistrate can do this",
   MustHaveEntropy: "waiting for entropy",
   MustHaveNominations: "must have nominations",
@@ -208,7 +208,7 @@ describe('KetherSortition', function() {
      expect(await KS.connect(account2).nominatedPixels()).to.equal(0);
      await KS.connect(account2).nominateSelf();
      expect(await KS.connect(account2).nominatedPixels()).to.equal(10000);
-     await expect(KS.connect(account2).nominate(1,1)).to.be.revertedWith(Errors.MustHaveBalance);
+     await expect(KS.connect(account2).nominate(1,1)).to.be.revertedWith(Errors.MustOwnToken);
      expect(await KS.connect(account2).nominatedPixels()).to.equal(10000);
 
     // nominate as account 1
@@ -244,6 +244,7 @@ describe('KetherSortition', function() {
 
   // nice to have tests
   xit("should withdraw LINK");
+  xit("should enforce minElectionDuration");
 
 
 });

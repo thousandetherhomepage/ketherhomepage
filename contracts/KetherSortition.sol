@@ -22,8 +22,7 @@ interface IERC20 {
 }
 
 library Errors {
-  // TODO: this error message is inaccurate, when you try to nominate a token you don't own
-  string constant MustHaveBalance = "must have tokens to nominate";
+  string constant MustOwnToken = "must own token";
   string constant OnlyMagistrate = "only active magistrate can do this";
   string constant MustHaveEntropy = "waiting for entropy";
   string constant MustHaveNominations = "must have nominations";
@@ -110,7 +109,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
     termDuration = _termDuration;
     minElectionDuration = _minElectionDuration;
-    termExpires = block.timestamp + minElectionDuration;
+    termExpires = block.timestamp + _termDuration;
   }
 
    receive() external payable {
@@ -150,7 +149,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   function _nominateAll(bool _nominateSelf, uint256 _nominateTokenId) internal returns (uint256) {
     require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
     address sender = _msgSender();
-    require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustHaveBalance);
+    require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustOwnToken);
     // This checks that the _nominateTokenId is minted, will revert otherwise
     require(_nominateSelf || ketherNFTContract.ownerOf(_nominateTokenId) != address(0));
 
@@ -229,7 +228,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   function nominate(uint256 _ownedTokenId, uint256 _nominateTokenId) external returns (uint256) {
     require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
     address sender = _msgSender();
-    require(ketherNFTContract.ownerOf(_ownedTokenId) == sender, Errors.MustHaveBalance);
+    require(ketherNFTContract.ownerOf(_ownedTokenId) == sender, Errors.MustOwnToken);
     // This checks that the _nominateTokenId is minted, will revert otherwise
     require(ketherNFTContract.ownerOf(_nominateTokenId) != address(0));
     uint256 pixels = _nominate(_ownedTokenId, _nominateTokenId);
@@ -267,13 +266,11 @@ contract KetherSortition is Ownable, VRFConsumerBase {
    * Emits {ElectionExecuting} event.
    */
   function startElection() external {
-    // FIXME: check that term expired
     require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
     require(nominatedTokens.length > 0, Errors.MustHaveNominations);
     require(termExpires <= block.timestamp, Errors.TermNotExpired);
     require(LINK.balanceOf(address(this)) >= s_fee, Errors.NotEnoughLink);
 
-    // TODO: check if this is a re-entry vector
     state = StateMachine.WAITING_FOR_ENTROPY;
     requestRandomness(s_keyHash, s_fee);
 
@@ -289,9 +286,6 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     require(state == StateMachine.GOT_ENTROPY, Errors.MustHaveEntropy);
     magistrateToken = getNextMagistrateToken();
 
-    // FIXME: This is going to stagger terms, do we want to align them to
-    // royalty payouts? Or maybe we could assign payouts to terms on a payment
-    // receiver.
     termNumber += 1;
     termStarted = block.timestamp;
     termExpires = termStarted + termDuration;
@@ -307,12 +301,11 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   // Only magistrate:
 
   /// @notice Transfer balance controlled by magistrate.
+  /// @notice Magistrate has exclusive rights to withdraw until the end of term.
+  /// @notice Remaining balance after the next election is rolled over to the next magistrate.
   function withdraw(address payable to) public {
     require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
-    // NOTE: you have exclusive rights to withdraw until the end of your term.
-    // afterwards it becomes a race as someone call call an election.
-
-    // FIXME: Would it be fun if this required having a >2 LINK balance to
+    // TODO: Someday, would it be fun if this required having a >2 LINK balance to
     // withdraw? If we wanna be super cute, could automagically buy LINK from
     // the proceeds before transferring the remaining balance.
 
