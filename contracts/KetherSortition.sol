@@ -112,10 +112,9 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     termExpires = block.timestamp + _termDuration;
   }
 
-   receive() external payable {
-      emit ReceivedPayment(termNumber, msg.value);
+  receive() external payable {
+    emit ReceivedPayment(termNumber, msg.value);
   }
-
 
   // Internal helpers:
 
