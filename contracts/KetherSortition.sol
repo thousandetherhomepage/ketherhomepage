@@ -31,6 +31,7 @@ library Errors {
   string constant NotExecuted = "election not executed";
   string constant TermNotExpired = "term not expired";
   string constant NotEnoughLink = "not enough LINK";
+  string constant NotNominated = "token is not nominated";
 }
 
 contract KetherSortition is Ownable, VRFConsumerBase {
@@ -54,6 +55,11 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     uint256 indexed termNumber,
     uint256 magistrateToken,
     address currentTokenOwner
+  );
+
+  event ReceivedPayment(
+    uint256 indexed termNumber,
+    uint256 value
   );
 
   struct Nomination{
@@ -107,6 +113,10 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     termExpires = block.timestamp + minElectionDuration;
   }
 
+   receive() external payable {
+      emit ReceivedPayment(termNumber, msg.value);
+  }
+
 
   // Internal helpers:
 
@@ -136,11 +146,14 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   /// @dev _nominate does not check token ownership, must already be checked.
   /// @param _nominateSelf if true each token nominates itself
-  /// @param _nominateTokenId if nominateSelf is falst, token to nominate to
+  /// @param _nominateTokenId if nominateSelf is false, token to nominate to. Must be a NFT-wrapped token
   function _nominateAll(bool _nominateSelf, uint256 _nominateTokenId) internal returns (uint256) {
     require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
     address sender = _msgSender();
     require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustHaveBalance);
+    // This checks that the _nominateTokenId is minted, will revert otherwise
+    require(_nominateSelf || ketherNFTContract.ownerOf(_nominateTokenId) != address(0));
+
 
     uint256 pixels = 0;
     for (uint256 i = 0; i < ketherNFTContract.balanceOf(sender); i++) {
@@ -180,7 +193,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   }
 
   function getNominatedToken(uint256 _idx) public view returns (uint256) {
-    require(isNominated(_idx), "XXX: TODO");
+    require(isNominated(_idx), Errors.NotNominated);
 
     return nominations[_idx].nominatedToken;
   }
@@ -207,6 +220,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   /**
    * @notice Nominate tokens held by the sender as candidates for magistrate in the next term.
    *      Nominations of tokens are independent of their owner.
+   * @param _ownedTokenId Token to nominate from
+   * @param _nominateTokenId tokenId to count nominations towards. Must be an NFT-wrapped token.
    * @return Number of nominated pixels.
    *
    * Emits {Nominated} event.
@@ -215,7 +230,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
     address sender = _msgSender();
     require(ketherNFTContract.ownerOf(_ownedTokenId) == sender, Errors.MustHaveBalance);
-
+    // This checks that the _nominateTokenId is minted, will revert otherwise
+    require(ketherNFTContract.ownerOf(_nominateTokenId) != address(0));
     uint256 pixels = _nominate(_ownedTokenId, _nominateTokenId);
 
     // Note this is emitted in the public function while `_nominateAll` emits the event in the helper
@@ -226,7 +242,7 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   /**
    * @notice Nominate tokens held by the sender as candidates towards a specific `_nominateTokenId` as magistrate in the next term
-   * @param _nominateTokenId tokenId to count nominations towards.
+   * @param _nominateTokenId tokenId to count nominations towards. Must be an NFT-wrapped token.
    * @return Number of nominated pixels.
    *
    * Emits {Nominated} event.

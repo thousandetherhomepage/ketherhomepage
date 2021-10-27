@@ -14,6 +14,7 @@ const Errors = {
   NotExecuted: "election not executed",
   TermNotExpired: "term not expired",
   NotEnoughLink: "not enough LINK",
+  NotNominated: "token is not nominated"
 };
 
 describe('KetherSortition', function() {
@@ -62,18 +63,18 @@ describe('KetherSortition', function() {
       account1,
     } = accounts;
 
-    expect(
+    await expect(
       KS.connect(account1).completeElection()
     ).to.be.revertedWith(Errors.MustHaveEntropy);
 
-    expect(
+    await expect(
       KS.connect(account1).startElection()
     ).to.be.revertedWith(Errors.MustHaveNominations);
 
     await buyNFT(account1, x=0, y=0);
     await KS.connect(account1).nominateSelf();
 
-    expect(
+    await expect(
       KS.connect(account1).startElection()
     ).to.be.revertedWith(Errors.TermNotExpired);
 
@@ -81,31 +82,31 @@ describe('KetherSortition', function() {
     await network.provider.send("evm_setNextBlockTimestamp", [termExpires.toNumber()]);
     await network.provider.send("evm_mine");
 
-    expect(
+    await expect(
       VRF.connect(owner).sendRandomness(KS.address, ethers.utils.formatBytes32String(""), 42)
     ).to.be.revertedWith(Errors.NotExecuted);
 
     await KS.connect(account1).startElection();
 
-    expect(
+    await expect(
       KS.connect(account1).startElection()
     ).to.be.revertedWith(Errors.AlreadyStarted);
 
-    expect(
+    await expect(
       KS.connect(account1).nominateSelf()
     ).to.be.revertedWith(Errors.AlreadyStarted);
 
-    expect(
+    await expect(
       KS.connect(account1).completeElection()
     ).to.be.revertedWith(Errors.MustHaveEntropy);
 
     await VRF.connect(owner).sendRandomness(KS.address, ethers.utils.formatBytes32String(""), 42);
 
-    expect(
+    await expect(
       KS.connect(account1).startElection()
     ).to.be.revertedWith(Errors.AlreadyStarted);
 
-    expect(
+    await expect(
       KS.connect(account1).nominateSelf()
     ).to.be.revertedWith(Errors.AlreadyStarted);
 
@@ -135,7 +136,7 @@ describe('KetherSortition', function() {
     expect(await KS.connect(account1).nominatedPixels()).to.equal(nominatedPixels);
 
     // Fast forward to term expiring
-    const termExpires = await KS.connect(account1).termExpires();
+    let termExpires = await KS.connect(account1).termExpires();
     await network.provider.send("evm_setNextBlockTimestamp", [termExpires.toNumber()]);
     await network.provider.send("evm_mine");
 
@@ -155,6 +156,41 @@ describe('KetherSortition', function() {
 
     await KS.connect(account1).completeElection();
     expect(await KS.connect(account1).magistrateToken()).to.equal(electedToken);
+
+    expect(await KS.connect(account1).getMagistrate()).to.equal(account1.address);
+    await KNFT.connect(account1).transferFrom(account1.address, account2.address, electedToken)
+    expect(await KS.connect(account1).getMagistrate()).to.equal(account2.address);
+
+    // Withdraw
+    await owner.sendTransaction({to: KS.address, value: 1000});
+    await expect(await KS.connect(account2).withdraw(account2.address)).to.changeEtherBalance(account2, 1000);
+
+    // Check that we can start a new election
+    expect(await KS.connect(account1).nominatedPixels()).to.equal(0);
+    await KS.connect(account1).nominateSelf();
+    expect(await KS.connect(account1).nominatedPixels()).to.equal(20000);
+
+    // Fast forward to term expiring
+    termExpires = await KS.connect(account1).termExpires();
+    await network.provider.send("evm_setNextBlockTimestamp", [termExpires.toNumber()]);
+    await network.provider.send("evm_mine");
+    await KS.connect(account1).startElection();
+    await VRF.connect(owner).sendRandomness(KS.address, ethers.utils.formatBytes32String(""), randomness+1);
+    expect(await KS.connect(account1).electionEntropy(), randomness+1);
+    await KS.connect(account1).completeElection();
+    expect(await KS.connect(account1).getMagistrate()).to.equal(account1.address);
+
+
+    // Withdraw
+    await owner.sendTransaction({to: KS.address, value: 1001});
+    await expect(KS.connect(account2).withdraw(account2.address)).to.be.revertedWith(Errors.OnlyMagistrate);
+    await expect(await KS.connect(account1).withdraw(account1.address)).to.changeEtherBalance(account1, 1001);
+
+    // Step down
+    termExpires = await KS.connect(account1).termExpires();
+    await KS.connect(account1).stepDown();
+    expect((await KS.connect(account1).termExpires()).toNumber()).to.be.lessThan(termExpires.toNumber());
+
   });
 
   // needed tests
@@ -163,30 +199,48 @@ describe('KetherSortition', function() {
       account1,
       account2
     } = accounts;
-     // Buy some more ads
-     await buyNFT(account2, x=10, y=0);
-     await buyNFT(account1, x=0, y=0); // 0
-     await buyNFT(account1, x=0, y=10); // 1
-     await buyNFT(account1, x=0, y=20); // 2
+     await buyNFT(account2, x=10, y=0); // 0
+     await buyNFT(account1, x=0, y=0);   // 1
+     await buyNFT(account1, x=0, y=10); // 2
+     await buyNFT(account1, x=0, y=20); // 3
 
      // account2 only has one ad
      expect(await KS.connect(account2).nominatedPixels()).to.equal(0);
      await KS.connect(account2).nominateSelf();
      expect(await KS.connect(account2).nominatedPixels()).to.equal(10000);
-     expect (KS.connect(account2).nominate(0,0)).to.be.revertedWith(Errors.MustHaveBalance);
+     await expect(KS.connect(account2).nominate(1,1)).to.be.revertedWith(Errors.MustHaveBalance);
      expect(await KS.connect(account2).nominatedPixels()).to.equal(10000);
 
     // nominate as account 1
     await KS.connect(account1).nominateSelf();
     expect(await KS.connect(account2).nominatedPixels()).to.equal(40000);
+
+    // transfer 0 token
+    expect(await KS.connect(account1).getNominatedToken(0)).to.equal(0);
+    await KNFT.connect(account2).transferFrom(account2.address, account1.address, 0)
+    KS.connect(account1).nominate(0,1)
+    expect(await KS.connect(account1).getNominatedToken(0)).to.equal(1);
+    expect(await KS.connect(account1).nominatedPixels()).to.equal(40000);
+
+
   });
-  xit("should be able to override nomination");
-  xit("changing owners after magistrate is set changes magistrate");
-  xit("changing owners allows new owner to re-nominate"); // esp nominateAll
-  xit("test multiple terms"); // cant do election with 0 noms, make sure nominations from prev elections don't count
-  xit("chainlink helpers are private")
-  xit("should withdraw");
-  xit("stepdown works");
+  it("should be able to override nomination", async function() {
+    const {
+      account1,
+      account2
+    } = accounts;
+
+    await buyNFT(account1, x=0, y=0);
+    await expect(KS.connect(account1).getNominatedToken(0)).to.be.revertedWith(Errors.NotNominated);
+    await KS.connect(account1).nominateSelf();
+    expect(await KS.connect(account1).getNominatedToken(0)).to.equal(0);
+    // token hasn't been minted
+    await expect(KS.connect(account1).nominateAll(1)).to.be.reverted;
+
+    await buyNFT(account2, x=10, y=0);
+    await KS.connect(account1).nominateAll(1);
+    expect(await KS.connect(account1).getNominatedToken(0)).to.equal(1);
+  });
 
   // nice to have tests
   xit("should withdraw LINK");
