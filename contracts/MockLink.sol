@@ -15,7 +15,7 @@ abstract contract ERC677Receiver {
 contract MockLink is ERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value, bytes data);
 
-    constructor() public ERC20("MockLink", "LINK") {
+    constructor() ERC20("MockLink", "LINK") {
         _mint(msg.sender, 100 * 10**18);
     }
 
