@@ -52,8 +52,8 @@ module.exports = {
     enabled: (process.env.REPORT_GAS) ? true : false,
     currency: 'USD',
     // Note: Prices are hardcoded for now
-    gasPrice: 50,
-    ethPrice: 3500,
+    gasPrice: 100,
+    ethPrice: 4000,
   },
 };
 
