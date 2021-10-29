@@ -25,12 +25,12 @@ contract KetherNFTRenderV2 is ITokenRenderer {
 
     return Base64.encode(abi.encodePacked(
       '<svg width="1000" height="1100" viewBox="0 0 1000 1110" xmlns="http://www.w3.org/2000/svg" style="background:#4a90e2">',
-        '<style>text { font: bold 30px sans-serif; fill: rgba(255,255,255,0.8); }</style>',
+        '<style>text {font:bold 30px sans-serif;fill:#fff;}</style>',
         '<text x="5" y="34">Thousand Ether Homepage</text>',
-        '<text x="1000" y="34" text-anchor="end">#', tokenId.toString(),'</text>',
+        '<text x="995" y="34" text-anchor="end">#', tokenId.toString(),'</text>',
         _renderGrid(bgURI, x, y, width, height),
         '<text x="5" y="1085">Size ',width.toString(),'x',height.toString(),'</text>',
-        '<text x="1000" y="1085" text-anchor="end">Position [',x.toString(),',',y.toString(),']</text>',
+        '<text x="995" y="1085" text-anchor="end">Position [',x.toString(),',',y.toString(),']</text>',
       '</svg>'));
   }
 
@@ -44,7 +44,9 @@ contract KetherNFTRenderV2 is ITokenRenderer {
     return abi.encodePacked(
       '<svg y="50" width="1000" height="1000" viewBox="0 0 100 100">',
         '<rect width="100" height="100" fill="white"></rect>',
-        '<image width="100" height="100" href="', _bgURI,'" opacity="0.2" />',
+        '<foreignObject width="100" height="100" opacity="0.2">',
+          '<img xmlns="http://www.w3.org/1999/xhtml" width="100%" height="100%" src="', _bgURI, '"/>',
+        '</foreignObject>',
         '<rect x="',xOffset,'" y="',yOffset,'" width="',(width+2).toString(),'" height="',(height+2).toString(),'" fill="rgba(255,255,255,0.5)" rx="1" stroke="rgba(66,185,131,0.1)" />',
         '<rect x="',x.toString(),'" y="',y.toString(),'" width="',width.toString(),'" height="',height.toString(),'" fill="rgb(66,185,131)"></rect>',
       '</svg>');
