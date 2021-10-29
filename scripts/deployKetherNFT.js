@@ -22,6 +22,15 @@ const deployed = {
   },
 };
 
+const rendererConfig = {
+  'rinkeby': {
+    'bgURI': "https://ipfs.io/ipfs/QmS316fwGDkzuKNm7SFvTCaPUKDhHeaGBYvfeyf58xrtJj",
+  },
+  'mainnet': {
+    'bgURI': "https://ipfs.io/ipfs/QmcptrkjBbyN2iVG2XbHPr4VernSXacC8igv5v93nqx6mG",
+  },
+};
+
 // Via https://docs.chain.link/docs/vrf-contracts/#config
 const sortitionConfig = {
   'rinkeby': {
