@@ -6,7 +6,7 @@ const deployed = {
     ownerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
     ketherHomepageAddress: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
     ketherNFTOwnerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
-    ketherNFTRendererAddress: "0xc767472dddaa5eb84e4dcc237101ae7fd7f2e03c",
+    ketherNFTRendererAddress: "0x1e920a6e4014806f350655826f742d74d5dc89e1", // V2
     ketherNFTAddress: "0xB7fCb57a5ce2F50C3203ccda27c05AEAdAF2C221",
     ketherViewAddress: "0x126C76281Fb6ee945BeF9b92aaC5D46eB8bDA299",
     ketherSortitionAddress: "0xA194a30C201523631E29EFf80718D72994eFa1d6",
@@ -21,6 +21,7 @@ const deployed = {
     ketherSortitionAddress: "0xa9a57f7d2A54C1E172a7dC546fEE6e03afdD28E2",
   },
 };
+deployed['homestead'] = deployed['mainnet']; // Alias for ethers
 
 const rendererConfig = {
   'rinkeby': {
@@ -30,6 +31,7 @@ const rendererConfig = {
     'bgURI': "https://ipfs.io/ipfs/QmcptrkjBbyN2iVG2XbHPr4VernSXacC8igv5v93nqx6mG",
   },
 };
+rendererConfig['homestead'] = rendererConfig['mainnet']; // Alias for ethers
 
 // Via https://docs.chain.link/docs/vrf-contracts/#config
 const sortitionConfig = {
@@ -50,8 +52,6 @@ const sortitionConfig = {
     'minElectionDuration': ethers.BigNumber.from(60 * 60 * 24 * 3), // 3 days
   },
 };
-
-deployed['homestead'] = deployed['mainnet']; // Alias for ethers
 sortitionConfig['homestead'] = sortitionConfig['mainnet']; // Alias for ethers
 
 async function main() {
@@ -102,13 +102,14 @@ async function main() {
   console.log("Starting deploys from address:", account.address);
 
   const KetherNFT = await ethers.getContractFactory("KetherNFT");
-  const KetherNFTRender = await ethers.getContractFactory("KetherNFTRender");
+  const KetherNFTRenderV2 = await ethers.getContractFactory("KetherNFTRenderV2");
   const KetherView = await ethers.getContractFactory("KetherView");
   const KetherSortition = await ethers.getContractFactory("KetherSortition");
 
+  const rendererCfg = rendererConfig[network.name];
   let ketherNFTRendererAddress = cfg["ketherNFTRendererAddress"];
   if (ketherNFTRendererAddress === undefined) {
-    const KNFTrender = await KetherNFTRender.deploy({ maxFeePerGas, maxPriorityFeePerGas });
+    const KNFTrender = await KetherNFTRenderV2.deploy(rendererCfg.bgURI, { maxFeePerGas, maxPriorityFeePerGas });
     console.log("Deploying KetherNFTRender to:", KNFTrender.address);
     ketherNFTRendererAddress = KNFTrender.address;
 
@@ -118,7 +119,7 @@ async function main() {
     console.log("KetherNFTRender already deployed");
   }
 
-  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${ketherNFTRendererAddress}`);
+  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${ketherNFTRendererAddress} "${rendererCfg.bgURI}"`);
 
   let ketherNFTAddress = cfg["ketherNFTAddress"];
   if (ketherNFTAddress === undefined) {
