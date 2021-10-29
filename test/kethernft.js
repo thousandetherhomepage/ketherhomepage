@@ -8,18 +8,20 @@ describe('KetherNFT', function() {
   let KetherHomepage, KetherNFT, KetherNFTRender, FlashEscrow;
   let accounts, KH, KNFT, KNFTrender;
 
+  const bgURI = "https://ipfs.io/ipfs/QmS316fwGDkzuKNm7SFvTCaPUKDhHeaGBYvfeyf58xrtJj";
+
   beforeEach(async() => {
     // NOTE: We're using V2 here because it's ported to newer solidity so we can debug more easily. It should also work with V1.
     KetherHomepage = await ethers.getContractFactory("KetherHomepageV2");
     KetherNFT = await ethers.getContractFactory("KetherNFT");
-    KetherNFTRender = await ethers.getContractFactory("KetherNFTRender");
+    KetherNFTRender = await ethers.getContractFactory("KetherNFTRenderV2");
     FlashEscrow = await ethers.getContractFactory("FlashEscrow");
 
     const [owner, withdrawWallet, metadataSigner, account1, account2, account3] = await ethers.getSigners();
     accounts = {owner, withdrawWallet, metadataSigner, account1, account2, account3};
 
     KH = await KetherHomepage.deploy(await owner.getAddress(), await withdrawWallet.getAddress());
-    KNFTrender = await KetherNFTRender.deploy();
+    KNFTrender = await KetherNFTRender.deploy(bgURI);
     KNFT = await KetherNFT.deploy(KH.address, KNFTrender.address);
   });
 
@@ -120,7 +122,7 @@ describe('KetherNFT', function() {
 
     await buyAd(account1, x=20, y=20);
     await buyAd(account1, x=30, y=40);
-    await buyAd(account1, x=1, y=50);
+    await buyAd(account1, x=0, y=0, width=1, height=1);
     await buyAd(account1, x=15, y=50);
     await buyAd(account1, x=50, y=1);
     await buyAd(account1, x=30, y=20);
@@ -133,7 +135,7 @@ describe('KetherNFT', function() {
     await KNFT.connect(account1).wrap(idx, await account1.getAddress());
     {
       const expected = {
-        "name": "ThousandEtherHomepage #0: 30x40 at [10,20]",
+        "name": "Ad #0: 30x40 at [10,20]",
         "description": "This NFT represents an ad unit on thousandetherhomepage.com, the owner of the NFT controls the content of this ad unit.",
         "external_url": "https://thousandetherhomepage.com",
         "image": "omitted for testing", // TODO: Test image elsewhere
@@ -183,7 +185,7 @@ describe('KetherNFT', function() {
 
     {
       const expected = {
-        "name": "ThousandEtherHomepage #0: 30x40 at [10,20]",
+        "name": "Ad #0: 30x40 at [10,20]",
         "description": "This NFT represents an ad unit on thousandetherhomepage.com, the owner of the NFT controls the content of this ad unit.",
         "external_url": "https://thousandetherhomepage.com",
         "image": "omitted for testing", // TODO: Test image elsewhere
@@ -404,7 +406,7 @@ describe('KetherNFT', function() {
   it("should let us upgrade the renderer", async function() {
     const {owner, account1} = accounts;
 
-    const KNFTrender2 = await KetherNFTRender.deploy();
+    const KNFTrender2 = await KetherNFTRender.deploy("foo");
 
     expect(
       KNFT.connect(account1).adminSetRenderer(KNFTrender2.address)
