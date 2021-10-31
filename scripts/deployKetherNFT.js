@@ -18,7 +18,7 @@ const deployed = {
     ketherNFTRendererAddress: "0x228c17030a866CcBf6734fA4262Dee64f0E392be",
     ketherNFTAddress: "0x7bb952AB78b28a62b1525acA54A71E7Aa6177645",
     ketherViewAddress: "0xaC292791A8b398698363F820dd6FbEE6EDF71442",
-    // ketherSortitionAddress: "",
+    ketherSortitionAddress: "0xa9a57f7d2A54C1E172a7dC546fEE6e03afdD28E2",
   },
 };
 
@@ -53,19 +53,32 @@ async function main() {
     throw "Unsupported network: "+ network.name;
   }
 
+  let feeData, targetGasFee;
+
   if (network.name !== 'rinkeby') {
-     throw "Only rinkeby allowed by default";
+    throw "Only rinkeby allowed by default";
+    targetGasFee = ethers.utils.parseUnits("120" , "gwei");
+  } else {
+    targetGasFee = ethers.utils.parseUnits("1" , "gwei");
   }
 
-  const feeData = await ethers.provider.getFeeData();
-  console.log("Current fee data", ethers.utils.formatUnits(feeData.maxPriorityFeePerGas, "gwei"), ethers.utils.formatUnits(feeData.maxFeePerGas, "gwei"));
+  console.log("Waiting until target gas fee:", ethers.utils.formatUnits(targetGasFee, "gwei"));
+  while (true) {
+    feeData = await ethers.provider.getFeeData();
+    gasPrice = feeData.gasPrice;
+    console.log(+new Date(), "Current fee data: ", "priority=", ethers.utils.formatUnits(feeData.maxPriorityFeePerGas, "gwei"), "maxFeePerGas=", ethers.utils.formatUnits(feeData.maxFeePerGas, "gwei"), "gasPrice=", ethers.utils.formatUnits(feeData.gasPrice, "gwei"));
 
-  const gasPrice = await ethers.provider.getGasPrice();
-  console.log("Current gas price", ethers.utils.formatUnits(gasPrice, "gwei"));
+    if (targetGasFee.gte(feeData.gasPrice)) {
+      console.log("TARGET GAS REACHED, DEPLOYING!");
+      break;
+    }
 
-  const maxFeePerGas = feeData.maxFeePerGas;
-  const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-  //const maxFeePerGas = ethers.utils.parseUnits("80" , "gwei")
+    await new Promise(r => setTimeout(r, 30 * 1000)); // 30 seconds
+  }
+
+  const maxFeePerGas = feeData.gasPrice; // gasPrice is baseFee + priorityFee
+  const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas; // This will put it a bit above what we need
+  //const maxFeePerGas = ethers.utils.parseUnits("106" , "gwei");
   //const maxPriorityFeePerGas = ethers.utils.parseUnits("2", "gwei");
 
   // Confirm the contract is actually there
