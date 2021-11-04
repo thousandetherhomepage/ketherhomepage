@@ -85,8 +85,8 @@ function svg(grid, ad) {
       <rect x="${x-1}" y="${y-1}" width="${width+2}" height="${height+2}" fill="rgba(255,255,255,0.5)" rx="1" stroke="rgba(66,185,131,0.1)" />
       <rect x="${x}" y="${y}" width="${width}" height="${height}" fill="rgb(66,185,131)"></rect>
     </svg>
-    <text x="5" y="1085">Size ${width}x${height}</text>
-    <text x="995" y="1085" text-anchor="end">Position [${x},${y}]</text>
+    <text x="5" y="1085">Size ${width*10}x${height*10}</text>
+    <text x="995" y="1085" text-anchor="end">Position [${x*10},${y*10}]</text>
   </svg>
   `
 }
