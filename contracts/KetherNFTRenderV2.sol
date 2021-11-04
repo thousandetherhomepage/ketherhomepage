@@ -14,42 +14,10 @@ interface ITokenRenderer {
 contract KetherNFTRenderV2 is ITokenRenderer {
   using Strings for uint;
 
-  string bgURI;
+  string baseURI;
 
-  constructor(string memory _bgURI) {
-    bgURI = _bgURI;
-  }
-
-  function renderImage(IKetherHomepage instance, uint256 tokenId) public view returns (string memory) {
-    (,uint x, uint y, uint width, uint height,,,,,) = instance.ads(tokenId);
-
-    return Base64.encode(abi.encodePacked(
-      '<svg width="1000" height="1100" viewBox="0 0 1000 1110" xmlns="http://www.w3.org/2000/svg" style="background:#4a90e2">',
-        '<style>text {font:bold 30px sans-serif;fill:#fff;}</style>',
-        '<text x="5" y="34">Thousand Ether Homepage</text>',
-        '<text x="995" y="34" text-anchor="end">#', tokenId.toString(),'</text>',
-        _renderGrid(bgURI, x, y, width, height),
-        '<text x="5" y="1085">Size ',width.toString(),'x',height.toString(),'</text>',
-        '<text x="995" y="1085" text-anchor="end">Position [',x.toString(),',',y.toString(),']</text>',
-      '</svg>'));
-  }
-
-  function _renderGrid(string memory _bgURI, uint x, uint y, uint width, uint height) internal pure returns (bytes memory) {
-    // Workaround for underflow
-    string memory xOffset = "-1";
-    if (x > 0) xOffset = (x-1).toString();
-    string memory yOffset = "-1";
-    if (y > 0) yOffset = (y-1).toString();
-
-    return abi.encodePacked(
-      '<svg y="50" width="1000" height="1000" viewBox="0 0 100 100">',
-        '<rect width="100" height="100" fill="white"></rect>',
-        '<foreignObject width="100" height="100" opacity="0.2">',
-          '<img xmlns="http://www.w3.org/1999/xhtml" width="100%" height="100%" src="', _bgURI, '"/>',
-        '</foreignObject>',
-        '<rect x="',xOffset,'" y="',yOffset,'" width="',(width+2).toString(),'" height="',(height+2).toString(),'" fill="rgba(255,255,255,0.5)" rx="1" stroke="rgba(66,185,131,0.1)" />',
-        '<rect x="',x.toString(),'" y="',y.toString(),'" width="',width.toString(),'" height="',height.toString(),'" fill="rgb(66,185,131)"></rect>',
-      '</svg>');
+  constructor(string memory _baseURI) {
+    baseURI = _baseURI;
   }
 
   // Thanks to @townsendsam for giving us this reference https://gist.github.com/townsendsam/df2c420accb5ae786e856c97d13a2de6
@@ -94,9 +62,6 @@ contract KetherNFTRenderV2 is ITokenRenderer {
     ));
   }
 
-  function _boolToString(bool val) internal pure returns (string memory) {
-      return val ? "true" : "false";
-  }
 
   function tokenURI(IKetherHomepage instance, uint256 tokenId) public view override(ITokenRenderer) returns (string memory) {
     (,uint x,uint y,uint width,uint height,,,,bool NSFW,bool forceNSFW) = instance.ads(tokenId);
@@ -114,7 +79,7 @@ contract KetherNFTRenderV2 is ITokenRenderer {
               '{"name":"Ad #', tokenId.toString(), ': ', width.toString(), 'x', height.toString(), ' at [', x.toString(), ',', y.toString(), ']"',
               ',"description":"This NFT represents an ad unit on thousandetherhomepage.com, the owner of the NFT controls the content of this ad unit."',
               ',"external_url":"https://thousandetherhomepage.com"',
-              ',"image":"data:image/svg+xml;base64,', renderImage(instance, tokenId), '"',
+              ',"image":"', baseURI, tokenId.toString(), '.svg"',
               ',"attributes":', _generateAttributes(x, y, width, height, NSFW, forceNSFW),
               '}'
         )))

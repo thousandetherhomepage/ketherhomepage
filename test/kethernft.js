@@ -8,7 +8,7 @@ describe('KetherNFT', function() {
   let KetherHomepage, KetherNFT, KetherNFTRender, FlashEscrow;
   let accounts, KH, KNFT, KNFTrender;
 
-  const bgURI = "https://ipfs.io/ipfs/QmS316fwGDkzuKNm7SFvTCaPUKDhHeaGBYvfeyf58xrtJj";
+  const baseURI = "ipfs://QmYhpcC8esDv2uL9cJUdY5FSUdDHAZQDsk7pwBb7BJgeXo/";
 
   beforeEach(async() => {
     // NOTE: We're using V2 here because it's ported to newer solidity so we can debug more easily. It should also work with V1.
@@ -21,7 +21,7 @@ describe('KetherNFT', function() {
     accounts = {owner, withdrawWallet, metadataSigner, account1, account2, account3};
 
     KH = await KetherHomepage.deploy(await owner.getAddress(), await withdrawWallet.getAddress());
-    KNFTrender = await KetherNFTRender.deploy(bgURI);
+    KNFTrender = await KetherNFTRender.deploy(baseURI);
     KNFT = await KetherNFT.deploy(KH.address, KNFTrender.address);
   });
 
@@ -174,8 +174,8 @@ describe('KetherNFT', function() {
         console.log("Failed to parse:", got);
         throw e;
       }
-      expect(parsed['image']).to.have.string('data:image/svg+xml;base64,');
-      //console.log(parsed['image']);
+      expect(parsed['image']).to.equal("ipfs://QmYhpcC8esDv2uL9cJUdY5FSUdDHAZQDsk7pwBb7BJgeXo/0.svg");
+      console.log(parsed['image']);
 
       parsed['image'] = expected['image'];
       expect(parsed).to.deep.equal(expected);
@@ -232,7 +232,7 @@ describe('KetherNFT', function() {
         console.log("Failed to parse:", got);
         throw e;
       }
-      expect(parsed['image']).to.have.string('data:image/svg+xml;base64,');
+      expect(parsed['image']).to.have.string("ipfs://QmYhpcC8esDv2uL9cJUdY5FSUdDHAZQDsk7pwBb7BJgeXo/0.svg");
       //console.log(parsed['image']);
 
       parsed['image'] = expected['image'];
@@ -406,7 +406,7 @@ describe('KetherNFT', function() {
   it("should let us upgrade the renderer", async function() {
     const {owner, account1} = accounts;
 
-    const KNFTrender2 = await KetherNFTRender.deploy("foo");
+    const KNFTrender2 = await KetherNFTRender.deploy("ipfs://NEWCID/");
 
     expect(
       KNFT.connect(account1).adminSetRenderer(KNFTrender2.address)
