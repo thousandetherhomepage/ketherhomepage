@@ -8,7 +8,7 @@ const deployed = {
     ketherNFTOwnerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
     ketherNFTRendererAddress: "0xc767472dddaa5eb84e4dcc237101ae7fd7f2e03c",
     ketherNFTAddress: "0xB7fCb57a5ce2F50C3203ccda27c05AEAdAF2C221",
-    ketherViewAddress: "0x126C76281Fb6ee945BeF9b92aaC5D46eB8bDA299",
+    ketherViewAddress: "0xd58D4ff574140472F9Ae2a90B6028Df822c10109",
     ketherSortitionAddress: "0xA194a30C201523631E29EFf80718D72994eFa1d6",
   },
   'mainnet': {
