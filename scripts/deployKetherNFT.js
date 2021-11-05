@@ -6,7 +6,7 @@ const deployed = {
     ownerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
     ketherHomepageAddress: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
     ketherNFTOwnerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
-    ketherNFTRendererAddress: "0xf611Ee721450Aa52bB16283D32784469eBF106E7",
+    ketherNFTRendererAddress: "0xf611Ee721450Aa52bB16283D32784469eBF106E7", // V2
     ketherNFTAddress: "0xB7fCb57a5ce2F50C3203ccda27c05AEAdAF2C221",
     ketherViewAddress: "0xd58D4ff574140472F9Ae2a90B6028Df822c10109",
     ketherSortitionAddress: "0xA194a30C201523631E29EFf80718D72994eFa1d6",
@@ -15,7 +15,7 @@ const deployed = {
     ownerAddress: "0xd534d9f6e61780b824afaa68032a7ec11720ca12",
     ketherNFTOwnerAddress: "0x714439382A47A23f7cdF56C9764ec22943f79361",
     ketherHomepageAddress: "0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
-    ketherNFTRendererAddress: "0x228c17030a866CcBf6734fA4262Dee64f0E392be",
+    ketherNFTRendererAdKetherRendress: "0xdAdf78F35dED924823dd80A2312F1b97549C4f7b", // V2
     ketherNFTAddress: "0x7bb952AB78b28a62b1525acA54A71E7Aa6177645",
     ketherViewAddress: "0xaC292791A8b398698363F820dd6FbEE6EDF71442",
     ketherSortitionAddress: "0xa9a57f7d2A54C1E172a7dC546fEE6e03afdD28E2",
@@ -66,7 +66,7 @@ async function main() {
 
   if (network.name !== 'rinkeby') {
     throw "Only rinkeby allowed by default";
-    targetGasFee = ethers.utils.parseUnits("120" , "gwei");
+    targetGasFee = ethers.utils.parseUnits("121" , "gwei");
   } else {
     targetGasFee = ethers.utils.parseUnits("3" , "gwei");
   }
@@ -75,6 +75,7 @@ async function main() {
   while (true) {
     feeData = await ethers.provider.getFeeData();
     gasPrice = feeData.gasPrice;
+
     console.log(+new Date(), "Current fee data: ", "priority=", ethers.utils.formatUnits(feeData.maxPriorityFeePerGas, "gwei"), "maxFeePerGas=", ethers.utils.formatUnits(feeData.maxFeePerGas, "gwei"), "gasPrice=", ethers.utils.formatUnits(feeData.gasPrice, "gwei"));
 
     if (targetGasFee.gte(feeData.gasPrice)) {
@@ -86,9 +87,9 @@ async function main() {
   }
 
   const maxFeePerGas = feeData.gasPrice; // gasPrice is baseFee + priorityFee
-//  const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas; // This will put it a bit above what we need
+  const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas; // This will put it a bit above what we need
   //const maxFeePerGas = ethers.utils.parseUnits("106" , "gwei");
-  const maxPriorityFeePerGas = ethers.utils.parseUnits("1", "gwei");
+  //const maxPriorityFeePerGas = ethers.utils.parseUnits("1", "gwei");
 
   // Confirm the contract is actually there
   const KH = await ethers.getContractAt("KetherHomepage", cfg.ketherHomepageAddress);
