@@ -60,10 +60,11 @@
             Contract is only on MainNet and Rinkeby.
           </span>
         </li>
-        <li v-if="networkConfig">
-          <a :href="networkConfig.etherscanLink" target="_blank">
-            Contract on Etherscan
-          </a>
+        <li v-if="networkConfig.etherscanPrefix" class="contracts">
+          Contracts on Etherscan:
+          <a :href="etherscanKetherLink" target="_blank"><code>KetherHomepage</code></a>
+          <a :href="etherscanNFTLink" target="_blank"><code>KetherNFT</code></a> 
+          <a :href="etherscanSortitionLink" target="_blank"><code>KetherSortition</code></a>
         </li>
         <li v-if="$store.getters.numNSFW > 0">
           <a v-if="!showNSFW" v-on:click="showNSFW = true"
@@ -115,7 +116,16 @@ export default {
       }
       const now = Math.floor(Date.now()/1000);
       return `${now - ts} seconds ago`;
-    }
+    },
+    etherscanKetherLink() {
+      return this.networkConfig.etherscanPrefix + this.networkConfig.contractAddr;
+    },
+    etherscanNFTLink() {
+      return this.networkConfig.etherscanPrefix + this.networkConfig.ketherNFTAddr;
+    },
+    etherscanSortitionLink() {
+      return this.networkConfig.etherscanPrefix + this.networkConfig.ketherSortitionAddr;
+    },
   },
   methods: {
     async connectEthereum(web3Provider) {
@@ -213,7 +223,6 @@ export default {
   async created() {
     await this.connectEthereum();
   },
-
   components: {
     Homepage: Homepage,
     Dropdown: Dropdown,
@@ -241,5 +250,8 @@ header {
 .buttons button {
   border-width: 1px;
   border-radius: 5px;
+}
+li.contracts a {
+  display: block;
 }
 </style>
