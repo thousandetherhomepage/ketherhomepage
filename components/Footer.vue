@@ -11,7 +11,7 @@
       <li><NuxtLink to="press">Press</NuxtLink></li>
       <li><a href="https://github.com/thousandetherhomepage">Source code</a></li>
       <li><a href="https://twitter.com/ketherhomepage">Twitter</a></li>
-      <li><a href="https://discord.gg/ketherhomepage">Discord</a></li>
+      <li><a href="https://discord.gg/PXVRw37bQ7">Discord</a></li>
       <li><a href="https://opensea.io/collection/thousand-ether-homepage">OpenSea</a></li>
     </ul>
     <slot></slot>
