@@ -13,7 +13,7 @@ export const state = () => {
     pixelsOwned: 0,
     grid: null, // lazy load
     previewAd: null,
-    gridVis: true,
+    vis: 'grid',
     loadedNetwork: null,
     loadedBlockNumber: 0,
     loadedBlockTimestamp: 0,
@@ -80,7 +80,7 @@ export const mutations = {
     state.ownedAds = Object.assign({}, state.ownedAds);
   },
   updatePreview(state, ad) {
-    state.gridVis = true; // Buy button forces grid view
+    state.vis = 'grid'; // Buy button forces grid view
     state.previewAd = Object.assign(state.previewAd || {}, ad);
   },
   clearPreview(state) {
@@ -97,7 +97,7 @@ export const mutations = {
   },
   setVis(state, vis) {
     // Valid values: 'grid' and 'list', default to 'grid'
-    state.gridVis = vis !== 'list';
+    state.vis = vis;
   },
   setAdsLength(state, len) {
     state.ads.length = len;

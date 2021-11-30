@@ -20,8 +20,9 @@ section {
 
 <template>
   <div class="container">
-    <AdGrid v-if="$store.state.gridVis" :provider="provider" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered" />
-    <LazyAdList v-else />
+    <LazyAdList v-if="$store.state.vis == 'list'" />
+    <LazyAdSVG v-else-if="$store.state.vis == 'svg'"/>
+    <AdGrid v-else :provider="provider" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered" />
     <div class="edit" v-if="$store.getters.numOwned > 0 > 0">
       {{$store.getters.numOwned}} ads owned by you, {{$store.getters.numOwnedWrapped}} wrapped as NFT.
       <div v-if="$store.getters.numHalfWrapped >0">{{$store.getters.numHalfWrapped}} half wrapped and can be rescued.</div>

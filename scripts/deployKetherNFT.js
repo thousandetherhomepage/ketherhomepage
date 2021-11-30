@@ -6,21 +6,32 @@ const deployed = {
     ownerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
     ketherHomepageAddress: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
     ketherNFTOwnerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
-    ketherNFTRendererAddress: "0xc767472dddaa5eb84e4dcc237101ae7fd7f2e03c",
+    ketherNFTRendererAddress: "0xf611Ee721450Aa52bB16283D32784469eBF106E7", // V2
     ketherNFTAddress: "0xB7fCb57a5ce2F50C3203ccda27c05AEAdAF2C221",
-    ketherViewAddress: "0x126C76281Fb6ee945BeF9b92aaC5D46eB8bDA299",
+    ketherViewAddress: "0xd58D4ff574140472F9Ae2a90B6028Df822c10109",
     ketherSortitionAddress: "0xA194a30C201523631E29EFf80718D72994eFa1d6",
   },
   'mainnet': {
     ownerAddress: "0xd534d9f6e61780b824afaa68032a7ec11720ca12",
     ketherNFTOwnerAddress: "0x714439382A47A23f7cdF56C9764ec22943f79361",
     ketherHomepageAddress: "0xb5fe93ccfec708145d6278b0c71ce60aa75ef925",
-    ketherNFTRendererAddress: "0x228c17030a866CcBf6734fA4262Dee64f0E392be",
+    ketherNFTRendererAdKetherRendress: "0xdAdf78F35dED924823dd80A2312F1b97549C4f7b", // V2
     ketherNFTAddress: "0x7bb952AB78b28a62b1525acA54A71E7Aa6177645",
     ketherViewAddress: "0xaC292791A8b398698363F820dd6FbEE6EDF71442",
     ketherSortitionAddress: "0xa9a57f7d2A54C1E172a7dC546fEE6e03afdD28E2",
   },
 };
+deployed['homestead'] = deployed['mainnet']; // Alias for ethers
+
+const rendererConfig = {
+  'rinkeby': {
+    'baseURI': "ipfs://QmYhpcC8esDv2uL9cJUdY5FSUdDHAZQDsk7pwBb7BJgeXo/",
+  },
+  'mainnet': {
+    'baseURI': "ipfs://QmXZtDgNBy4kL6meGcvNHqgrGFCV7uer6h3ixFy1BjCMr7/",
+  },
+};
+rendererConfig['homestead'] = rendererConfig['mainnet']; // Alias for ethers
 
 // Via https://docs.chain.link/docs/vrf-contracts/#config
 const sortitionConfig = {
@@ -41,8 +52,6 @@ const sortitionConfig = {
     'minElectionDuration': ethers.BigNumber.from(60 * 60 * 24 * 3), // 3 days
   },
 };
-
-deployed['homestead'] = deployed['mainnet']; // Alias for ethers
 sortitionConfig['homestead'] = sortitionConfig['mainnet']; // Alias for ethers
 
 async function main() {
@@ -57,15 +66,16 @@ async function main() {
 
   if (network.name !== 'rinkeby') {
     throw "Only rinkeby allowed by default";
-    targetGasFee = ethers.utils.parseUnits("120" , "gwei");
+    targetGasFee = ethers.utils.parseUnits("121" , "gwei");
   } else {
-    targetGasFee = ethers.utils.parseUnits("1" , "gwei");
+    targetGasFee = ethers.utils.parseUnits("3" , "gwei");
   }
 
   console.log("Waiting until target gas fee:", ethers.utils.formatUnits(targetGasFee, "gwei"));
   while (true) {
     feeData = await ethers.provider.getFeeData();
     gasPrice = feeData.gasPrice;
+
     console.log(+new Date(), "Current fee data: ", "priority=", ethers.utils.formatUnits(feeData.maxPriorityFeePerGas, "gwei"), "maxFeePerGas=", ethers.utils.formatUnits(feeData.maxFeePerGas, "gwei"), "gasPrice=", ethers.utils.formatUnits(feeData.gasPrice, "gwei"));
 
     if (targetGasFee.gte(feeData.gasPrice)) {
@@ -79,7 +89,7 @@ async function main() {
   const maxFeePerGas = feeData.gasPrice; // gasPrice is baseFee + priorityFee
   const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas; // This will put it a bit above what we need
   //const maxFeePerGas = ethers.utils.parseUnits("106" , "gwei");
-  //const maxPriorityFeePerGas = ethers.utils.parseUnits("2", "gwei");
+  //const maxPriorityFeePerGas = ethers.utils.parseUnits("1", "gwei");
 
   // Confirm the contract is actually there
   const KH = await ethers.getContractAt("KetherHomepage", cfg.ketherHomepageAddress);
@@ -93,13 +103,14 @@ async function main() {
   console.log("Starting deploys from address:", account.address);
 
   const KetherNFT = await ethers.getContractFactory("KetherNFT");
-  const KetherNFTRender = await ethers.getContractFactory("KetherNFTRender");
+  const KetherNFTRenderV2 = await ethers.getContractFactory("KetherNFTRenderV2");
   const KetherView = await ethers.getContractFactory("KetherView");
   const KetherSortition = await ethers.getContractFactory("KetherSortition");
 
+  const rendererCfg = rendererConfig[network.name];
   let ketherNFTRendererAddress = cfg["ketherNFTRendererAddress"];
   if (ketherNFTRendererAddress === undefined) {
-    const KNFTrender = await KetherNFTRender.deploy({ maxFeePerGas, maxPriorityFeePerGas });
+    const KNFTrender = await KetherNFTRenderV2.deploy(rendererCfg.baseURI, { maxFeePerGas, maxPriorityFeePerGas });
     console.log("Deploying KetherNFTRender to:", KNFTrender.address);
     ketherNFTRendererAddress = KNFTrender.address;
 
@@ -109,7 +120,7 @@ async function main() {
     console.log("KetherNFTRender already deployed");
   }
 
-  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${ketherNFTRendererAddress}`);
+  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${ketherNFTRendererAddress} "${rendererCfg.baseURI}"`);
 
   let ketherNFTAddress = cfg["ketherNFTAddress"];
   if (ketherNFTAddress === undefined) {
