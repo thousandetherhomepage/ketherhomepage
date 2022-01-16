@@ -49,6 +49,7 @@ section {
     </div>
     <p v-else-if="$store.state.activeAccount">
       No purchased ads detected for active accounts. Reload after buying an ad.
+      <button type="button" v-on:click="tab = 'missing'" :disabled="tab == 'missing'">Find Missing Ad</button>
     </p>
 
     <section>
