@@ -35,14 +35,23 @@ export default {
       }
     },
     async connect() {
+      const infuraId =  this.networkConfig.web3Fallback.split("/").pop();
       const web3Modal = new Web3Modal({
         providerOptions: {
           walletconnect: {
             package: WalletConnectProvider,
             options: {
-              infuraId: this.networkConfig.web3Fallback.split('/').pop()
-            }
-          }
+              infuraId: infuraId,
+            },
+          },
+          walletlink: {
+            package: WalletLink,
+            options: {
+              appName: "Tousand Ether Homepage", // Required
+              infuraId: infuraId,
+              chainId: 1,
+            },
+          },
         },
       });
       let web3Provider;
