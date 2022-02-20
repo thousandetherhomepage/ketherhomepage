@@ -47,7 +47,7 @@ export default {
           walletlink: {
             package: WalletLink,
             options: {
-              appName: "Tousand Ether Homepage", // Required
+              appName: "Thousand Ether Homepage", // Required
               infuraId: infuraId,
               chainId: 1,
             },
