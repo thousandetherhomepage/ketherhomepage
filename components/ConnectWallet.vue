@@ -1,5 +1,4 @@
-<template>
-</template>
+<template></template>
 
 <style lang="scss">
 .connect-wallet {
@@ -13,6 +12,7 @@ import { ethers } from "ethers";
 
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
+import WalletLink from "walletlink";
 
 export default {
   props: ["networkConfig"],
@@ -25,7 +25,7 @@ export default {
       }
 
       try {
-        return await window.ethereum.request({ method: 'eth_requestAccounts' });
+        return await window.ethereum.request({ method: "eth_requestAccounts" });
       } catch (error) {
         if (error.code === 4001) {
           // User rejected request
@@ -57,9 +57,9 @@ export default {
       let web3Provider;
       try {
         web3Provider = await web3Modal.connect();
-      } catch(err) {
+      } catch (err) {
         console.error("web3Modal failed", err);
-        this.$emit('wallet-disconnect');
+        this.$emit("wallet-disconnect");
         return;
       }
 
@@ -67,15 +67,15 @@ export default {
       const accounts = await provider.listAccounts();
 
       for (const account of accounts) {
-        this.$store.dispatch('addAccount', account);
+        this.$store.dispatch("addAccount", account);
       }
       console.log("Loaded accounts:", accounts);
 
-      this.$emit('wallet-connect', web3Provider);
+      this.$emit("wallet-connect", web3Provider);
     },
   },
   async fetch() {
     await this.connect();
-  }
-}
+  },
+};
 </script>
