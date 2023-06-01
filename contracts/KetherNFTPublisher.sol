@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
 interface IKetherNFTPublish {
+  event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+  event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+
   /// @dev See {KetherNFT-publish}.
   function publish(uint _idx, string calldata _link, string calldata _image, string calldata _title, bool _NSFW) external;
 }
@@ -40,25 +43,25 @@ library Errors {
  *      KetherNFT.approve(address(ketherSortition), tokenId);
  */
 contract KetherNFTPublisher is Context, IKetherNFTPublish {
-  IKetherNFT public ketherNFT;
+  IERC721 public ketherNFT;
 
   IKetherSortition public ketherSortition;
 
   // We can't trigger approval clearing when underlying tokens are transferred,
   // so we track who made the approval and reject if the owner changes.
-  struct Approval{
+  struct Assign {
     address from;
     address to;
   }
 
   // Mapping from token ID to approved address
-  mapping(uint256 => Approval) private _tokenApprovals;
+  mapping(uint256 => Assign) private _tokenApprovals;
 
   // Mapping from owner to operator approvals
   mapping(address => mapping(address => bool)) private _operatorApprovals;
 
   constructor(address _ketherNFTContract, address _ketherSortitionContract) {
-    ketherNFT = IKetherNFT(_ketherNFTContract);
+    ketherNFT = IERC721(_ketherNFTContract);
     ketherSortition = IKetherSortition(_ketherSortitionContract);
   }
 
@@ -77,8 +80,8 @@ contract KetherNFTPublisher is Context, IKetherNFTPublish {
         "ERC721: approve caller is not owner nor approved for all"
     );
 
-    _tokenApprovals[tokenId] = Approval(owner, to);
-    emit ERC721.Approval(owner, to, tokenId);
+    _tokenApprovals[tokenId] = Assign(owner, to);
+    emit Approval(owner, to, tokenId);
   }
 
   /**
@@ -87,7 +90,7 @@ contract KetherNFTPublisher is Context, IKetherNFTPublish {
    */
   function getApproved(uint256 tokenId) public view returns (address) {
       address owner = ketherNFT.ownerOf(tokenId); // Assert that token exists
-      Approval a = _tokenApprovals[tokenId];
+      Assign memory a = _tokenApprovals[tokenId];
       require(owner == a.from, Errors.OwnerChanged); 
       return a.to;
   }
@@ -99,7 +102,7 @@ contract KetherNFTPublisher is Context, IKetherNFTPublish {
     require(operator != _msgSender(), "ERC721: approve to caller");
 
     _operatorApprovals[_msgSender()][operator] = approved;
-    emit IERC721.ApprovalForAll(_msgSender(), operator, approved);
+    emit ApprovalForAll(_msgSender(), operator, approved);
   }
 
   /**
@@ -146,6 +149,6 @@ contract KetherNFTPublisher is Context, IKetherNFTPublish {
   function publish(uint _idx, string calldata _link, string calldata _image, string calldata _title, bool _NSFW) external {
       require(isApprovedToPublish(_msgSender(), _idx), Errors.MustBeApproved);
 
-      ketherNFT.publish(_idx, _link, _image, _title, _NSFW);
+      IKetherNFTPublish(address(ketherNFT)).publish(_idx, _link, _image, _title, _NSFW);
   }
 }
