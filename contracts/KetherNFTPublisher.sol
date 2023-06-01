@@ -5,10 +5,13 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
 interface IKetherNFTPublish {
-  /**
-   * @dev See {KetherNFT-publish}.
-   */
-  function publish(uint _idx, string calldata _link, string calldata _image, string calldata _title, bool _NSFW) external {
+  /// @dev See {KetherNFT-publish}.
+  function publish(uint _idx, string calldata _link, string calldata _image, string calldata _title, bool _NSFW) external;
+}
+
+interface IKetherSortition {
+  /// @dev See {KetherSortition-getMagistrate}.
+  function getMagistrate() external view returns (address);
 }
 
 library Errors {
@@ -18,7 +21,11 @@ library Errors {
 
 /**
  * @notice KetherNFTPublisher allows an owner of a KetherNFT to delegate
- * publishing permission to another address.
+ * publishing permission to another address. Only one address can be approved
+ * at a time.
+ *
+ * Approving the ketherSortition address will give the acting magistrate
+ * permission to publish.
  *
  * 1. Owner of KetherNFT sets KetherNFTPublisher instance as approved spender:
  *      KetherNFT.approve(address(KetherNFTPublisher), tokenId);
@@ -29,9 +36,13 @@ library Errors {
  *      KetherNFTPublisher.publish(tokenId, ...)
  * 4. Owner can clear approval:
  *      KetherNFTPublisher.approve(address(0), tokenId);
+ * 5. Owner can approve the magistrate:
+ *      KetherNFT.approve(address(ketherSortition), tokenId);
  */
 contract KetherNFTPublisher is Context, IKetherNFTPublish {
-  IKetherNFT public instance;
+  IKetherNFT public ketherNFT;
+
+  IKetherSortition public ketherSortition;
 
   // We can't trigger approval clearing when underlying tokens are transferred,
   // so we track who made the approval and reject if the owner changes.
@@ -46,8 +57,9 @@ contract KetherNFTPublisher is Context, IKetherNFTPublish {
   // Mapping from owner to operator approvals
   mapping(address => mapping(address => bool)) private _operatorApprovals;
 
-  constructor(address _ketherNFTContract) {
-    instance = IKetherNFT(_ketherNFTContract);
+  constructor(address _ketherNFTContract, address _ketherSortitionContract) {
+    ketherNFT = IKetherNFT(_ketherNFTContract);
+    ketherSortition = IKetherSortition(_ketherSortitionContract);
   }
 
   /**
@@ -57,11 +69,11 @@ contract KetherNFTPublisher is Context, IKetherNFTPublish {
    * Must be the token's owner.
    */
   function approve(address to, uint256 tokenId) public {
-    address owner = instance.ownerOf(tokenId);
+    address owner = ketherNFT.ownerOf(tokenId);
     require(to != owner, "ERC721: approval to current owner");
 
     require(
-        _msgSender() == owner || instance.isApprovedForAll(owner, _msgSender()),
+        _msgSender() == owner || ketherNFT.isApprovedForAll(owner, _msgSender()),
         "ERC721: approve caller is not owner nor approved for all"
     );
 
@@ -74,7 +86,7 @@ contract KetherNFTPublisher is Context, IKetherNFTPublish {
    * @dev See {IERC721-getApproved}.
    */
   function getApproved(uint256 tokenId) public view returns (address) {
-      address owner = instance.ownerOf(tokenId); // Assert that token exists
+      address owner = ketherNFT.ownerOf(tokenId); // Assert that token exists
       Approval a = _tokenApprovals[tokenId];
       require(owner == a.from, Errors.OwnerChanged); 
       return a.to;
@@ -100,9 +112,28 @@ contract KetherNFTPublisher is Context, IKetherNFTPublish {
   /**
    * @dev Returns whether `publisher` is allowed to manage `tokenId`.
    */
-  function _isApprovedOrOwner(address publisher, uint256 tokenId) internal view returns (bool) {
-    address owner = instance.ownerOf(tokenId); // Implicitly checks tokenId validity
-    return (publisher == owner || instance.isApprovedForAll(owner, publisher) || instance.getApproved(tokenId) == publisher);
+  function isApprovedToPublish(address publisher, uint256 tokenId) public view returns (bool) {
+    address owner = ketherNFT.ownerOf(tokenId); // Implicitly checks tokenId validity
+    if (publisher == owner || ketherNFT.isApprovedForAll(owner, publisher)) {
+        return true;
+    }
+    address approved = ketherNFT.getApproved(tokenId);
+    if (approved == publisher) {
+        return true;
+    }
+
+    // Is Magistrate allowed to publish?
+    address magistrate = ketherSortition.getMagistrate();
+    if (magistrate != publisher) {
+        // Publisher is not the magistrate, nevermind.
+        return false;
+    }
+
+    // Sortition contract approved means the magistrate is approved
+    return (
+        approved == address(ketherSortition) ||
+        ketherNFT.isApprovedForAll(owner, address(ketherSortition))
+    );
   }
 
   /**
@@ -113,8 +144,8 @@ contract KetherNFTPublisher is Context, IKetherNFTPublish {
    * @dev See {KetherNFT-publish}.
    */
   function publish(uint _idx, string calldata _link, string calldata _image, string calldata _title, bool _NSFW) external {
-      require(_isApprovedOrOwner(_msgSender(), _idx), Errors.MustBeApproved);
+      require(isApprovedToPublish(_msgSender(), _idx), Errors.MustBeApproved);
 
-      instance.publish(_idx, _link, _image, _title, _NSFW);
+      ketherNFT.publish(_idx, _link, _image, _title, _NSFW);
   }
 }
