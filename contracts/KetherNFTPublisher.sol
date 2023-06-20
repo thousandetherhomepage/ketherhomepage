@@ -18,7 +18,8 @@ interface IKetherSortition {
 }
 
 library Errors {
-  string constant MustBeApproved = "must be approved";
+  string constant MustApprovePublisher = "publisher contract must be approved";
+  string constant MustBeApproved = "sender must be approved publisher";
   string constant OwnerChanged = "owner changed since approved";
 }
 
@@ -117,11 +118,20 @@ contract KetherNFTPublisher is Context, IKetherNFTPublish {
    */
   function isApprovedToPublish(address publisher, uint256 tokenId) public view returns (bool) {
     address owner = ketherNFT.ownerOf(tokenId); // Implicitly checks tokenId validity
-    if (publisher == owner || ketherNFT.isApprovedForAll(owner, publisher)) {
-        return true;
-    }
     address approved = ketherNFT.getApproved(tokenId);
-    if (approved == publisher) {
+
+    // Is this contract approved to control publishers?
+    if (!ketherNFT.isApprovedForAll(owner, address(this)) &&
+        approved != address(this)
+    ) {
+        throw Errors.MustApprovePublisher;
+    }
+
+    // Is the publisher the owner or approved?
+    if (publisher == owner ||
+        ketherNFT.isApprovedForAll(owner, publisher) ||
+        approved == publisher
+    ) {
         return true;
     }
 
