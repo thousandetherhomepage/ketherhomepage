@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.4;
 
-import "hardhat/console.sol";
-
 import "./IKetherHomepage.sol";
 
 /// KetherHomepage is same as the old one, but ported to solidity v0.8
