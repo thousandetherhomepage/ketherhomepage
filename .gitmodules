@@ -4,3 +4,6 @@
 [submodule "lib/kethernftpublisher"]
 	path = lib/kethernftpublisher
 	url = https://github.com/thousandetherhomepage/kethernftpublisher
+[submodule "lib/baubles"]
+	path = lib/baubles
+	url = https://github.com/thousandetherhomepage/baubles
