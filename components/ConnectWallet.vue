@@ -10,14 +10,13 @@
 <script>
 import { ethers } from "ethers";
 
-import Web3Modal from "web3modal";
-import WalletConnectProvider from "@walletconnect/web3-provider";
-import WalletLink from "walletlink";
+import { EthereumProvider } from '@walletconnect/ethereum-provider';
 
 export default {
   props: ["networkConfig"],
   methods: {
     async requestAccounts() {
+      // Deprecated flow
       if (process.server || window.ethereum === undefined) return [];
 
       if (window.ethereum.request === undefined) {
@@ -36,42 +35,40 @@ export default {
     },
     async connect() {
       const infuraId =  this.networkConfig.web3Fallback.split("/").pop();
-      const web3Modal = new Web3Modal({
-        providerOptions: {
-          walletconnect: {
-            package: WalletConnectProvider,
-            options: {
-              infuraId: infuraId,
-            },
-          },
-          walletlink: {
-            package: WalletLink,
-            options: {
-              appName: "Thousand Ether Homepage", // Required
-              infuraId: infuraId,
-              chainId: 1,
-            },
-          },
+      const ethereumProvider = await EthereumProvider.init({
+        projectId: 'ketherhomepage', // required
+        showQrModal: true,
+        infuraId: infuraId,
+        qrModalOptions: { themeMode: "light" },
+        chains: [1],
+        methods: ["eth_sendTransaction"],
+        events: ["chainChanged", "accountsChanged"],
+        metadata: {
+          name: "ThousandEtherHomepage",
+          description: "On-chain 1,621 ads on a 1000x1000 pixel canvas",
+          url: "https://thousandetherhomepage.com",
+          icons: ["https://thousandetherhomepage.com/teh-128px.png"],
         },
       });
-      let web3Provider;
+
+      // 6. Set up connection listener
+      ethereumProvider.on("connect", () => {
+        console.log("Loaded accounts:", ethereu,Provider.accounts);
+
+        for (const account of ethereumProvider.accounts) {
+          this.$store.dispatch("addAccount", account);
+        }
+
+        this.$emit("wallet-connect", ethereumProvider);
+      });
+
       try {
-        web3Provider = await web3Modal.connect();
-      } catch (err) {
-        console.error("web3Modal failed", err);
+        ethereumProvider.connect();
+      } catch(err) {
+        console.error("WalletConnect failed", err);
         this.$emit("wallet-disconnect");
         return;
       }
-
-      const provider = new ethers.providers.Web3Provider(web3Provider);
-      const accounts = await provider.listAccounts();
-
-      for (const account of accounts) {
-        this.$store.dispatch("addAccount", account);
-      }
-      console.log("Loaded accounts:", accounts);
-
-      this.$emit("wallet-connect", web3Provider);
     },
   },
   async fetch() {
