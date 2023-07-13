@@ -2,6 +2,9 @@ const hre = require("hardhat");
 const ethers = hre.ethers;
 
 const deployed = {
+  'sepolia': {
+    ownerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
+  },
   'rinkeby': {
     ownerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
     ketherHomepageAddress: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
@@ -24,6 +27,9 @@ const deployed = {
 deployed['homestead'] = deployed['mainnet']; // Alias for ethers
 
 const rendererConfig = {
+  'sepolia': {
+    'baseURI': "ipfs://QmYhpcC8esDv2uL9cJUdY5FSUdDHAZQDsk7pwBb7BJgeXo/",
+  },
   'rinkeby': {
     'baseURI': "ipfs://QmYhpcC8esDv2uL9cJUdY5FSUdDHAZQDsk7pwBb7BJgeXo/",
   },
@@ -35,6 +41,14 @@ rendererConfig['homestead'] = rendererConfig['mainnet']; // Alias for ethers
 
 // Via https://docs.chain.link/docs/vrf-contracts/#config
 const sortitionConfig = {
+  'sepolia': {
+    'vrfCoordinator': '0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625',
+    'link': '0x779877A7B0D9E8603169DdbD7836e478b4624789',
+    'keyHash': '	0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c',
+    'fee': ethers.BigNumber.from('250000000000000000'), // 0.25 LINK (18 decimals)
+    'termDuration': ethers.BigNumber.from(60 * 60), // 1 hour
+    'minElectionDuration': ethers.BigNumber.from(60 * 10), // 10 minutes
+  },
   'rinkeby': {
     'vrfCoordinator': '0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B',
     'link': '0x01BE23585060835E02B77ef475b0Cc51aA1e0709',
@@ -64,8 +78,8 @@ async function main() {
 
   let feeData, targetGasFee;
 
-  if (network.name !== 'rinkeby') {
-    throw "Only rinkeby allowed by default";
+  if (network.name !== 'rinkeby' && network.name !== 'sepolia') {
+    throw "Only rinkeby and sepolia allowed by default";
     targetGasFee = ethers.utils.parseUnits("121" , "gwei");
   } else {
     targetGasFee = ethers.utils.parseUnits("3" , "gwei");
