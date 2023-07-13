@@ -76,7 +76,7 @@ async function main() {
     throw "Unsupported network: "+ network.name;
   }
 
-  let feeData, targetGasFee;
+  let feeData, targetGasFee, gasPrice;
 
   if (network.name !== 'rinkeby' && network.name !== 'sepolia') {
     throw "Only rinkeby and sepolia allowed by default";
@@ -100,13 +100,10 @@ async function main() {
     await new Promise(r => setTimeout(r, 30 * 1000)); // 30 seconds
   }
 
-  const maxFeePerGas = feeData.gasPrice; // gasPrice is baseFee + priorityFee
-  const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas; // This will put it a bit above what we need
+  //const maxFeePerGas = feeData.gasPrice; // gasPrice is baseFee + priorityFee
+  //const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas; // This will put it a bit above what we need
   //const maxFeePerGas = ethers.utils.parseUnits("106" , "gwei");
   //const maxPriorityFeePerGas = ethers.utils.parseUnits("1", "gwei");
-
-  // Confirm the contract is actually there
-  const KH = await ethers.getContractAt("KetherHomepage", cfg.ketherHomepageAddress);
 
   const [account] = await ethers.getSigners();
   if (account === undefined) {
@@ -116,10 +113,26 @@ async function main() {
   }
   console.log("Starting deploys from address:", account.address);
 
+
+  const KetherHomepage = await ethers.getContractFactory("KetherHomepage");
   const KetherNFT = await ethers.getContractFactory("KetherNFT");
   const KetherNFTRenderV2 = await ethers.getContractFactory("KetherNFTRenderV2");
   const KetherView = await ethers.getContractFactory("KetherView");
   const KetherSortition = await ethers.getContractFactory("KetherSortition");
+
+  let ketherHomepageAddress = cfg.ketherHomepageAddress;
+  let KH;
+  if (ketherHomepageAddress === undefined) {
+    KH = await KetherHomepage.deploy(cfg.ownerAddress, cfg.ownerAddress, { maxFeePerGas, maxPriorityFeePerGas });
+    console.log("Deploying KetherView to:", KH.address);
+    ketherHomepageAddress = KH.address;
+
+    const tx = await KH.deployTransaction.wait();
+    console.log(" -> Mined with", tx.gasUsed.toString(), "gas");
+  } else {
+    // Confirm the contract is actually there
+    KH = await ethers.getContractAt("KetherHomepage", ketherHomepageAddress);
+  }
 
   const rendererCfg = rendererConfig[network.name];
   let ketherNFTRendererAddress = cfg["ketherNFTRendererAddress"];
