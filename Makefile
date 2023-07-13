@@ -14,7 +14,7 @@ deploy-dapp: build ../thousandetherhomepage.github.io
 	echo "Push it."
 
 deploy-contract:
-	npx hardhat run scripts/deployKetherNFT.js --network rinkeby
+	npx hardhat run scripts/deployKetherNFT.js --network sepolia
 
 withdraw:
 	npx hardhat run scripts/withdraw.js --network mainnet

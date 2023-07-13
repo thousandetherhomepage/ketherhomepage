@@ -20,6 +20,10 @@ module.exports = {
       url: 'https://rinkeby.infura.io/v3/' + INFURA_API_KEY,
       accounts: ACCOUNTS,
     },
+    sepolia: {
+      url: 'https://sepolia.infura.io/v3/' + INFURA_API_KEY,
+      accounts: ACCOUNTS,
+    },
     mainnet: {
       url: 'https://mainnet.infura.io/v3/' + INFURA_API_KEY,
       accounts: ACCOUNTS,
