@@ -4,32 +4,35 @@
   "version": "2.0.0",
   "private": true,
   "scripts": {
-    "dev": "nuxt",
-    "build": "nuxt build",
-    "start": "nuxt start",
-    "generate": "nuxt generate"
+    "dev": "nuxi dev",
+    "build": "nuxi build",
+    "start": "nuxi start",
+    "generate": "nuxi generate"
   },
   "dependencies": {
     "@walletconnect/ethereum-provider": "^2.9.0",
-    "@walletconnect/modal": "^2.6.0",
-    "core-js": "^3.20.2",
+    "@walletconnect/modal": "^2.5.8",
+    "core-js": "^3.22",
     "ethers": "^5",
-    "nuxt": "^2",
+    "nuxt": "^2.17.0",
     "vue-draggable-resizable": "^2.3.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.22.9",
+    "@babel/preset-env": "^7.22.9",
     "@chainlink/contracts": "^0.2.1",
     "@nomiclabs/hardhat-ethers": "^2",
     "@nomiclabs/hardhat-etherscan": "^3.1.7",
     "@nomiclabs/hardhat-waffle": "^2",
+    "@nuxt/bridge": "npm:@nuxt/bridge-edge",
     "@openzeppelin/contracts": "^4",
+    "babel-plugin-transform-vite-meta-env": "^1.0.3",
     "base64-sol": "^1.0.1",
     "chai": "^4.3.4",
     "ethereum-waffle": "^3.4.0",
     "hardhat": "^2",
     "hardhat-gas-reporter": "^1",
     "sass": "^1.38.2",
-    "sass-loader": "^10.2.0",
-    "yarn": "^1.22.19"
+    "sass-loader": "^10"
   }
 }

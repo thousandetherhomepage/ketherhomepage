@@ -12,6 +12,7 @@ import { ethers } from "ethers";
 
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
 
+
 export default {
   props: ["networkConfig"],
   methods: {
@@ -36,7 +37,7 @@ export default {
     async connect() {
       const infuraId =  this.networkConfig.web3Fallback.split("/").pop();
       const ethereumProvider = await EthereumProvider.init({
-        projectId: 'ketherhomepage', // required
+        projectId: 'c2b10083c2b1bda11734bd4f48101899', // required
         showQrModal: true,
         infuraId: infuraId,
         qrModalOptions: { themeMode: "light" },
@@ -53,7 +54,7 @@ export default {
 
       // 6. Set up connection listener
       ethereumProvider.on("connect", () => {
-        console.log("Loaded accounts:", ethereu,Provider.accounts);
+        console.log("Loaded accounts:", ethereumProvider.accounts);
 
         for (const account of ethereumProvider.accounts) {
           this.$store.dispatch("addAccount", account);

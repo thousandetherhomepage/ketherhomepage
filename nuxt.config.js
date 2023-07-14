@@ -19,7 +19,7 @@ export default {
         'upgrade-insecure-requests': '',
         'default-src': ["'self'"],
         'script-src': ["'self'", '*.infura.io'],
-        'connect-src': ["'self'", '*.infura.io', '*.walletconnect.org', 'wss://*.walletconnect.org'],
+        'connect-src': ["'self'", '*.infura.io', '*.walletconnect.com', 'wss://*.walletconnect.com'],
         'style-src': ["'self'", "'unsafe-inline'"], // Would be nice to have the hashes built here - see https://github.com/nuxt/nuxt.js/pull/8022/files
         'img-src': ['*', 'data:']
       }
@@ -37,7 +37,7 @@ export default {
       { charset: 'utf-8' },
       //{ name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: "The Million Dollar Homepage as an Ethereum Smart Contract and DApp: A glimpse into what the future of web integrated with modern blockchain technology could be like." },
-      process.env.NODE_ENV === 'production' ? { 'http-equiv': "Content-Security-Policy", content: "upgrade-insecure-requests; default-src 'self'; script-src 'self' 'self' *.infura.io; connect-src 'self' *.infura.io *.walletconnect.org wss://*.walletconnect.org; style-src 'self' 'unsafe-inline'; img-src * data:"} : {},
+      process.env.NODE_ENV === 'production' ? { 'http-equiv': "Content-Security-Policy", content: "upgrade-insecure-requests; default-src 'self'; script-src 'self' 'self' *.infura.io; connect-src 'self' *.infura.io *.walletconnect.com wss://*.walletconnect.com; style-src 'self' 'unsafe-inline'; img-src * data:"} : {},
       { name: "twitter:card", content: "summary"},
       { property: "og:url", content: "https://thousandetherhomepage.com"},
       { property: "og:title", content: "The Thousand Ether Homepage" },
@@ -72,6 +72,41 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+    //babel: {
+    //  plugins: [
+    //   '@babel/plugin-proposal-nullish-coalescing-operator',
+    //   '@babel/plugin-proposal-optional-chaining',
+    //  ],
+    //},
+    
+    //transpile: [
+    //  '@walletconnect/ethereum-provider',
+    //  '@walletconnect/modal',
+    //  'valtio',
+    //],
+
+    // https://github.com/WalletConnect/walletconnect-monorepo/issues/1349 ??
+    extend(config, ctx) {
+      config.module.rules.push({
+        test: /node_modules[\\/]@walletconnect/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env'],
+          },
+        },
+      });
+      config.module.rules.push({
+        test: /node_modules[\\/]valtio/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env'],
+            plugins: ['babel-plugin-transform-vite-meta-env'],
+          },
+        },
+      });
+    }
   },
 
   hooks: {
@@ -85,4 +120,4 @@ export default {
   },
 
   ssr: true
-}
+};
