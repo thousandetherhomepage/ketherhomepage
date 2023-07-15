@@ -26,6 +26,8 @@ contracts: artifacts/contracts/*
 artifacts/contracts/%: contracts/%.sol
 	npx hardhat compile
 
-node_modules/: package.json yaml.lock
+yaml.lock: package.json
 	yarn
-	touch node_modules/
+	touch yaml.lock
+
+node_modules/: yaml.lock
