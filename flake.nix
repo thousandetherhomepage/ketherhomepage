@@ -16,7 +16,7 @@
         devShell = with pkgs; mkShell {
           buildInputs = [
             nodejs-18_x
-            nodePackages.npm
+            nodePackages.yarn
 
             foundry-bin
           ];
