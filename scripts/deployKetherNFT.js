@@ -10,6 +10,8 @@ const deployed = {
     ketherNFTAddress: "0x6B69B05a5478A2390493765b496F70A52fE7b816",
     ketherViewAddress: "0xc7Eaa7aC2dE304d9cDAd21AF81BffA273363d3d1",
     ketherSortitionAddress: "0x09BCa032F3b3a08afCFf03826edf4F36481b486C",
+    ketherBaublesAddress: "0x8EDA32B19325baC1b6B12c78E97B6FF1ed5a9Cc3",
+    ketherNFTPublisherAddress: "0xcba5846735a03ac02af69134Df1aB17f122DD2dD",
   },
   'rinkeby': {
     ownerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
@@ -28,6 +30,8 @@ const deployed = {
     ketherNFTAddress: "0x7bb952AB78b28a62b1525acA54A71E7Aa6177645",
     ketherViewAddress: "0xaC292791A8b398698363F820dd6FbEE6EDF71442",
     ketherSortitionAddress: "0xa9a57f7d2A54C1E172a7dC546fEE6e03afdD28E2",
+    ketherBaublesAddress: "0xF383C0E93D14790a81F85B565EDfda4BAa6F9437",
+    ketherNFTPublisherAddress: "0xda5aba302810ab3f6a3f3e7f8ab0307c1f464bc9",
   },
 };
 deployed['homestead'] = deployed['mainnet']; // Alias for ethers
