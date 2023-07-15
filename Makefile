@@ -26,6 +26,6 @@ contracts: artifacts/contracts/*
 artifacts/contracts/%: contracts/%.sol
 	npx hardhat compile
 
-node_modules/: package.json package-lock.json
-	npm install
+node_modules/: package.json yaml.lock
+	yarn
 	touch node_modules/

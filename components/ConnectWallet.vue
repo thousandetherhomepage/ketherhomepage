@@ -8,8 +8,6 @@
 </style>
 
 <script>
-import { ethers } from "ethers";
-
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
 
 
@@ -35,15 +33,27 @@ export default {
       }
     },
     async connect() {
+      if (window.ethereum !== undefined) {
+        // FIXME: Old flow, for some reason our current WalletConnect v2 setup doesn't detect it so we do it manually
+        const accounts = await this.requestAccounts();
+        if (accounts && accounts.length > 0) {
+          for (const account of accounts) {
+            this.$store.dispatch("addAccount", account);
+          }
+
+          this.$emit("wallet-connect", window.ethereum);
+          return;
+        }
+      }
+
       const infuraId =  this.networkConfig.web3Fallback.split("/").pop();
-      const ethereumProvider = await EthereumProvider.init({
+      const provider = await EthereumProvider.init({
         projectId: 'c2b10083c2b1bda11734bd4f48101899', // required
         showQrModal: true,
         infuraId: infuraId,
         qrModalOptions: { themeMode: "light" },
         chains: [1],
-        methods: ["eth_sendTransaction"],
-        events: ["chainChanged", "accountsChanged"],
+        optionalChains: [11155111], // Sepolia
         metadata: {
           name: "ThousandEtherHomepage",
           description: "On-chain 1,621 ads on a 1000x1000 pixel canvas",
@@ -53,18 +63,21 @@ export default {
       });
 
       // 6. Set up connection listener
-      ethereumProvider.on("connect", () => {
-        console.log("Loaded accounts:", ethereumProvider.accounts);
+      provider.on("connect", () => {
+        console.log("Loaded accounts:", provider.accounts);
 
-        for (const account of ethereumProvider.accounts) {
+        for (const account of provider.accounts) {
           this.$store.dispatch("addAccount", account);
         }
 
-        this.$emit("wallet-connect", ethereumProvider);
+        this.$emit("wallet-connect", provider);
       });
+      provider.on('disconnect', () => {
+        this.$emit("wallet-disconnect");
+      })
 
       try {
-        ethereumProvider.connect();
+        provider.connect();
       } catch(err) {
         console.error("WalletConnect failed", err);
         this.$emit("wallet-disconnect");
