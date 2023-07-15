@@ -20,13 +20,20 @@ module.exports = {
       url: 'https://rinkeby.infura.io/v3/' + INFURA_API_KEY,
       accounts: ACCOUNTS,
     },
+    sepolia: {
+      url: 'https://sepolia.infura.io/v3/' + INFURA_API_KEY,
+      accounts: ACCOUNTS,
+    },
     mainnet: {
       url: 'https://mainnet.infura.io/v3/' + INFURA_API_KEY,
       accounts: ACCOUNTS,
     }
   },
   etherscan: {
-    apiKey: process.env['ETHERSCAN_API_KEY']
+    apiKey: {
+        mainnet: process.env['ETHERSCAN_API_KEY'],
+        sepolia: process.env['ETHERSCAN_API_KEY'],
+    }
   },
   solidity: {
     compilers: [

@@ -14,7 +14,7 @@ deploy-dapp: build ../thousandetherhomepage.github.io
 	echo "Push it."
 
 deploy-contract:
-	npx hardhat run scripts/deployKetherNFT.js --network rinkeby
+	npx hardhat run scripts/deployKetherNFT.js --network sepolia
 
 withdraw:
 	npx hardhat run scripts/withdraw.js --network mainnet
@@ -26,6 +26,8 @@ contracts: artifacts/contracts/*
 artifacts/contracts/%: contracts/%.sol
 	npx hardhat compile
 
-node_modules/: package.json package-lock.json
-	npm install
-	touch node_modules/
+yaml.lock: package.json
+	yarn
+	touch yaml.lock
+
+node_modules/: yaml.lock

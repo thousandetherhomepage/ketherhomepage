@@ -8,16 +8,14 @@
 </style>
 
 <script>
-import { ethers } from "ethers";
+import { EthereumProvider } from '@walletconnect/ethereum-provider';
 
-import Web3Modal from "web3modal";
-import WalletConnectProvider from "@walletconnect/web3-provider";
-import WalletLink from "walletlink";
 
 export default {
   props: ["networkConfig"],
   methods: {
     async requestAccounts() {
+      // Deprecated flow
       if (process.server || window.ethereum === undefined) return [];
 
       if (window.ethereum.request === undefined) {
@@ -35,43 +33,56 @@ export default {
       }
     },
     async connect() {
+      if (window.ethereum !== undefined) {
+        // FIXME: Old flow, for some reason our current WalletConnect v2 setup doesn't detect it so we do it manually
+        const accounts = await this.requestAccounts();
+        if (accounts && accounts.length > 0) {
+          for (const account of accounts) {
+            this.$store.dispatch("addAccount", account);
+          }
+
+          this.$emit("wallet-connect", window.ethereum);
+          return;
+        }
+      }
+
       const infuraId =  this.networkConfig.web3Fallback.split("/").pop();
-      const web3Modal = new Web3Modal({
-        providerOptions: {
-          walletconnect: {
-            package: WalletConnectProvider,
-            options: {
-              infuraId: infuraId,
-            },
-          },
-          walletlink: {
-            package: WalletLink,
-            options: {
-              appName: "Thousand Ether Homepage", // Required
-              infuraId: infuraId,
-              chainId: 1,
-            },
-          },
+      const provider = await EthereumProvider.init({
+        projectId: 'c2b10083c2b1bda11734bd4f48101899', // required
+        showQrModal: true,
+        infuraId: infuraId,
+        qrModalOptions: { themeMode: "light" },
+        chains: [1],
+        optionalChains: [11155111], // Sepolia
+        metadata: {
+          name: "ThousandEtherHomepage",
+          description: "On-chain 1,621 ads on a 1000x1000 pixel canvas",
+          url: "https://thousandetherhomepage.com",
+          icons: ["https://thousandetherhomepage.com/teh-128px.png"],
         },
       });
-      let web3Provider;
+
+      // 6. Set up connection listener
+      provider.on("connect", () => {
+        console.log("Loaded accounts:", provider.accounts);
+
+        for (const account of provider.accounts) {
+          this.$store.dispatch("addAccount", account);
+        }
+
+        this.$emit("wallet-connect", provider);
+      });
+      provider.on('disconnect', () => {
+        this.$emit("wallet-disconnect");
+      })
+
       try {
-        web3Provider = await web3Modal.connect();
-      } catch (err) {
-        console.error("web3Modal failed", err);
+        provider.connect();
+      } catch(err) {
+        console.error("WalletConnect failed", err);
         this.$emit("wallet-disconnect");
         return;
       }
-
-      const provider = new ethers.providers.Web3Provider(web3Provider);
-      const accounts = await provider.listAccounts();
-
-      for (const account of accounts) {
-        this.$store.dispatch("addAccount", account);
-      }
-      console.log("Loaded accounts:", accounts);
-
-      this.$emit("wallet-connect", web3Provider);
     },
   },
   async fetch() {
