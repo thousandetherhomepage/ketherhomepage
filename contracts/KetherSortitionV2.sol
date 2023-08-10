@@ -1,9 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity >=0.8.4;
-
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+pragma solidity ^0.8.21;
 
 interface IKetherHomepage {
   function ads(uint _idx) external view returns (address,uint,uint,uint,uint,string memory,string memory,string memory,bool,bool);
@@ -33,7 +29,7 @@ library Errors {
   string constant NotNominated = "token is not nominated";
 }
 
-contract KetherSortition is Ownable, VRFConsumerBase {
+contract KetherSortitionV2 is Ownable {
   event Nominated(
       uint256 indexed termNumber,
       address nominator,
@@ -89,21 +85,14 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   uint256 public nominatedPixels = 0;
   mapping(uint256 => Nomination) nominations; // mapping of tokenId => {termNumber, nominatedToken}
 
-  /// @dev provided by Chainlink
   uint256 public electionEntropy;
 
+  // Note: WAITING_FOR_ENTROPY is legacy leftover from when we used Chainlink. Trying to make minimal changes to avoid introducing new bugs.
   // nominating -[term expired & startElection() calls]> waitingForEntropy -[Chainlink calls into fulfillrandomness()]> gotEntropy -[completeElection()] -> nominating
   enum StateMachine { NOMINATING, WAITING_FOR_ENTROPY, GOT_ENTROPY }
   StateMachine public state = StateMachine.NOMINATING;
 
-  // Chainlink values
-  bytes32 private s_keyHash;
-  uint256 private s_fee;
-
-  constructor(address _ketherNFTContract, address _ketherContract, address vrfCoordinator, address link, bytes32 keyHash, uint256 fee, uint256 _termDuration, uint256 _minElectionDuration ) VRFConsumerBase(vrfCoordinator, link) {
-    s_keyHash = keyHash;
-    s_fee = fee;
-
+  constructor(address _ketherNFTContract, address _ketherContract, uint256 _termDuration, uint256 _minElectionDuration ) {
     ketherNFTContract = IERC721(_ketherNFTContract);
     ketherContract = IKetherHomepage(_ketherContract);
 
@@ -118,13 +107,16 @@ contract KetherSortition is Ownable, VRFConsumerBase {
 
   // Internal helpers:
 
-  /**
-   * @notice Only callable by Chainlink VRF, async triggered via startElection().
-   */
-  function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-    require(state == StateMachine.WAITING_FOR_ENTROPY, Errors.NotExecuted);
-    electionEntropy = randomness;
-    state = StateMachine.GOT_ENTROPY;
+  function _getEntropy() view internal returns(uint256) {
+    // Borrowed from: https://github.com/1001-digital/erc721-extensions/blob/f5c983bac8989bc5ebf9b34c03f28e438da9a7b3/contracts/RandomlyAssigned.sol#L27
+    return uint256(keccak256(
+      abi.encodePacked(
+        msg.sender,
+        block.coinbase,
+        block.prevrandao,
+        block.gaslimit,
+        block.timestamp,
+        blockhash(block.number))));
   }
 
   /// @dev _nominate does not check token ownership, must already be checked.
@@ -270,8 +262,8 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     require(termExpires <= block.timestamp, Errors.TermNotExpired);
     require(LINK.balanceOf(address(this)) >= s_fee, Errors.NotEnoughLink);
 
-    state = StateMachine.WAITING_FOR_ENTROPY;
-    requestRandomness(s_keyHash, s_fee);
+    electionEntropy = _getEntropy();
+    state = StateMachine.GOT_ENTROPY;
 
     emit ElectionExecuting(termNumber);
   }
@@ -304,11 +296,15 @@ contract KetherSortition is Ownable, VRFConsumerBase {
   /// @notice Remaining balance after the next election is rolled over to the next magistrate.
   function withdraw(address payable to) public {
     require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
-    // TODO: Someday, would it be fun if this required having a >2 LINK balance to
-    // withdraw? If we wanna be super cute, could automagically buy LINK from
-    // the proceeds before transferring the remaining balance.
 
     to.transfer(address(this).balance);
+  }
+
+  /// @notice Magistrate can withdraw token deposits.
+  function withdrawToken(IERC20 token, address to) external onlyOwner {
+    require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
+
+    token.transfer(to, token.balanceOf(address(this)));
   }
 
   /// @notice Cut the term short, leaving enough time for new nominations.
@@ -322,14 +318,5 @@ contract KetherSortition is Ownable, VRFConsumerBase {
     }
 
     emit StepDown(termNumber, magistrateToken, _msgSender());
-  }
-
-  // Only owner (admin helpers):
-
-  /**
-   * @notice Withdraw ERC20 tokens, primarily for rescuing remaining LINK once the experiment is over.
-   */
-  function adminWithdrawToken(IERC20 token, address to) external onlyOwner {
-    token.transfer(to, token.balanceOf(address(this)));
   }
 }
