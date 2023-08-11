@@ -63,8 +63,10 @@
         <li v-if="networkConfig.etherscanPrefix" class="contracts">
           Contracts on Etherscan:
           <a :href="etherscanKetherLink" target="_blank"><code>KetherHomepage</code></a>
-          <a :href="etherscanNFTLink" target="_blank"><code>KetherNFT</code></a> 
-          <a :href="etherscanSortitionLink" target="_blank"><code>KetherSortition</code></a>
+          <a :href="etherscanNFTLink" target="_blank"><code>nft.kether.eth</code></a>
+          <a :href="etherscanSortitionLink" target="_blank"><code>sortition.kether.eth</code></a>
+          <a :href="etherscanPublisherLink" target="_blank"><code>publisher.kether.eth</code></a>
+          <a :href="etherscanBaublesLink" target="_blank"><code>baubles.kether.eth</code></a>
         </li>
         <li v-if="$store.getters.numNSFW > 0">
           <a v-if="!showNSFW" v-on:click="showNSFW = true"
@@ -125,6 +127,12 @@ export default {
     },
     etherscanSortitionLink() {
       return this.networkConfig.etherscanPrefix + this.networkConfig.ketherSortitionAddr;
+    },
+    etherscanBaublesLink() {
+      return this.networkConfig.etherscanPrefix + this.networkConfig.ketherBaublesAddr;
+    },
+    etherscanPublisherLink() {
+      return this.networkConfig.etherscanPrefix + this.networkConfig.ketherNFTPublisherAddr;
     },
   },
   methods: {
