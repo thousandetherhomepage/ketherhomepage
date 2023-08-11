@@ -104,6 +104,7 @@ export default {
       provider: null,
       contract: null,
       ketherNFT: null,
+      ketherPublisher: null,
       isReadOnly: false,
       showNSFW: false,
       prerendered: null,
@@ -154,8 +155,8 @@ export default {
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
       if (this.networkConfig) {
-        const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
-        await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView);
+        const {contract, ketherNFT, ketherView, ketherPublisher} = loadContracts(this.networkConfig, this.provider)
+        await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView, ketherPublisher);
         this.listenContractEvents(contract, ketherNFT);
         this.isReadOnly = false;
 
@@ -181,10 +182,10 @@ export default {
       this.networkConfig = deployConfig[this.activeNetwork];
 
       const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
-      await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView);
+      await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView, ketherPublisher);
       this.isReadOnly = true;
     },
-    async setContracts(activeNetwork, contract, ketherNFT, ketherView) {
+    async setContracts(activeNetwork, contract, ketherNFT, ketherView, ketherPublisher) {
       // Load the initial state on network change
       await this.$store.dispatch('initState', activeNetwork);
       if (this.contract) {
@@ -195,6 +196,7 @@ export default {
       }
       this.contract = contract;
       this.ketherNFT = ketherNFT;
+      this.ketherPublisher = ketherPublisher;
       this.contract.on('error', function(err) {
         console.error("Contract subscription error:", err);
       });
