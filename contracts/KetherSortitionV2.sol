@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity >=0.8.4;
 
 interface IKetherHomepage {
   function ads(uint _idx) external view returns (address,uint,uint,uint,uint,string memory,string memory,string memory,bool,bool);
@@ -112,7 +112,7 @@ contract KetherSortitionV2 {
     return uint256(keccak256(
       abi.encodePacked(
         block.coinbase,
-        block.prevrandao,
+        block.difficulty,
         block.gaslimit,
         block.timestamp)));
   }
