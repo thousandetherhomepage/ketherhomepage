@@ -10,8 +10,8 @@ const deployed = {
     ketherNFTAddress: "0x6B69B05a5478A2390493765b496F70A52fE7b816",
     ketherViewAddress: "0xc7Eaa7aC2dE304d9cDAd21AF81BffA273363d3d1",
     ketherSortitionAddress: "0x7cdA37F0d0c0a3e85747c7270721B472171cF39E", // V2
-    ketherBaublesAddress: "0x8EDA32B19325baC1b6B12c78E97B6FF1ed5a9Cc3",
-    ketherNFTPublisherAddress: "0xcba5846735a03ac02af69134Df1aB17f122DD2dD",
+    ketherBaublesAddress: "0xfDb8591751FCd30105Ae409d56529c8D8039fCD9",
+    ketherNFTPublisherAddress: "0x80E71c447e0f90Af42d84B4d7A957d60120136BD",
   },
   'rinkeby': { // DEPRECATED
     ownerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
@@ -210,7 +210,7 @@ async function main() {
     console.log("KetherSortition already deployed");
   }
 
-  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${ketherSortitionAddress} ${ketherNFTAddress} ${KH.address} ${sortition.vrfCoordinator} ${sortition.link} ${sortition.keyHash} ${sortition.fee} ${sortition.termDuration} ${sortition.minElectionDuration}`);
+  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${ketherSortitionAddress} ${ketherNFTAddress} ${KH.address} ${sortition.termDuration} ${sortition.minElectionDuration}`);
 }
 
 main()
