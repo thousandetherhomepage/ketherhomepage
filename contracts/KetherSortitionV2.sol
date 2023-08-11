@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.20;
 
 interface IKetherHomepage {
   function ads(uint _idx) external view returns (address,uint,uint,uint,uint,string memory,string memory,string memory,bool,bool);
@@ -29,7 +29,7 @@ library Errors {
   string constant NotNominated = "token is not nominated";
 }
 
-contract KetherSortitionV2 is Ownable {
+contract KetherSortitionV2 {
   event Nominated(
       uint256 indexed termNumber,
       address nominator,
@@ -111,12 +111,10 @@ contract KetherSortitionV2 is Ownable {
     // Borrowed from: https://github.com/1001-digital/erc721-extensions/blob/f5c983bac8989bc5ebf9b34c03f28e438da9a7b3/contracts/RandomlyAssigned.sol#L27
     return uint256(keccak256(
       abi.encodePacked(
-        msg.sender,
         block.coinbase,
         block.prevrandao,
         block.gaslimit,
-        block.timestamp,
-        blockhash(block.number))));
+        block.timestamp)));
   }
 
   /// @dev _nominate does not check token ownership, must already be checked.
@@ -139,7 +137,7 @@ contract KetherSortitionV2 is Ownable {
   /// @param _nominateTokenId if nominateSelf is false, token to nominate to. Must be a NFT-wrapped token
   function _nominateAll(bool _nominateSelf, uint256 _nominateTokenId) internal returns (uint256) {
     require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
-    address sender = _msgSender();
+    address sender = msg.sender;
     require(ketherNFTContract.balanceOf(sender) > 0, Errors.MustOwnToken);
     // This checks that the _nominateTokenId is minted, will revert otherwise
     require(_nominateSelf || ketherNFTContract.ownerOf(_nominateTokenId) != address(0));
@@ -218,7 +216,7 @@ contract KetherSortitionV2 is Ownable {
    */
   function nominate(uint256 _ownedTokenId, uint256 _nominateTokenId) external returns (uint256) {
     require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
-    address sender = _msgSender();
+    address sender = msg.sender;
     require(ketherNFTContract.ownerOf(_ownedTokenId) == sender, Errors.MustOwnToken);
     // This checks that the _nominateTokenId is minted, will revert otherwise
     require(ketherNFTContract.ownerOf(_nominateTokenId) != address(0));
@@ -260,7 +258,6 @@ contract KetherSortitionV2 is Ownable {
     require(state == StateMachine.NOMINATING, Errors.AlreadyStarted);
     require(nominatedTokens.length > 0, Errors.MustHaveNominations);
     require(termExpires <= block.timestamp, Errors.TermNotExpired);
-    require(LINK.balanceOf(address(this)) >= s_fee, Errors.NotEnoughLink);
 
     electionEntropy = _getEntropy();
     state = StateMachine.GOT_ENTROPY;
@@ -295,14 +292,14 @@ contract KetherSortitionV2 is Ownable {
   /// @notice Magistrate has exclusive rights to withdraw until the end of term.
   /// @notice Remaining balance after the next election is rolled over to the next magistrate.
   function withdraw(address payable to) public {
-    require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
+    require(msg.sender == getMagistrate(), Errors.OnlyMagistrate);
 
     to.transfer(address(this).balance);
   }
 
   /// @notice Magistrate can withdraw token deposits.
-  function withdrawToken(IERC20 token, address to) external onlyOwner {
-    require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
+  function withdrawToken(IERC20 token, address to) external {
+    require(msg.sender == getMagistrate(), Errors.OnlyMagistrate);
 
     token.transfer(to, token.balanceOf(address(this)));
   }
@@ -310,13 +307,13 @@ contract KetherSortitionV2 is Ownable {
   /// @notice Cut the term short, leaving enough time for new nominations.
   /// Emits {StepDown} event.
   function stepDown() public {
-    require(_msgSender() == getMagistrate(), Errors.OnlyMagistrate);
+    require(msg.sender == getMagistrate(), Errors.OnlyMagistrate);
 
     uint256 timeRemaining = termExpires - block.timestamp;
     if (timeRemaining > minElectionDuration) {
       termExpires = block.timestamp + minElectionDuration;
     }
 
-    emit StepDown(termNumber, magistrateToken, _msgSender());
+    emit StepDown(termNumber, magistrateToken, msg.sender);
   }
 }
