@@ -30,7 +30,7 @@
           <div>
               Delegated Publisher
               <input type="text" v-model.number="delegateAd" placholder="tokenId" style="width: 5em;" />
-              <button type="button" v-on:click="refresh({ idx: delegateAd }); tab = 'publish'">Edit as Publisher</button>
+              <button type="button" v-on:click="editAsPublisher(); tab = 'publish'">Edit as Publisher</button>
               See: <a href="https://publisher.thousandetherhomepage.com/">publisher.kether.eth</a>
           </div>
       </p>
@@ -41,7 +41,7 @@
     </p>
 
     <section>
-      <LazyPublish v-if="tab == 'publish'" :ad="ad" :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :showNSFW="showNSFW" />
+      <LazyPublish v-if="tab == 'publish'" :ad="ad" :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :showNSFW="showNSFW" :asPublisher="asPublisher" />
       <LazyWrap v-else-if="tab == 'wrap'" :ad="ad" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" @refresh="refresh" />
       <LazyMissing v-else-if="tab == 'missing'" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" />
     </section>
@@ -56,9 +56,14 @@ export default {
       ad: null,
       tab: null,
       delegateAd: null,
+      asPublisher: false,
     }
   },
   methods: {
+    editAsPublisher() {
+      this.refresh({ idx: this.delegateAd });
+      this.asPublisher = true;
+    },
     refresh({ idx }) {
       this.ad = this.$store.state.ads[idx];
     },

@@ -50,6 +50,7 @@ input {
 
       <div class="editAd">
         <h3>Publish Changes</h3>
+        <p v-if="asPublisher"><strong style="color: purple">Editing as delegated publisher</strong></p>
         <p>
           What do you want your ad to look like? Some rules:
         </p>
@@ -118,7 +119,7 @@ import Ad from './Ad.vue'
 import Wrap from './Wrap.vue'
 
 export default {
-  props: ["ad", "provider", "contract", "ketherNFT", "showNSFW"],
+  props: ["ad", "provider", "contract", "ketherNFT", "ketherPublisher", "asPublisher", "showNSFW"],
   data() {
     return {
       canPublish: true,

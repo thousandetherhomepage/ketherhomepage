@@ -7,6 +7,7 @@
       :provider="provider"
       :contract="contract"
       :ketherNFT="ketherNFT"
+      :ketherPublisher="ketherPublisher"
       :isReadOnly="isReadOnly"
       :showNSFW="showNSFW"
       :prerendered="prerendered"

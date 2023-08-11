@@ -23,7 +23,7 @@ section {
     <LazyAdList v-if="$store.state.vis == 'list'" />
     <LazyAdSVG v-else-if="$store.state.vis == 'svg'"/>
     <AdGrid v-else :provider="provider" :contract="contract" :showNSFW="showNSFW" :isReadOnly="isReadOnly" :prerendered="prerendered" />
-    <Editor :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :showNSFW="showNSFW" />
+    <Editor :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :ketherPublisher="ketherPublisher" :showNSFW="showNSFW" />
   </div>
 </template>
 
@@ -33,7 +33,7 @@ import AdList from './AdList.vue'
 import Offline from './Offline.vue'
 
 export default {
-  props: ["provider", "contract", "ketherNFT", "isReadOnly", "showNSFW", "prerendered"],
+  props: ["provider", "contract", "ketherNFT", "ketherPublisher", "isReadOnly", "showNSFW", "prerendered"],
   components: {
     Offline,
     AdGrid,
