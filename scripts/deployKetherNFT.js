@@ -9,11 +9,11 @@ const deployed = {
     ketherNFTRendererAddress: "0xd81620fc592c6DC4104FAa9bec1E1e5F5562d8fd", // V2
     ketherNFTAddress: "0x6B69B05a5478A2390493765b496F70A52fE7b816",
     ketherViewAddress: "0xc7Eaa7aC2dE304d9cDAd21AF81BffA273363d3d1",
-    ketherSortitionAddress: "0x09BCa032F3b3a08afCFf03826edf4F36481b486C",
-    ketherBaublesAddress: "0x8EDA32B19325baC1b6B12c78E97B6FF1ed5a9Cc3",
-    ketherNFTPublisherAddress: "0xcba5846735a03ac02af69134Df1aB17f122DD2dD",
+    ketherSortitionAddress: "0x7cdA37F0d0c0a3e85747c7270721B472171cF39E", // V2
+    ketherBaublesAddress: "0xfDb8591751FCd30105Ae409d56529c8D8039fCD9",
+    ketherNFTPublisherAddress: "0x80E71c447e0f90Af42d84B4d7A957d60120136BD",
   },
-  'rinkeby': {
+  'rinkeby': { // DEPRECATED
     ownerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
     ketherHomepageAddress: "0xb88404dd8fe4969ef67841250baef7f04f6b1a5e",
     ketherNFTOwnerAddress: "0xbCb061d2feE38DCB6DE7e5D269852B4BDb986Ed6",
@@ -131,7 +131,7 @@ async function main() {
   const KetherNFT = await ethers.getContractFactory("KetherNFT");
   const KetherNFTRenderV2 = await ethers.getContractFactory("KetherNFTRenderV2");
   const KetherView = await ethers.getContractFactory("KetherView");
-  const KetherSortition = await ethers.getContractFactory("KetherSortition");
+  const KetherSortitionV2 = await ethers.getContractFactory("KetherSortitionV2");
 
   let ketherHomepageAddress = cfg.ketherHomepageAddress;
   let KH;
@@ -196,9 +196,9 @@ async function main() {
   const sortition = sortitionConfig[network.name];
   let ketherSortitionAddress = cfg["ketherSortitionAddress"];
   if (ketherSortitionAddress === undefined) {
-    const KS = await KetherSortition.deploy(
+    const KS = await KetherSortitionV2.deploy(
       ketherNFTAddress, KH.address,
-      sortition.vrfCoordinator, sortition.link, sortition.keyHash, sortition.fee,
+      // Removed from V1: sortition.vrfCoordinator, sortition.link, sortition.keyHash, sortition.fee,
       sortition.termDuration, sortition.minElectionDuration,
       gasConfig);
     console.log("Deploying KetherSortition to:", KS.address);
@@ -210,7 +210,7 @@ async function main() {
     console.log("KetherSortition already deployed");
   }
 
-  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${ketherSortitionAddress} ${ketherNFTAddress} ${KH.address} ${sortition.vrfCoordinator} ${sortition.link} ${sortition.keyHash} ${sortition.fee} ${sortition.termDuration} ${sortition.minElectionDuration}`);
+  console.log(`Verify on Etherscan: npx hardhat verify --network ${network.name} ${ketherSortitionAddress} ${ketherNFTAddress} ${KH.address} ${sortition.termDuration} ${sortition.minElectionDuration}`);
 }
 
 main()
