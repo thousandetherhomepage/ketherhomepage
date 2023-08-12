@@ -166,7 +166,7 @@ export default {
       const ad = this.ad;
       const signer = await this.provider.getSigner();
       const signerAddr = await signer.getAddress();
-      if (signerAddr.toLowerCase() != ad.owner) {
+      if (!this.asPublisher && signerAddr.toLowerCase() != ad.owner) {
         this.error = 'Incorrect active wallet. Must publish with: ' + ad.owner;
         return;
       }
@@ -177,7 +177,12 @@ export default {
 
       try {
         let tx;
-        if (isWrapped) {
+        if (this.asPublisher && signerAddr.toLowerCase() != ad.owner) {
+          if (!await this.ketherPublisher.isApprovedToPublish(signerAddr, ad.idx)) {
+            throw "KetherNFTPublisher: Signer is not approved to publish to this ad: " + ad.idx;
+          }
+          tx = await this.ketherPublisher.connect(signer).publish(ad.idx, ad.link, ad.image, ad.title, Number(ad.NSFW));
+        } else if (isWrapped) {
           tx = await this.ketherNFT.connect(signer).publish(ad.idx, ad.link, ad.image, ad.title, Number(ad.NSFW));
         } else {
           tx = await this.contract.connect(signer).publish(ad.idx, ad.link, ad.image, ad.title, Number(ad.NSFW));

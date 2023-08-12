@@ -4,6 +4,9 @@ import contractJSON from "~/artifacts/contracts/KetherHomepage.sol/KetherHomepag
 import ketherNFTJSON from "~/artifacts/contracts/KetherNFT.sol/KetherNFT.json";
 import ketherViewJSON from "~/artifacts/contracts/KetherView.sol/KetherView.json";
 
+// Minimal subset
+const ketherNFTPublisherJSON = {"abi": [{"inputs":[{"internalType":"address","name":"publisher","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"isApprovedToPublish","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"uint256","name":"_idx","type":"uint256"},{"internalType":"string","name":"_link","type":"string"},{"internalType":"string","name":"_image","type":"string"},{"internalType":"string","name":"_title","type":"string"},{"internalType":"bool","name":"_NSFW","type":"bool"}],"name":"publish","outputs":[],"stateMutability":"nonpayable","type":"function"}]};
+
 export const deployConfig = {
     homestead: {
         name: "main",
@@ -62,6 +65,7 @@ export const loadContracts = (networkConfig, provider) => {
     const contract = new ethers.Contract(networkConfig.contractAddr, contractJSON.abi, provider);
     const ketherNFT = new ethers.Contract(networkConfig.ketherNFTAddr, ketherNFTJSON.abi, provider);
     const ketherView = new ethers.Contract(networkConfig.ketherViewAddr, ketherViewJSON.abi, provider);
+    const ketherPublisher = new ethers.Contract(networkConfig.ketherNFTPublisherAddr, ketherNFTPublisherJSON.abi, provider);
 
-    return {contract, ketherNFT, ketherView}
+    return {contract, ketherNFT, ketherView, ketherPublisher}
 }

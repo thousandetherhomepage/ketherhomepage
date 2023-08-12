@@ -182,7 +182,7 @@ export default {
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
 
-      const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
+      const {contract, ketherNFT, ketherView, ketherPublisher} = loadContracts(this.networkConfig, this.provider)
       await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView, ketherPublisher);
       this.isReadOnly = true;
     },

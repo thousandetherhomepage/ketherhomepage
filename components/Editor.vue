@@ -41,7 +41,7 @@
     </p>
 
     <section>
-      <LazyPublish v-if="tab == 'publish'" :ad="ad" :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :showNSFW="showNSFW" :asPublisher="asPublisher" />
+      <LazyPublish v-if="tab == 'publish'" :ad="ad" :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :ketherPublisher="ketherPublisher" :showNSFW="showNSFW" :asPublisher="asPublisher" />
       <LazyWrap v-else-if="tab == 'wrap'" :ad="ad" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" @refresh="refresh" />
       <LazyMissing v-else-if="tab == 'missing'" :provider="provider" :ketherNFT="ketherNFT" :contract="contract" />
     </section>
@@ -50,7 +50,7 @@
 
 <script>
 export default {
-  props: ["provider", "contract", "ketherNFT", "showNSFW"],
+  props: ["provider", "contract", "ketherNFT", "ketherPublisher", "showNSFW"],
   data() {
     return {
       ad: null,
