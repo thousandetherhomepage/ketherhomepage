@@ -1,9 +1,22 @@
 <style lang="scss">
+nav {
+    font-weight: bold;
+    color: rgba(255,255,255,0.8);
+    padding: 1em 2em;
+    margin-top: 0.5em;
+}
+.publisher {
+    background: rgb(56,109,170);
+}
+
+.find-missing {
+    background: rgb(190,140,20);
+}
 </style>
 
 <template>
   <div>
-    <div class="edit" v-if="$store.getters.numOwned > 0 > 0">
+    <nav class="edit" v-if="$store.getters.numOwned > 0 > 0">
       {{$store.getters.numOwned}} ads owned by you, {{$store.getters.numOwnedWrapped}} wrapped as NFT.
       <div v-if="$store.getters.numHalfWrapped >0">{{$store.getters.numHalfWrapped}} half wrapped and can be rescued.</div>
       <form v-on:submit.prevent>
@@ -26,19 +39,17 @@
         <button type="button" v-on:click="tab = 'wrap'" :disabled="tab == 'wrap' || !ad">Wrap / Unwrap</button>
         <button type="button" v-on:click="tab = 'missing'" :disabled="tab == 'missing'">Find Missing Ad</button>
       </p>
-      <p>
-          <div>
-              Delegated Publisher
-              <input type="text" v-model.number="delegateAd" placholder="tokenId" style="width: 5em;" />
-              <button type="button" v-on:click="editAsPublisher(); tab = 'publish'">Edit as Publisher</button>
-              See: <a href="https://publisher.thousandetherhomepage.com/">publisher.kether.eth</a>
-          </div>
-      </p>
-    </div>
-    <p v-else-if="$store.state.activeAccount">
+    </nav>
+    <nav class="find-missing" v-else-if="$store.state.activeAccount">
       No purchased ads detected for active accounts. Reload after buying an ad.
       <button type="button" v-on:click="tab = 'missing'" :disabled="tab == 'missing'">Find Missing Ad</button>
-    </p>
+    </nav>
+    <nav class="publisher" v-if="$store.state.activeAccount">
+      Delegated Publisher
+      <input type="text" v-model.number="delegateAd" placholder="tokenId" style="width: 5em;" />
+      <button type="button" v-on:click="editAsPublisher(); tab = 'publish'">Edit as Publisher</button>
+      See: <a href="https://publisher.thousandetherhomepage.com/">publisher.kether.eth</a>
+    </nav>
 
     <section>
       <LazyPublish v-if="tab == 'publish'" :ad="ad" :provider="provider" :contract="contract" :ketherNFT="ketherNFT" :ketherPublisher="ketherPublisher" :showNSFW="showNSFW" :asPublisher="asPublisher" />
