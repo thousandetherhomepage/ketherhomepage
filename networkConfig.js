@@ -15,7 +15,7 @@ export const deployConfig = {
         ketherViewAddr: "0xaC292791A8b398698363F820dd6FbEE6EDF71442",
         ketherSortitionAddr: "0xa9a57f7d2A54C1E172a7dC546fEE6e03afdD28E2",
         ketherBaublesAddr: "0xF383C0E93D14790a81F85B565EDfda4BAa6F9437",
-        ketherNFTPublisherAddr: "0xDa5aba302810ab3F6A3f3E7f8aB0307c1f464Bc9",
+        ketherNFTPublisherAddr: "0x45C5508bA714bd27404c16f594967e998Afc6B60",
         web3Fallback: "https://mainnet.infura.io/v3/fa9f29a052924745babfc1d119465148",
         etherscanPrefix: "https://etherscan.io/address/",
         prerendered: {
@@ -51,7 +51,7 @@ export const deployConfig = {
         ketherViewAddr: "0xc7Eaa7aC2dE304d9cDAd21AF81BffA273363d3d1",
         ketherSortitionAddr: "0x09BCa032F3b3a08afCFf03826edf4F36481b486C",
         ketherBaublesAddr: "0xfDb8591751FCd30105Ae409d56529c8D8039fCD9",
-        ketherNFTPublisherAddr: "0x80E71c447e0f90Af42d84B4d7A957d60120136BD",
+        ketherNFTPublisherAddr: "0x32EF068FbC48A6eC0e4648E52370FFac02287c3e",
         web3Fallback: "https://sepolia.infura.io/v3/fa9f29a052924745babfc1d119465148",
         etherscanPrefix: "https://sepolia.etherscan.io/address/",
         nftView: "https://testnets.opensea.io/assets/",
