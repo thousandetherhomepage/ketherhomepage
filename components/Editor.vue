@@ -1,16 +1,31 @@
 <style lang="scss">
 nav {
-    font-weight: bold;
-    color: rgba(255,255,255,0.8);
-    padding: 1em 2em;
-    margin-top: 0.5em;
+  font-weight: bold;
+  color: white;
+  padding: 0.7em 1em;
+  margin-top: 0.5em;
+  margin-top: 1em;
+  margin-left: 5px;
+  border-radius: 3px;
 }
+
+input {
+  padding: 2px;
+}
+button {
+  margin-left: 5px;
+}
+
+.edit {
+  background: #246648;
+}
+
 .publisher {
-    background: rgb(56,109,170);
+  background: rgb(56,109,170);
 }
 
 .find-missing {
-    background: rgb(190,140,20);
+  background: rgb(190,140,20);
 }
 </style>
 
@@ -46,7 +61,7 @@ nav {
     </nav>
     <nav class="publisher" v-if="$store.state.activeAccount">
       Delegated Publisher
-      <input type="text" v-model.number="delegateAd" placholder="tokenId" style="width: 5em;" />
+      <input type="text" v-model.number="delegateAd" placeholder="tokenId" style="width: 5em;" />
       <button type="button" v-on:click="editAsPublisher(); tab = 'publish'">Edit as Publisher</button>
       See: <a href="https://publisher.thousandetherhomepage.com/">publisher.kether.eth</a>
     </nav>

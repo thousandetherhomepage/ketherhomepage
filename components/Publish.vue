@@ -178,7 +178,8 @@ export default {
       try {
         let tx;
         if (this.asPublisher && signerAddr.toLowerCase() != ad.owner) {
-          if (!await this.ketherPublisher.isApprovedToPublish(signerAddr, ad.idx)) {
+          const ok = await this.ketherPublisher.isApprovedToPublish(signerAddr, ad.idx);
+          if (!ok) {
             throw "KetherNFTPublisher: Signer is not approved to publish to this ad: " + ad.idx;
           }
           tx = await this.ketherPublisher.connect(signer).publish(ad.idx, ad.link, ad.image, ad.title, Number(ad.NSFW));

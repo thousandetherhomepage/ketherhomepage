@@ -1,18 +1,4 @@
 <style lang="scss">
-.edit {
-  margin-top: 1em;
-  margin-left: 5px;
-  padding: 5px 10px;
-  border-radius: 3px;
-  background: #246648;
-  color: white;
-  font-weight: bold;
-
-  button {
-    margin-left: 5px;
-  }
-}
-
 section {
   margin-bottom: 2em;
 }
