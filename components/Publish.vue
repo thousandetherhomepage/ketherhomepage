@@ -50,6 +50,7 @@ input {
 
       <div class="editAd">
         <h3>Publish Changes</h3>
+        <p v-if="asPublisher"><strong style="color: purple">Editing as delegated publisher</strong></p>
         <p>
           What do you want your ad to look like? Some rules:
         </p>
@@ -118,7 +119,7 @@ import Ad from './Ad.vue'
 import Wrap from './Wrap.vue'
 
 export default {
-  props: ["ad", "provider", "contract", "ketherNFT", "showNSFW"],
+  props: ["ad", "provider", "contract", "ketherNFT", "ketherPublisher", "asPublisher", "showNSFW"],
   data() {
     return {
       canPublish: true,
@@ -165,7 +166,7 @@ export default {
       const ad = this.ad;
       const signer = await this.provider.getSigner();
       const signerAddr = await signer.getAddress();
-      if (signerAddr.toLowerCase() != ad.owner) {
+      if (!this.asPublisher && signerAddr.toLowerCase() != ad.owner) {
         this.error = 'Incorrect active wallet. Must publish with: ' + ad.owner;
         return;
       }
@@ -176,7 +177,13 @@ export default {
 
       try {
         let tx;
-        if (isWrapped) {
+        if (this.asPublisher && signerAddr.toLowerCase() != ad.owner) {
+          const ok = await this.ketherPublisher.isApprovedToPublish(signerAddr, ad.idx);
+          if (!ok) {
+            throw "KetherNFTPublisher: Signer is not approved to publish to this ad: " + ad.idx;
+          }
+          tx = await this.ketherPublisher.connect(signer).publish(ad.idx, ad.link, ad.image, ad.title, Number(ad.NSFW));
+        } else if (isWrapped) {
           tx = await this.ketherNFT.connect(signer).publish(ad.idx, ad.link, ad.image, ad.title, Number(ad.NSFW));
         } else {
           tx = await this.contract.connect(signer).publish(ad.idx, ad.link, ad.image, ad.title, Number(ad.NSFW));

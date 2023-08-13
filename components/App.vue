@@ -7,6 +7,7 @@
       :provider="provider"
       :contract="contract"
       :ketherNFT="ketherNFT"
+      :ketherPublisher="ketherPublisher"
       :isReadOnly="isReadOnly"
       :showNSFW="showNSFW"
       :prerendered="prerendered"
@@ -18,7 +19,9 @@
       {{walletConnect ? "Loading..." : "Connect Wallet" }}
     </button>
     <div v-else>
-      Active Account: <strong>{{$store.state.activeAccount}}</strong>
+      <p>
+        Active Account: <strong>{{$store.state.activeAccount}}</strong>
+      </p>
     </div>
 
 
@@ -63,8 +66,10 @@
         <li v-if="networkConfig.etherscanPrefix" class="contracts">
           Contracts on Etherscan:
           <a :href="etherscanKetherLink" target="_blank"><code>KetherHomepage</code></a>
-          <a :href="etherscanNFTLink" target="_blank"><code>KetherNFT</code></a> 
-          <a :href="etherscanSortitionLink" target="_blank"><code>KetherSortition</code></a>
+          <a :href="etherscanNFTLink" target="_blank"><code>nft.kether.eth</code></a>
+          <a :href="etherscanSortitionLink" target="_blank"><code>sortition.kether.eth</code></a>
+          <a :href="etherscanPublisherLink" target="_blank"><code>publisher.kether.eth</code></a>
+          <a :href="etherscanBaublesLink" target="_blank"><code>baubles.kether.eth</code></a>
         </li>
         <li v-if="$store.getters.numNSFW > 0">
           <a v-if="!showNSFW" v-on:click="showNSFW = true"
@@ -102,6 +107,7 @@ export default {
       provider: null,
       contract: null,
       ketherNFT: null,
+      ketherPublisher: null,
       isReadOnly: false,
       showNSFW: false,
       prerendered: null,
@@ -126,6 +132,12 @@ export default {
     etherscanSortitionLink() {
       return this.networkConfig.etherscanPrefix + this.networkConfig.ketherSortitionAddr;
     },
+    etherscanBaublesLink() {
+      return this.networkConfig.etherscanPrefix + this.networkConfig.ketherBaublesAddr;
+    },
+    etherscanPublisherLink() {
+      return this.networkConfig.etherscanPrefix + this.networkConfig.ketherNFTPublisherAddr;
+    },
   },
   methods: {
     async connectEthereum(web3Provider) {
@@ -146,8 +158,8 @@ export default {
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
       if (this.networkConfig) {
-        const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
-        await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView);
+        const {contract, ketherNFT, ketherView, ketherPublisher} = loadContracts(this.networkConfig, this.provider)
+        await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView, ketherPublisher);
         this.listenContractEvents(contract, ketherNFT);
         this.isReadOnly = false;
 
@@ -172,11 +184,11 @@ export default {
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
 
-      const {contract, ketherNFT, ketherView} = loadContracts(this.networkConfig, this.provider)
-      await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView);
+      const {contract, ketherNFT, ketherView, ketherPublisher} = loadContracts(this.networkConfig, this.provider)
+      await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView, ketherPublisher);
       this.isReadOnly = true;
     },
-    async setContracts(activeNetwork, contract, ketherNFT, ketherView) {
+    async setContracts(activeNetwork, contract, ketherNFT, ketherView, ketherPublisher) {
       // Load the initial state on network change
       await this.$store.dispatch('initState', activeNetwork);
       if (this.contract) {
@@ -187,6 +199,7 @@ export default {
       }
       this.contract = contract;
       this.ketherNFT = ketherNFT;
+      this.ketherPublisher = ketherPublisher;
       this.contract.on('error', function(err) {
         console.error("Contract subscription error:", err);
       });
