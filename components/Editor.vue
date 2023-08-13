@@ -27,6 +27,16 @@ button {
 .find-missing {
   background: rgb(190,140,20);
 }
+
+.message {
+  color: rgba(240, 140, 140, 1);
+
+  pre {
+    text-wrap: wrap;
+    overflow: hidden;
+    color: rgba(255,255,255,0.5);
+  }
+}
 </style>
 
 <template>
@@ -62,8 +72,14 @@ button {
     <nav class="publisher" v-if="$store.state.activeAccount">
       Delegated Publisher
       <input type="text" v-model.number="delegateAd" placeholder="tokenId" style="width: 5em;" />
-      <button type="button" v-on:click="editAsPublisher(); tab = 'publish'">Edit as Publisher</button>
+      <button type="button" v-on:click="editAsPublisher()">Edit as Publisher</button>
       See: <a href="https://publisher.thousandetherhomepage.com/">publisher.kether.eth</a>
+      <div v-if="publisherMsg" class="message">
+        <p>
+          {{publisherMsg.message}}
+        </p>
+        <pre v-if="publisherMsg.context">{{publisherMsg.context}}</pre>
+      </div>
     </nav>
 
     <section>
@@ -83,12 +99,35 @@ export default {
       tab: null,
       delegateAd: null,
       asPublisher: false,
+      publisherMsg: null,
     }
   },
   methods: {
-    editAsPublisher() {
+    async editAsPublisher() {
+      if (this.delegateAd === "" || this.delegateAd === null) {
+        this.publisherMsg = {
+          message: "Error: Must specify ad tokenId to publish as.",
+        }
+        return;
+      }
+      try {
+        const addr = await (await this.provider.getSigner()).getAddress();
+        const ok = await this.ketherPublisher.isApprovedToPublish(addr, this.delegateAd);
+        if (!ok) {
+          this.publisherMsg = {message: "Error: Not approved to publish for this ad: " + this.delegateAd};
+          return;
+        }
+      } catch (err) {
+        this.publisherMsg = {
+          message: "Error: Delegated publishing is not set up for this ad: " + this.delegateAd,
+          context: err.message,
+        }
+        return;
+      }
+
       this.refresh({ idx: this.delegateAd });
       this.asPublisher = true;
+      this.tab = 'publish';
     },
     refresh({ idx }) {
       this.ad = this.$store.state.ads[idx];

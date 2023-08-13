@@ -19,7 +19,9 @@
       {{walletConnect ? "Loading..." : "Connect Wallet" }}
     </button>
     <div v-else>
-      Active Account: <strong>{{$store.state.activeAccount}}</strong>
+      <p>
+        Active Account: <strong>{{$store.state.activeAccount}}</strong>
+      </p>
     </div>
 
 
