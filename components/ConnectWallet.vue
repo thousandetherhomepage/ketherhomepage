@@ -77,7 +77,7 @@ export default {
       })
 
       try {
-        provider.connect();
+        await provider.connect();
       } catch(err) {
         console.error("WalletConnect failed", err);
         this.$emit("wallet-disconnect");

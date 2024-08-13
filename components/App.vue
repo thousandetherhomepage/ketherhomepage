@@ -63,7 +63,7 @@
             Contract is only on MainNet and Rinkeby.
           </span>
         </li>
-        <li v-if="networkConfig.etherscanPrefix" class="contracts">
+        <li v-if="networkConfig?.etherscanPrefix" class="contracts">
           Contracts on Etherscan:
           <a :href="etherscanKetherLink" target="_blank"><code>KetherHomepage</code></a>
           <a :href="etherscanNFTLink" target="_blank"><code>nft.kether.eth</code></a>
@@ -124,19 +124,19 @@ export default {
       return `${now - ts} seconds ago`;
     },
     etherscanKetherLink() {
-      return this.networkConfig.etherscanPrefix + this.networkConfig.contractAddr;
+      return this.networkConfig?.etherscanPrefix + this.networkConfig?.contractAddr;
     },
     etherscanNFTLink() {
-      return this.networkConfig.etherscanPrefix + this.networkConfig.ketherNFTAddr;
+      return this.networkConfig?.etherscanPrefix + this.networkConfig?.ketherNFTAddr;
     },
     etherscanSortitionLink() {
-      return this.networkConfig.etherscanPrefix + this.networkConfig.ketherSortitionAddr;
+      return this.networkConfig?.etherscanPrefix + this.networkConfig?.ketherSortitionAddr;
     },
     etherscanBaublesLink() {
-      return this.networkConfig.etherscanPrefix + this.networkConfig.ketherBaublesAddr;
+      return this.networkConfig?.etherscanPrefix + this.networkConfig?.ketherBaublesAddr;
     },
     etherscanPublisherLink() {
-      return this.networkConfig.etherscanPrefix + this.networkConfig.ketherNFTPublisherAddr;
+      return this.networkConfig?.etherscanPrefix + this.networkConfig?.ketherNFTPublisherAddr;
     },
   },
   methods: {
@@ -165,6 +165,8 @@ export default {
 
         // Find half-wrapped ads
         this.$store.dispatch('detectHalfWrapped', { ketherContract: contract, nftContract: ketherNFT });
+      } else {
+        throw new Error("Unsupported active network: " + this.activeNetwork);
       }
 
       // When the network changes, refresh the page.
@@ -183,6 +185,7 @@ export default {
       this.provider = new ethers.providers.StaticJsonRpcProvider(web3Fallback);
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
+      if (!this.networkConfig) throw new Error("setReadOnlyNetwork: Missing networkConfig");
 
       const {contract, ketherNFT, ketherView, ketherPublisher} = loadContracts(this.networkConfig, this.provider)
       await this.setContracts(this.activeNetwork, contract, ketherNFT, ketherView, ketherPublisher);

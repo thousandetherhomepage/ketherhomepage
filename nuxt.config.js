@@ -89,7 +89,7 @@ export default {
     // https://github.com/WalletConnect/walletconnect-monorepo/issues/1349 ??
     extend(config, ctx) {
       config.module.rules.push({
-        test: /node_modules[\\/]@walletconnect/,
+        test: /node_modules\/@walletconnect/,
         use: {
           loader: 'babel-loader',
           options: {
@@ -98,7 +98,16 @@ export default {
         },
       });
       config.module.rules.push({
-        test: /node_modules[\\/]valtio/,
+        test: /node_modules\/unstorage/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env'],
+          },
+        },
+      });
+      config.module.rules.push({
+        test: /node_modules\/valtio/,
         use: {
           loader: 'babel-loader',
           options: {
