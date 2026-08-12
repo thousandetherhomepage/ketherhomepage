@@ -46,11 +46,9 @@ export default {
         }
       }
 
-      const infuraId =  this.networkConfig.web3Fallback.split("/").pop();
       const provider = await EthereumProvider.init({
         projectId: 'c2b10083c2b1bda11734bd4f48101899', // required
         showQrModal: true,
-        infuraId: infuraId,
         qrModalOptions: { themeMode: "light" },
         chains: [1],
         optionalChains: [11155111], // Sepolia

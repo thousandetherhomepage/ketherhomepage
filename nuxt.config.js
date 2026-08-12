@@ -19,7 +19,7 @@ export default {
         'upgrade-insecure-requests': '',
         'default-src': ["'self'"],
         'script-src': ["'self'", '*.infura.io'],
-        'connect-src': ["'self'", '*.infura.io', '*.walletconnect.com', 'wss://*.walletconnect.com'],
+        'connect-src': ["'self'", 'https://ethereum-rpc.publicnode.com', 'https://eth.drpc.org', '*.infura.io', '*.walletconnect.com', 'wss://*.walletconnect.com'],
         'frame-src': ["'self'", '*.walletconnect.com'],
         'style-src': ["'self'", "'unsafe-inline'"], // Would be nice to have the hashes built here - see https://github.com/nuxt/nuxt.js/pull/8022/files
         'img-src': ['*', 'data:']
@@ -38,7 +38,7 @@ export default {
       { charset: 'utf-8' },
       //{ name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: "The Million Dollar Homepage as an Ethereum Smart Contract and DApp: A glimpse into what the future of web integrated with modern blockchain technology could be like." },
-      process.env.NODE_ENV === 'production' ? { 'http-equiv': "Content-Security-Policy", content: "upgrade-insecure-requests; default-src 'self'; script-src 'self' 'self' *.infura.io; connect-src 'self' *.infura.io *.walletconnect.com wss://*.walletconnect.com; style-src 'self' 'unsafe-inline'; img-src * data:; frame-src 'self' '*.walletconnect.com'"} : {},
+      process.env.NODE_ENV === 'production' ? { 'http-equiv': "Content-Security-Policy", content: "upgrade-insecure-requests; default-src 'self'; script-src 'self' 'self' *.infura.io; connect-src 'self' https://ethereum-rpc.publicnode.com https://eth.drpc.org *.infura.io *.walletconnect.com wss://*.walletconnect.com; style-src 'self' 'unsafe-inline'; img-src * data:; frame-src 'self' '*.walletconnect.com'"} : {},
       { name: "twitter:card", content: "summary"},
       { property: "og:url", content: "https://thousandetherhomepage.com"},
       { property: "og:title", content: "The Thousand Ether Homepage" },
