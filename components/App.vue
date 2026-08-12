@@ -91,7 +91,7 @@
 <script>
 import { ethers } from "ethers";
 
-import { defaultNetwork, deployConfig, loadContracts } from '~/networkConfig';
+import { defaultNetwork, deployConfig, loadContracts, loadProvider } from '~/networkConfig';
 
 import Dropdown from "./Dropdown.vue";
 import Homepage from "./Homepage.vue";
@@ -181,8 +181,7 @@ export default {
       });
     },
     async setReadOnlyNetwork(network) {
-      const web3Fallback = deployConfig[network].web3Fallback || "http://localhost:8545/";
-      this.provider = new ethers.providers.StaticJsonRpcProvider(web3Fallback);
+      this.provider = loadProvider(deployConfig[network]);
       this.activeNetwork = (await this.provider.getNetwork()).name;
       this.networkConfig = deployConfig[this.activeNetwork];
       if (!this.networkConfig) throw new Error("setReadOnlyNetwork: Missing networkConfig");

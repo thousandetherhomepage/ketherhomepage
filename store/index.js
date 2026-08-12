@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 
-import { deployConfig, defaultNetwork, loadContracts } from "~/networkConfig";
+import { deployConfig, defaultNetwork, loadContracts, loadProvider } from "~/networkConfig";
 
 export const state = () => {
   return {
@@ -206,11 +206,10 @@ export const actions = {
     // This runs during nuxt generate, we need it to generate initState.json
 
     // TODO: refactor this since it shares code with App.vue
-    if (process.dev) return; // Don't preload ads in dev mode so we don't spam Infura 😥
+    if (process.dev) return; // Don't preload ads in dev mode so we don't spam public RPCs 😥
     if (route.name !== 'index') return; // We only want to preload ads for the index route
 
-    const web3Fallback = deployConfig[defaultNetwork].web3Fallback || "http://localhost:8545/";
-    const provider = new ethers.providers.StaticJsonRpcProvider(web3Fallback);
+    const provider = loadProvider(deployConfig[defaultNetwork]);
     const activeNetwork = (await provider.getNetwork()).name;
     const networkConfig = deployConfig[activeNetwork];
     const contracts = loadContracts(networkConfig, provider)

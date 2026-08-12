@@ -16,7 +16,10 @@ export const deployConfig = {
         ketherSortitionAddr: "0xa9a57f7d2A54C1E172a7dC546fEE6e03afdD28E2",
         ketherBaublesAddr: "0xF383C0E93D14790a81F85B565EDfda4BAa6F9437",
         ketherNFTPublisherAddr: "0x45C5508bA714bd27404c16f594967e998Afc6B60",
-        web3Fallback: "https://mainnet.infura.io/v3/fa9f29a052924745babfc1d119465148",
+        web3Fallback: [
+            "https://ethereum-rpc.publicnode.com",
+            "https://eth.drpc.org",
+        ],
         etherscanPrefix: "https://etherscan.io/address/",
         prerendered: {
             image: "https://storage.googleapis.com/storage.thousandetherhomepage.com/mainnet.png",
@@ -60,6 +63,22 @@ export const deployConfig = {
 };
 deployConfig.mainnet = deployConfig.homestead;
 export const defaultNetwork = "homestead";
+
+export const loadProvider = (networkConfig) => {
+    const web3Fallback = networkConfig.web3Fallback || "http://localhost:8545/";
+    const urls = Array.isArray(web3Fallback) ? web3Fallback : [web3Fallback];
+    const network = networkConfig.name === "main" ? "homestead" : networkConfig.name;
+
+    return new ethers.providers.FallbackProvider(
+        urls.map((url, i) => ({
+            provider: new ethers.providers.StaticJsonRpcProvider(url, network),
+            priority: i + 1,
+            stallTimeout: 2500,
+            weight: 1,
+        })),
+        1
+    );
+};
 
 export const loadContracts = (networkConfig, provider) => {
     const contract = new ethers.Contract(networkConfig.contractAddr, contractJSON.abi, provider);
