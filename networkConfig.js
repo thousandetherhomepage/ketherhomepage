@@ -19,6 +19,7 @@ export const deployConfig = {
         web3Fallback: [
             "https://ethereum-rpc.publicnode.com",
             "https://eth.drpc.org",
+            "https://mainnet.infura.io/v3/fa9f29a052924745babfc1d119465148",
         ],
         etherscanPrefix: "https://etherscan.io/address/",
         prerendered: {
