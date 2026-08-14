@@ -1,24 +1,41 @@
-name: "Generate initState"
+name: Generate initState
 
 on:
   workflow_dispatch:
   schedule:
-  - cron: '6 9 4 * *' # Run monthly,
+    - cron: '6 1 * * 1' # Sunday evening US Eastern (Monday 01:06 UTC)
+
+concurrency:
+  group: generate-init-state
+  cancel-in-progress: false
 
 jobs:
-  check:
+  generate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Node.js
-        uses: actions/setup-node@v3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 18.x
-          cache: 'yarn'
-      - run: yarn
-      - run: make build
-      - uses: stefanzweifel/git-auto-commit-action@v4
+          persist-credentials: true # Required for the generated-state commit.
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          commit_message: 'Generate initState.json cache'
+          node-version-file: .nvmrc
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Generate state
+        run: make build
+      - name: Validate generated state
+        run: node scripts/validate-init-state.js
+      - name: Reject unrelated generated changes
+        run: git diff --exit-code -- . ':(exclude)static/initState.json'
+      - name: Commit generated state
+        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
+        with:
+          commit_message: Generate initState.json cache
           commit_author: initState Updater <actions@github.com>
+          file_pattern: static/initState.json
