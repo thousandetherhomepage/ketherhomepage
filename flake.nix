@@ -1,24 +1,21 @@
 {
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     utils.url = "github:numtide/flake-utils";
-    foundry.url = "github:shazow/foundry.nix/monthly"; # Use monthly branch for permanent releases
   };
 
-  outputs = { self, nixpkgs, utils, foundry }:
+  outputs = { self, nixpkgs, utils }:
     utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ foundry.overlay ];
-        };
+        pkgs = import nixpkgs { inherit system; };
       in {
 
-        devShell = with pkgs; mkShell {
+        devShells.default = with pkgs; mkShell {
           buildInputs = [
-            nodejs-18_x
-            nodePackages.yarn
+            nodejs_24
+            yarn
 
-            foundry-bin
+            foundry
           ];
 
           shellHook = ''

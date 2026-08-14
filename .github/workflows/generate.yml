@@ -1,24 +1,56 @@
-name: "Generate initState"
+name: Generate initState
 
 on:
   workflow_dispatch:
   schedule:
-  - cron: '6 9 4 * *' # Run monthly,
+    - cron: '6 9 * * 1' # Mondays at 09:06 UTC
+
+concurrency:
+  group: generate-init-state
+  cancel-in-progress: false
 
 jobs:
-  check:
+  generate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Node.js
-        uses: actions/setup-node@v3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 18.x
-          cache: 'yarn'
-      - run: yarn
-      - run: make build
-      - uses: stefanzweifel/git-auto-commit-action@v4
+          persist-credentials: true # Required for the generated-state commit.
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          commit_message: 'Generate initState.json cache'
+          node-version-file: .nvmrc
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Generate state
+        run: make build
+      - name: Validate generated state
+        run: |
+          node - <<'NODE'
+          const { execFileSync } = require('node:child_process');
+          const state = require('./static/initState.json');
+          const previous = JSON.parse(execFileSync('git', ['show', 'HEAD:static/initState.json'], { encoding: 'utf8' }));
+          const ageSeconds = Math.floor(Date.now() / 1000) - state.loadedBlockTimestamp;
+
+          if (state.loadedNetwork !== 'homestead') throw new Error(`Unexpected network: ${state.loadedNetwork}`);
+          if (!Number.isInteger(state.loadedBlockNumber) || state.loadedBlockNumber <= 0) throw new Error('Invalid block number');
+          if (!Number.isInteger(state.loadedBlockTimestamp) || state.loadedBlockTimestamp <= 0) throw new Error('Invalid block timestamp');
+          if (!Array.isArray(state.ads) || state.ads.length === 0) throw new Error('Generated state contains no ads');
+          if (state.loadedBlockNumber < previous.loadedBlockNumber) throw new Error('Generated block regressed');
+          if (state.ads.length < previous.ads.length) throw new Error(`Ad count regressed: ${previous.ads.length} -> ${state.ads.length}`);
+          if (ageSeconds < -300 || ageSeconds > 3600) throw new Error(`Generated state is not fresh: ${ageSeconds}s old`);
+
+          console.log(`Validated ${state.ads.length} ads at block ${state.loadedBlockNumber} (${ageSeconds}s old)`);
+          NODE
+          git diff --exit-code -- . ':(exclude)static/initState.json'
+      - name: Commit generated state
+        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
+        with:
+          commit_message: Generate initState.json cache
           commit_author: initState Updater <actions@github.com>
+          file_pattern: static/initState.json
